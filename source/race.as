@@ -179,6 +179,9 @@ class cPlayerTime
 
         G_CenterPrintMsg( client.getEnt(), "Current: " + RACE_TimeToString( this.finishTime ) + "\n"
                           + str + RACE_TimeToString( delta ) );
+		G_PrintMsg( client.getEnt(), S_COLOR_ORANGE + "Race finished: " + S_COLOR_WHITE + RACE_TimeToString( this.finishTime )
+						  + S_COLOR_ORANGE + " / Personal: " + RACE_TimeDiffString( this.finishTime, this.bestFinishTime )
+						  + S_COLOR_ORANGE + " / Server: " + RACE_TimeDiffString( this.finishTime, levelRecords[0].finishTime ) + "\n" );
 
         if ( this.bestFinishTime == 0 || this.finishTime < this.bestFinishTime )
         {
@@ -194,6 +197,7 @@ class cPlayerTime
         {
             if ( levelRecords[top].finishTime == 0 || levelRecords[top].finishTime > this.finishTime )
             {
+				client.addAward( S_COLOR_GREEN + "Server Record #" + ( top + 1 ) + "!" );
                 // move the other records down
                 for ( int i = MAX_RECORDS - 1; i > top; i-- )
                     levelRecords[i].Copy( levelRecords[i - 1] );
@@ -240,10 +244,10 @@ class cPlayerTime
         // print some output and give awards if earned
 
         // green if player's best time at this sector, red if not improving previous best time
+		String sep;
         if ( this.bestSectorTimes[id] == 0 || this.sectorTimes[id] <= this.bestSectorTimes[id] )
         {
             str = S_COLOR_GREEN;
-			String sep;
 			if ( this.bestSectorTimes[id] == 0 )
 			{
 				delta = this.sectorTimes[id];
@@ -266,23 +270,27 @@ class cPlayerTime
         }
         else
         {
+			sep = "+";
             delta = this.sectorTimes[id] - this.bestSectorTimes[id];
-            str = S_COLOR_RED + "+";
+            str = S_COLOR_RED + sep;
         }
 
         G_CenterPrintMsg( client.getEnt(), "Current: " + RACE_TimeToString( this.sectorTimes[id] ) + "\n"
                           + str + RACE_TimeToString( delta ) );
+		G_PrintMsg( client.getEnt(), S_COLOR_ORANGE + "Sector " + this.currentSector + ": " + S_COLOR_WHITE + RACE_TimeToString( this.sectorTimes[id] )
+						  + S_COLOR_ORANGE + " / Personal: " + RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id] )
+						  + S_COLOR_ORANGE + " / Server: " + RACE_TimeDiffString( this.sectorTimes[id], levelRecords[0].sectorTimes[id] ) + "\n" );
 
         // if beating the level record on this sector give an award
         if ( this.sectorTimes[id] < levelRecords[0].sectorTimes[id] )
         {
-            client.addAward( "Sector Record on sector " + this.currentSector + "!" );
+            client.addAward( "Sector record on sector " + this.currentSector + "!" );
         }
         // if beating his own record on this sector give an award
         else if ( this.sectorTimes[id] < this.bestSectorTimes[id] )
         {
         	// ch : does racesow apply sector records only if race is completed?
-            client.addAward( "Personal record on Sector " + this.currentSector + "!" );
+            client.addAward( "Personal record on sector " + this.currentSector + "!" );
             this.bestSectorTimes[id] = this.sectorTimes[id];
         }
 
@@ -488,6 +496,28 @@ String RACE_TimeToString( uint time )
         millString = milli;
 
     return minsString + ":" + secsString + "." + millString;
+}
+
+String RACE_TimeDiffString( uint time, uint reference )
+{
+	String result;
+	if ( reference == 0 )
+	{
+		result = S_COLOR_WHITE + "--:--.---";
+	}
+	else if ( time == reference )
+	{
+		result += S_COLOR_CYAN + RACE_TimeToString( 0 );
+	}
+	else if ( time < reference )
+	{
+		result += S_COLOR_GREEN + "-" + RACE_TimeToString( reference - time );
+	}
+	else
+	{
+		result += S_COLOR_RED + "+" + RACE_TimeToString( time - reference );
+	}
+	return result;
 }
 
 void RACE_UpdateHUDTopScores()
