@@ -209,6 +209,7 @@ class cPlayerTime
         // set up for respawning the player with a delay
         cEntity @respawner = G_SpawnEntity( "race_respawner" );
         respawner.nextThink = levelTime + 5000;
+		@respawner.think = race_respawner_think;
         respawner.count = client.playerNum;
 
         G_AnnouncerSound( client, G_SoundIndex( "sounds/misc/timer_ploink" ), GS_MAX_TEAMS, false, null );
