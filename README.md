@@ -12,6 +12,7 @@ The most important changes made are:
 * Fixed displaying of the top scores in the hud. They are now loaded when you
 	connect.
 * Print finish and sector times to the console so they can be looked at later.
+* Assign saved top times to their owners.
 
 ## Todo
 

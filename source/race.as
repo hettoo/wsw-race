@@ -776,6 +776,24 @@ void GT_scoreEvent( cClient @client, String &score_event, String &args )
     	// ch : begin fetching records over interweb
     	// MM_FetchRaceRecords( client.getEnt() );
     }
+	else if ( score_event == "userinfochanged" )
+	{
+    	if( @client != null )
+		{
+			cPlayerTime @playerTimer = RACE_GetPlayerTimer( client );
+
+			for ( int i = 0; i < MAX_RECORDS; i++ )
+			{
+				if ( levelRecords[i].playerName == client.name )
+				{
+					playerTimer.bestFinishTime = levelRecords[i].finishTime;
+					for ( int j = 0; j < numCheckpoints; j++ )
+						playerTimer.bestSectorTimes[j] = levelRecords[i].sectorTimes[j];
+					break;
+				}
+			}
+		}
+	}
 }
 
 // a player is being respawned. This can happen from several ways, as dying, changing team,
