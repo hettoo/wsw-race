@@ -486,6 +486,7 @@ void RACE_UpdateHUDTopScores()
 {
     for ( int i = 0; i < MAX_RECORDS; i++ )
     {
+		G_ConfigString( CS_GENERAL + i, "" );
         if ( levelRecords[i].finishTime > 0 && levelRecords[i].playerName.len() > 0 )
         {
             G_ConfigString( CS_GENERAL + i, "#" + ( i + 1 ) + " - " + levelRecords[i].playerName + " - " + RACE_TimeToString( levelRecords[i].finishTime ) );
@@ -727,7 +728,11 @@ void GT_scoreEvent( cClient @client, String &score_event, String &args )
     else if ( score_event == "enterGame" )
     {
     	if( @client != null )
+		{
 			RACE_GetPlayerTimer( client ).clear();
+
+			RACE_UpdateHUDTopScores();
+		}
 
     	// ch : begin fetching records over interweb
     	// MM_FetchRaceRecords( client.getEnt() );
