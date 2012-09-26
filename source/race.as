@@ -1045,6 +1045,12 @@ bool GT_MatchStateFinished( int incomingMatchState )
 // place to set up the new state rules
 void GT_MatchStateStarted()
 {
+	if ( match.getState() < MATCH_STATE_PLAYTIME )
+	{
+		match.launchState( MATCH_STATE_PLAYTIME );
+		return;
+	}
+
     switch ( match.getState() )
     {
     case MATCH_STATE_WARMUP:

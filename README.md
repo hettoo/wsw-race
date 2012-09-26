@@ -14,5 +14,6 @@ The most important changes made are:
 * Print finish and sector times to the console so they can be looked at later.
 * Assign saved top times to their owners.
 * Added practicemode with noclip and position save/load commands.
+* Disabled warmup
 
 ## Todo
