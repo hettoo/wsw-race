@@ -185,7 +185,7 @@ class cPlayerTime
 
         if ( this.bestFinishTime == 0 || this.finishTime < this.bestFinishTime )
         {
-            client.addAward( S_COLOR_YELLOW + "Personal Record!" );
+            client.addAward( S_COLOR_YELLOW + "Personal record!" );
             // copy all the sectors into the new personal record backup
             this.bestFinishTime = this.finishTime;
             for ( int i = 0; i < numCheckpoints; i++ )
@@ -197,7 +197,8 @@ class cPlayerTime
         {
             if ( levelRecords[top].finishTime == 0 || levelRecords[top].finishTime > this.finishTime )
             {
-				client.addAward( S_COLOR_GREEN + "Server Record #" + ( top + 1 ) + "!" );
+				if ( top == 0 )
+					client.addAward( S_COLOR_GREEN + "Server record!" );
                 // move the other records down
                 for ( int i = MAX_RECORDS - 1; i > top; i-- )
                     levelRecords[i].Copy( levelRecords[i - 1] );
