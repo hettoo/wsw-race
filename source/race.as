@@ -24,6 +24,10 @@ uint[] levelRecordSectors;
 uint   levelRecordFinishTime;
 String levelRecordPlayerName;
 
+int[] playerNoclipWeapons( maxClients );
+Vec3[] playerSavedPositions( maxClients );
+Vec3[] playerSavedAngles( maxClients );
+
 // ch : MM
 const uint RECORD_SEND_INTERVAL = 5 * 60 * 1000;	// 5 minutes
 uint lastRecordSent = 0;
@@ -89,6 +93,7 @@ class cPlayerTime
     uint bestFinishTime;
     int currentSector;
     bool inRace;
+	bool practicing;
     bool arraysSetUp;
 
     void setupArrays( int size )
@@ -103,6 +108,7 @@ class cPlayerTime
     {
         this.currentSector = 0;
         this.inRace = false;
+        this.practicing = false;
         this.startTime = 0;
         this.finishTime = 0;
         this.bestFinishTime = 0;
@@ -125,8 +131,11 @@ class cPlayerTime
 
     ~cPlayerTime() {}
 
-    void startRace( cClient @client )
+    bool startRace( cClient @client )
     {
+		if ( this.practicing )
+			return false;
+
         this.currentSector = 0;
         this.inRace = true;
         this.startTime = levelTime;
@@ -135,6 +144,8 @@ class cPlayerTime
             this.sectorTimes[i] = 0;
 
         client.newRaceRun( numCheckpoints );
+
+		return true;
     }
 
     void cancelRace()
@@ -299,6 +310,35 @@ class cPlayerTime
 
         G_AnnouncerSound( client, G_SoundIndex( "sounds/misc/timer_bip_bip" ), GS_MAX_TEAMS, false, null );
     }
+
+	void enterPracticeMode( cClient @client )
+	{
+		if ( practicing )
+			return;
+
+		practicing = true;
+		G_CenterPrintMsg( client.getEnt(), S_COLOR_CYAN + "Entered practicemode" );
+		cancelRace();
+	}
+
+	void leavePracticeMode( cClient @client )
+	{
+		if ( !practicing )
+			return;
+
+		practicing = false;
+		G_CenterPrintMsg( client.getEnt(), S_COLOR_CYAN + "Left practicemode" );
+		if ( client.team != TEAM_SPECTATOR )
+			client.respawn( false );
+	}
+
+	void togglePracticeMode( cClient @client )
+	{
+		if ( practicing )
+			leavePracticeMode( client );
+		else
+			enterPracticeMode( client );
+	}
 }
 
 cPlayerTime[] cPlayerTimes( maxClients );
@@ -438,12 +478,13 @@ void target_starttimer_use( cEntity @self, cEntity @other, cEntity @activator )
     if ( RACE_GetPlayerTimer( activator.client ).inRace )
         return;
 
-    RACE_GetPlayerTimer( activator.client ).startRace( activator.client );
+    if ( RACE_GetPlayerTimer( activator.client ).startRace( activator.client ) )
+	{
+		G_Print( activator.client.name + " started a new race\n" );
 
-    G_Print( activator.client.name + " started a new race\n" );
-
-    int soundIndex = G_SoundIndex( "sounds/announcer/countdown/go0" + int( brandom( 1, 2 ) ) );
-    G_AnnouncerSound( activator.client, soundIndex, GS_MAX_TEAMS, false, null );
+		int soundIndex = G_SoundIndex( "sounds/announcer/countdown/go0" + int( brandom( 1, 2 ) ) );
+		G_AnnouncerSound( activator.client, soundIndex, GS_MAX_TEAMS, false, null );
+	}
 }
 
 // doesn't need to do anything at all, just sit there, waiting
@@ -684,6 +725,75 @@ bool GT_Command( cClient @client, String &cmdString, String &argsString, int arg
 
         return true;
     }
+	else if ( cmdString == "practicemode" )
+	{
+		RACE_GetPlayerTimer( client ).togglePracticeMode( client );
+		return true;
+	}
+	else if ( cmdString == "noclip" )
+	{
+		if ( !RACE_GetPlayerTimer( client ).practicing )
+		{
+			G_PrintMsg( client.getEnt(), "Noclip is only available in practicemode.\n" );
+			return false;
+		}
+		if ( client.team == TEAM_SPECTATOR )
+		{
+			G_PrintMsg( client.getEnt(), "Noclip is not available for spectators.\n" );
+			return false;
+		}
+
+		cEntity @ent = client.getEnt();
+		String msg;
+		if ( ent.moveType == MOVETYPE_PLAYER )
+		{
+			ent.moveType = MOVETYPE_NOCLIP;
+			playerNoclipWeapons[ client.playerNum ] = ent.weapon;
+			msg = "noclip ON";
+		}
+		else
+		{
+			ent.moveType = MOVETYPE_PLAYER;
+			client.selectWeapon( playerNoclipWeapons[ client.playerNum ] );
+			msg = "noclip OFF";
+		}
+
+		G_PrintMsg( ent, msg + "\n" );
+
+		return true;
+	}
+	else if ( cmdString == "position" )
+	{
+		if ( argsString == "save" )
+		{
+			playerSavedPositions[ client.playerNum ] = client.getEnt().origin;
+			playerSavedAngles[ client.playerNum ] = client.getEnt().angles;
+		}
+		else if ( argsString == "load" )
+		{
+			if ( !RACE_GetPlayerTimer( client ).practicing && client.team != TEAM_SPECTATOR )
+			{
+				G_PrintMsg( client.getEnt(), "Position load is only available in practicemode.\n" );
+				return false;
+			}
+
+			if ( playerSavedPositions[ client.playerNum ] == Vec3() )
+			{
+				G_PrintMsg( client.getEnt(), "No position has been saved yet.\n" );
+				return false;
+			}
+
+			client.getEnt().origin = playerSavedPositions[ client.playerNum ];
+			client.getEnt().angles = playerSavedAngles[ client.playerNum ];
+		}
+		else
+		{
+			G_PrintMsg( client.getEnt(), "position <save | load>\n" );
+			return false;
+		}
+
+		return true;
+	}
 
     return false;
 }
@@ -711,7 +821,6 @@ String @GT_ScoreboardMessage( uint maxlen )
     cTeam @team;
     cEntity @ent;
     int i, playerID;
-    int racing;
     //int readyIcon;
 
     @team = @G_GetTeam( TEAM_PLAYERS );
@@ -727,7 +836,13 @@ String @GT_ScoreboardMessage( uint maxlen )
         @ent = @team.ent( i );
 
         int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum + 1 ) : ent.playerNum;
-        racing = int( RACE_GetPlayerTimer( ent.client ).inRace ? 1 : 0 );
+        String racing;
+		if ( RACE_GetPlayerTimer( ent.client ).practicing )
+			racing = S_COLOR_CYAN + "No";
+		else if ( RACE_GetPlayerTimer( ent.client ).inRace )
+			racing = S_COLOR_GREEN + "Yes";
+		else
+			racing = S_COLOR_RED + "No";
 
         entry = "&p " + playerID + " " + ent.client.clanName + " "
                 + RACE_GetPlayerTimer( ent.client ).bestFinishTime + " "
@@ -807,6 +922,12 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
 
     // set player movement to pass through other players
     ent.client.setPMoveFeatures( ent.client.pmoveFeatures | PMFEAT_GHOSTMOVE );
+
+	if ( RACE_GetPlayerTimer( ent.client ).practicing && playerSavedPositions[ ent.client.playerNum ] != Vec3() )
+	{
+		ent.origin = playerSavedPositions[ ent.client.playerNum ];
+		ent.angles = playerSavedAngles[ ent.client.playerNum ];
+	}
 
     if ( gametype.isInstagib )
         ent.client.inventoryGiveItem( WEAP_INSTAGUN );
@@ -1054,12 +1175,15 @@ void GT_InitGametype()
         gametype.setTeamSpawnsystem( team, SPAWNSYSTEM_INSTANT, 0, 0, false );
 
     // define the scoreboard layout
-    G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %t 96 %l 48 %b 48" );
+    G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %t 96 %l 48 %s 48" );
     G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Time Ping Racing" );
 
     // add commands
     G_RegisterCommand( "gametype" );
     G_RegisterCommand( "racerestart" );
+    G_RegisterCommand( "practicemode" );
+    G_RegisterCommand( "noclip" );
+    G_RegisterCommand( "position" );
 
     demoRecording = false;
 
