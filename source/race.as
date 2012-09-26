@@ -130,7 +130,6 @@ class cPlayerTime
         this.currentSector = 0;
         this.inRace = true;
         this.startTime = levelTime;
-        this.finishTime = 0;
 
         for ( int i = 0; i < numCheckpoints; i++ )
             this.sectorTimes[i] = 0;
@@ -141,6 +140,7 @@ class cPlayerTime
     void cancelRace()
     {
         this.inRace = false;
+        this.finishTime = 0;
     }
 
     void completeRace( cClient @client )
@@ -634,13 +634,11 @@ bool GT_Command( cClient @client, String &cmdString, String &argsString, int arg
     {
         if ( @client != null )
         {
-            if ( !RACE_GetPlayerTimer( client ).inRace )
+            if ( RACE_GetPlayerTimer( client ).inRace )
             {
-                G_PrintMsg( client.getEnt(), "You are not currently in a race\n" );
-                return true;
+				RACE_GetPlayerTimer( client ).cancelRace();
             }
 
-            RACE_GetPlayerTimer( client ).cancelRace();
             client.respawn( false );
         }
 
