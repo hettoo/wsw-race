@@ -24,10 +24,6 @@ uint[] levelRecordSectors;
 uint   levelRecordFinishTime;
 String levelRecordPlayerName;
 
-int[] playerNoclipWeapons( maxClients );
-Vec3[] playerSavedPositions( maxClients );
-Vec3[] playerSavedAngles( maxClients );
-
 // ch : MM
 const uint RECORD_SEND_INTERVAL = 5 * 60 * 1000;	// 5 minutes
 uint lastRecordSent = 0;
@@ -269,13 +265,12 @@ class cPlayerTime
 			{
 				delta = this.bestSectorTimes[id] - this.sectorTimes[id];
 				sep = "-";
-				str += sep;
 			}
 			for ( int i = 0; i < MAX_RECORDS; i++ )
 			{
 				if ( this.sectorTimes[id] <= levelRecords[i].sectorTimes[id] )
 				{
-					str += "R#" + ( i + 1 ) + sep; // extra id when on server record beating time
+					str += ( this.sectorTimes[id] == levelRecords[i].sectorTimes[id] ? "" : "-" ) + "R#" + ( i + 1 ) + sep; // extra id when on server record beating time
 					break;
 				}
 			}
@@ -342,6 +337,10 @@ class cPlayerTime
 }
 
 cPlayerTime[] cPlayerTimes( maxClients );
+
+int[] playerNoclipWeapons( maxClients );
+Vec3[] playerSavedPositions( maxClients );
+Vec3[] playerSavedAngles( maxClients );
 
 cPlayerTime @RACE_GetPlayerTimer( cClient @client )
 {
