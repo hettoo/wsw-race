@@ -15,13 +15,10 @@ BASE_MOD = basewsw
 CONFIG_DIR = configs/server/gametypes
 FILES = $(shell find $(SOURCE_DIR))
 SETTINGS_FILE = $(SOURCE_DIR)/race.as
-EVERY_PK3 = $(NAME)-*.pk3
 CFG = $(NAME).cfg
 
-VERSION = $(shell grep 'gametype\.version =' $(SETTINGS_FILE) \
-		  | head -n1 | sed 's/.*"\(.*\)".*/\1/')
-VERSION_WORD = $(subst .,_,$(VERSION))
-PK3 = $(NAME)-$(VERSION_WORD).pk3
+PK3 = $(NAME)-hettoo-001.pk3
+EVERY_PK3 = $(NAME)-hettoo-*.pk3
 
 all: dist
 
