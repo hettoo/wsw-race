@@ -18,7 +18,7 @@ SETTINGS_FILE = $(SOURCE_DIR)/race.as
 EVERY_PK3 = $(NAME)-*.pk3
 CFG = $(NAME).cfg
 
-VERSION = $(shell grep VERSION $(SETTINGS_FILE) \
+VERSION = $(shell grep 'gametype\.version =' $(SETTINGS_FILE) \
 		  | head -n1 | sed 's/.*"\(.*\)".*/\1/')
 VERSION_WORD = $(subst .,_,$(VERSION))
 PK3 = $(NAME)-$(VERSION_WORD).pk3
