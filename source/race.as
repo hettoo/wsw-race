@@ -240,21 +240,29 @@ class cPlayerTime
         // print some output and give awards if earned
 
         // green if player's best time at this sector, red if not improving previous best time
-        if ( this.bestSectorTimes[id] == 0 )
+        if ( this.bestSectorTimes[id] == 0 || this.sectorTimes[id] <= this.bestSectorTimes[id] )
         {
-            delta = this.sectorTimes[id];
-            str = S_COLOR_GREEN + " ";
-        }
-        else if ( this.sectorTimes[id] <= this.bestSectorTimes[id] )
-        {
-            delta = this.bestSectorTimes[id] - this.sectorTimes[id];
-            str = S_COLOR_GREEN + "-";
-            if ( this.sectorTimes[id] <= levelRecords[0].sectorTimes[id] )
-                str += "R#1-"; // extra id when on server record beating time
-            else if ( this.sectorTimes[id] <= levelRecords[1].sectorTimes[id] )
-                str += "R#2-"; // extra id when on server record beating time
-            else if ( this.sectorTimes[id] <= levelRecords[2].sectorTimes[id] )
-                str += "R#3-"; // extra id when on server record beating time
+            str = S_COLOR_GREEN;
+			String sep;
+			if ( this.bestSectorTimes[id] == 0 )
+			{
+				delta = this.sectorTimes[id];
+				sep = " ";
+			}
+			else
+			{
+				delta = this.bestSectorTimes[id] - this.sectorTimes[id];
+				sep = "-";
+				str += sep;
+			}
+			for ( int i = 0; i < MAX_RECORDS; i++ )
+			{
+				if ( this.sectorTimes[id] <= levelRecords[i].sectorTimes[id] )
+				{
+					str += "R#" + ( i + 1 ) + sep; // extra id when on server record beating time
+					break;
+				}
+			}
         }
         else
         {
@@ -270,7 +278,7 @@ class cPlayerTime
         {
             client.addAward( "Sector Record on sector " + this.currentSector + "!" );
         }
-        // if beating his own record on this secotr give an award
+        // if beating his own record on this sector give an award
         else if ( this.sectorTimes[id] < this.bestSectorTimes[id] )
         {
         	// ch : does racesow apply sector records only if race is completed?
