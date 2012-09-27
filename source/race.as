@@ -252,7 +252,8 @@ class cPlayerTime
         // print some output and give awards if earned
 
         // green if player's best time at this sector, red if not improving previous best time
-		String sep;
+        // '-' means improved / equal, '+' means worse and no sign means no time was set yet
+        String sep;
         if ( this.bestSectorTimes[id] == 0 || this.sectorTimes[id] <= this.bestSectorTimes[id] )
         {
             str = S_COLOR_GREEN;
@@ -266,21 +267,22 @@ class cPlayerTime
 				delta = this.bestSectorTimes[id] - this.sectorTimes[id];
 				sep = "-";
 			}
-			for ( int i = 0; i < MAX_RECORDS; i++ )
-			{
-				if ( this.sectorTimes[id] <= levelRecords[i].sectorTimes[id] )
-				{
-					str += ( this.sectorTimes[id] == levelRecords[i].sectorTimes[id] ? "" : "-" ) + "R#" + ( i + 1 ) + sep; // extra id when on server record beating time
-					break;
-				}
-			}
         }
         else
         {
-			sep = "+";
+            sep = "+";
             delta = this.sectorTimes[id] - this.bestSectorTimes[id];
-            str = S_COLOR_RED + sep;
+            str = S_COLOR_RED;
         }
+        for ( int i = 0; i < MAX_RECORDS; i++ )
+        {
+            if ( this.sectorTimes[id] <= levelRecords[i].sectorTimes[id] )
+            {
+                str += "-R#" + ( i + 1 ); // extra id when on server record beating time
+                break;
+            }
+        }
+        str += sep;
 
         G_CenterPrintMsg( client.getEnt(), "Current: " + RACE_TimeToString( this.sectorTimes[id] ) + "\n"
                           + str + RACE_TimeToString( delta ) );
@@ -338,6 +340,7 @@ class cPlayerTime
 
 cPlayerTime[] cPlayerTimes( maxClients );
 
+// hettoo : practicemode
 int[] playerNoclipWeapons( maxClients );
 Vec3[] playerSavedPositions( maxClients );
 Vec3[] playerSavedAngles( maxClients );
@@ -894,11 +897,13 @@ void GT_scoreEvent( cClient @client, String &score_event, String &args )
 	{
     	if( @client != null )
 		{
+            // find out if he holds a record better than his current time
 			cPlayerTime @playerTimer = RACE_GetPlayerTimer( client );
 
 			for ( int i = 0; i < MAX_RECORDS; i++ )
 			{
-				if ( levelRecords[i].playerName == client.name )
+				if ( levelRecords[i].playerName == client.name
+                        && ( playerTimer.bestFinishTime == 0 || levelRecords[i].finishTime < playerTimer.bestFinishTime ) )
 				{
 					playerTimer.bestFinishTime = levelRecords[i].finishTime;
 					for ( int j = 0; j < numCheckpoints; j++ )
@@ -922,6 +927,7 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
     // set player movement to pass through other players
     ent.client.setPMoveFeatures( ent.client.pmoveFeatures | PMFEAT_GHOSTMOVE );
 
+    // actually it could happen that a spawnpoint is at (0, 0, 0) and a user saves his position there... whatever
 	if ( RACE_GetPlayerTimer( ent.client ).practicing && playerSavedPositions[ ent.client.playerNum ] != Vec3() )
 	{
 		ent.origin = playerSavedPositions[ ent.client.playerNum ];
@@ -942,8 +948,11 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
     // add a teleportation effect
     ent.respawnEffect();
 
-    int soundIndex = G_SoundIndex( "sounds/announcer/countdown/ready0" + int( brandom( 1, 2 ) ) );
-    G_AnnouncerSound( ent.client, soundIndex, GS_MAX_TEAMS, false, null );
+    if ( !RACE_GetPlayerTimer( ent.client ).practicing )
+    {
+        int soundIndex = G_SoundIndex( "sounds/announcer/countdown/ready0" + int( brandom( 1, 2 ) ) );
+        G_AnnouncerSound( ent.client, soundIndex, GS_MAX_TEAMS, false, null );
+    }
 }
 
 // Thinking function. Called each frame
@@ -1045,6 +1054,7 @@ bool GT_MatchStateFinished( int incomingMatchState )
 // place to set up the new state rules
 void GT_MatchStateStarted()
 {
+    // hettoo : skip warmup and countdown
 	if ( match.getState() < MATCH_STATE_PLAYTIME )
 	{
 		match.launchState( MATCH_STATE_PLAYTIME );
