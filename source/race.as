@@ -214,7 +214,11 @@ class cPlayerTime
             if ( levelRecords[top].finishTime == 0 || levelRecords[top].finishTime > this.finishTime )
             {
 				if ( top == 0 )
+                {
 					client.addAward( S_COLOR_GREEN + "Server record!" );
+                    G_PrintMsg( null, client.name + S_COLOR_GREEN + " made a new server record: "
+                            + S_COLOR_WHITE + RACE_TimeToString( this.finishTime ) + "\n" );
+                }
 
                 int move = MAX_RECORDS - 1;
                 for ( int i = 0; i < MAX_RECORDS; i++ )
