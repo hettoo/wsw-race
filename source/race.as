@@ -545,22 +545,16 @@ String RACE_TimeToString( uint time )
 String RACE_TimeDiffString( uint time, uint reference )
 {
 	String result;
+
 	if ( reference == 0 )
-	{
 		result = S_COLOR_WHITE + "--:--.---";
-	}
 	else if ( time == reference )
-	{
-		result += S_COLOR_CYAN + RACE_TimeToString( 0 );
-	}
+		result = S_COLOR_CYAN + RACE_TimeToString( 0 );
 	else if ( time < reference )
-	{
-		result += S_COLOR_GREEN + "-" + RACE_TimeToString( reference - time );
-	}
+		result = S_COLOR_GREEN + "-" + RACE_TimeToString( reference - time );
 	else
-	{
-		result += S_COLOR_RED + "+" + RACE_TimeToString( time - reference );
-	}
+		result = S_COLOR_RED + "+" + RACE_TimeToString( time - reference );
+
 	return result;
 }
 
@@ -570,9 +564,7 @@ void RACE_UpdateHUDTopScores()
     {
 		G_ConfigString( CS_GENERAL + i, "" ); // somehow it is not shown the first time if it isn't initialized like this
         if ( levelRecords[i].finishTime > 0 && levelRecords[i].playerName.len() > 0 )
-        {
             G_ConfigString( CS_GENERAL + i, "#" + ( i + 1 ) + " - " + levelRecords[i].playerName + " - " + RACE_TimeToString( levelRecords[i].finishTime ) );
-        }
     }
 }
 
@@ -718,9 +710,7 @@ bool GT_Command( cClient @client, String &cmdString, String &argsString, int arg
         if ( @client != null )
         {
             if ( RACE_GetPlayerTimer( client ).inRace )
-            {
 				RACE_GetPlayerTimer( client ).cancelRace();
-            }
 
             client.respawn( false );
         }
