@@ -343,20 +343,20 @@ class cPlayerTime
 
 	void enterPracticeMode( cClient @client )
 	{
-		if ( practicing )
+		if ( this.practicing )
 			return;
 
-		practicing = true;
+		this.practicing = true;
 		G_CenterPrintMsg( client.getEnt(), S_COLOR_CYAN + "Entered practicemode" );
-		cancelRace();
+		this.cancelRace();
 	}
 
 	void leavePracticeMode( cClient @client )
 	{
-		if ( !practicing )
+		if ( !this.practicing )
 			return;
 
-		practicing = false;
+		this.practicing = false;
 		G_CenterPrintMsg( client.getEnt(), S_COLOR_CYAN + "Left practicemode" );
 		if ( client.team != TEAM_SPECTATOR )
 			client.respawn( false );
@@ -364,10 +364,10 @@ class cPlayerTime
 
 	void togglePracticeMode( cClient @client )
 	{
-		if ( practicing )
-			leavePracticeMode( client );
+		if ( this.practicing )
+			this.leavePracticeMode( client );
 		else
-			enterPracticeMode( client );
+			this.enterPracticeMode( client );
 	}
 }
 
