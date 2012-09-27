@@ -220,25 +220,25 @@ class cPlayerTime
                             + S_COLOR_WHITE + RACE_TimeToString( this.finishTime ) + "\n" );
                 }
 
-                int move = MAX_RECORDS - 1;
+                int remove = MAX_RECORDS - 1;
                 for ( int i = 0; i < MAX_RECORDS; i++ )
                 {
                     if ( levelRecords[i].playerName == client.name )
                     {
                         if ( i < top )
                         {
-                            move = -1; // he already has a better time
+                            remove = -1; // he already has a better time, don't save it
                             break;
                         }
 
-                        move = i;
+                        remove = i;
                     }
                 }
 
-                if ( move != -1 )
+                if ( remove != -1 )
                 {
                     // move the other records down
-                    for ( int i = move; i > top; i-- )
+                    for ( int i = remove; i > top; i-- )
                         levelRecords[i].Copy( levelRecords[i - 1] );
 
                     levelRecords[top].Store( client );
