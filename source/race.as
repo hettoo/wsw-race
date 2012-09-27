@@ -710,7 +710,7 @@ bool GT_Command( cClient @client, String &cmdString, String &argsString, int arg
         GENERIC_CheatVarResponse( client, cmdString, argsString, argc );
         return true;
     }
-    else if ( ( cmdString == "racerestart" ) || ( cmdString == "restartrace" ) )
+    else if ( ( cmdString == "racerestart" ) || ( cmdString == "kill" ) )
     {
         if ( @client != null )
         {
@@ -1186,6 +1186,7 @@ void GT_InitGametype()
     // add commands
     G_RegisterCommand( "gametype" );
     G_RegisterCommand( "racerestart" );
+    G_RegisterCommand( "kill" );
     G_RegisterCommand( "practicemode" );
     G_RegisterCommand( "noclip" );
     G_RegisterCommand( "position" );
