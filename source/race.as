@@ -53,6 +53,15 @@ class cRecordTime
 
     ~cRecordTime() {}
 
+    void clear()
+    {
+        this.playerName = "";
+        this.finishTime = 0;
+
+        for ( int i = 0; i < numCheckpoints; i++ )
+            this.sectorTimes[i] = 0;
+    }
+
     void Copy( cRecordTime &other )
     {
         if ( !this.arraysSetUp )
@@ -206,14 +215,34 @@ class cPlayerTime
             {
 				if ( top == 0 )
 					client.addAward( S_COLOR_GREEN + "Server record!" );
-                // move the other records down
-                for ( int i = MAX_RECORDS - 1; i > top; i-- )
-                    levelRecords[i].Copy( levelRecords[i - 1] );
 
-                levelRecords[top].Store( client );
+                int move = MAX_RECORDS - 1;
+                for ( int i = 0; i < MAX_RECORDS; i++ )
+                {
+                    if ( levelRecords[i].playerName == client.name )
+                    {
+                        if ( i < top )
+                        {
+                            move = -1; // he already has a better time
+                            break;
+                        }
 
-                RACE_WriteTopScores();
-                RACE_UpdateHUDTopScores();
+                        move = i;
+                    }
+                }
+
+                if ( move != -1 )
+                {
+                    // move the other records down
+                    for ( int i = move; i > top; i-- )
+                        levelRecords[i].Copy( levelRecords[i - 1] );
+
+                    levelRecords[top].Store( client );
+
+                    RACE_WriteTopScores();
+                    RACE_UpdateHUDTopScores();
+                }
+
                 break;
             }
         }
@@ -606,7 +635,8 @@ void RACE_LoadTopScores()
         String timeToken, nameToken, sectorToken;
         int count = 0;
 
-        for ( int i = 0; i < MAX_RECORDS; i++ )
+        int i = 0;
+        while ( i < MAX_RECORDS )
         {
             timeToken = topScores.getToken( count++ );
             if ( timeToken.len() == 0 )
@@ -632,8 +662,26 @@ void RACE_LoadTopScores()
                 levelRecords[i].sectorTimes[j] = uint( sectorToken.toInt() );
             }
 
+            // check if he already has a score
+            bool exists = false;
+            for ( int j = 0; j < i; j++ )
+            {
+                if ( levelRecords[j].playerName == nameToken )
+                {
+                    exists = true;
+                    break;
+                }
+            }
+            if ( exists )
+            {
+                levelRecords[i].clear();
+                continue;
+            }
+
             levelRecords[i].finishTime = uint( timeToken.toInt() );
             levelRecords[i].playerName = nameToken;
+
+            i++;
         }
 
         RACE_UpdateHUDTopScores();
