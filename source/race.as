@@ -98,6 +98,7 @@ class cPlayerTime
     uint bestFinishTime;
     int currentSector;
     bool inRace;
+    bool postRace;
 	bool practicing;
     bool arraysSetUp;
 
@@ -113,6 +114,7 @@ class cPlayerTime
     {
         this.currentSector = 0;
         this.inRace = false;
+        this.postRace = false;
         this.practicing = false;
         this.startTime = 0;
         this.finishTime = 0;
@@ -138,7 +140,7 @@ class cPlayerTime
 
     bool startRace( cClient @client )
     {
-		if ( this.practicing )
+		if ( this.practicing || this.postRace )
 			return false;
 
         this.currentSector = 0;
@@ -156,6 +158,7 @@ class cPlayerTime
     void cancelRace()
     {
         this.inRace = false;
+        this.postRace = false;
         this.finishTime = 0;
     }
 
@@ -171,6 +174,7 @@ class cPlayerTime
 
         this.finishTime = levelTime - this.startTime;
         this.inRace = false;
+        this.postRace = true;
 
         // send the final time to MM
         client.setRaceTime( -1, this.finishTime );
