@@ -568,7 +568,7 @@ void RACE_UpdateHUDTopScores()
 {
     for ( int i = 0; i < MAX_RECORDS; i++ )
     {
-		G_ConfigString( CS_GENERAL + i, "" );
+		G_ConfigString( CS_GENERAL + i, "" ); // somehow it is not shown the first time if it isn't initialized like this
         if ( levelRecords[i].finishTime > 0 && levelRecords[i].playerName.len() > 0 )
         {
             G_ConfigString( CS_GENERAL + i, "#" + ( i + 1 ) + " - " + levelRecords[i].playerName + " - " + RACE_TimeToString( levelRecords[i].finishTime ) );
