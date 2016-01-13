@@ -1,11 +1,9 @@
-WSW_DIR = ~/.warsow-1.0
+WSW_DIR = ~/.warsow-2.0
 EXECUTE_DIR = .
 EXECUTABLE = wsw-server
 MOD = basewsw
 
 NAME = race
-SERVER_CMD = cd $(EXECUTE_DIR) && $(EXECUTABLE) +set fs_game $(MOD) \
-			 +set g_gametype $(NAME)
 THIS = Makefile
 SOURCE_DIR = source
 GAMETYPES_DIR = /progs/gametypes/
@@ -14,10 +12,9 @@ TMP_DIR = tmp
 BASE_MOD = basewsw
 CONFIG_DIR = configs/server/gametypes
 FILES = $(shell find $(SOURCE_DIR))
-SETTINGS_FILE = $(SOURCE_DIR)/race.as
 CFG = $(NAME).cfg
 
-PK3 = $(NAME)-hettoo-002.pk3
+PK3 = $(NAME)-hettoo-000.pk3
 EVERY_PK3 = $(NAME)-hettoo-*.pk3
 
 all: dist
@@ -35,11 +32,8 @@ $(PK3): $(FILES) $(THIS)
 local: dist
 	cp $(PK3) $(WSW_DIR)/$(BASE_MOD)/
 
-production: local
-	$(SERVER_CMD)
-
-productionloop: local
-	while true; do $(SERVER_CMD); done
+run: local
+	cd $(EXECUTE_DIR) && $(EXECUTABLE) +set fs_game $(MOD) +set g_gametype $(NAME)
 
 clean:
 	rm -f $(EVERY_PK3)
@@ -49,9 +43,4 @@ destroy:
 	rm -f $(WSW_DIR)/$(BASE_MOD)/$(CONFIG_DIR)/$(CFG)
 	rm -f $(WSW_DIR)/$(MOD)/$(CONFIG_DIR)/$(CFG)
 
-restart: destroy local
-
-dev: restart
-	$(SERVER_CMD)
-
-.PHONY: all dist local production productionloop clean destroy restart dev
+.PHONY: all dist local run clean destroy
