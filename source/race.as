@@ -64,7 +64,7 @@ class cRecordTime
             this.sectorTimes[i] = other.sectorTimes[i];
     }
 
-    void Store( cClient @client )
+    void Store( Client @client )
     {
         if ( !this.arraysSetUp )
             return;
@@ -125,7 +125,7 @@ class cPlayerTime
 
     ~cPlayerTime() {}
 
-    void startRace( cClient @client )
+    void startRace( Client @client )
     {
         this.currentSector = 0;
         this.inRace = true;
@@ -143,7 +143,7 @@ class cPlayerTime
         this.inRace = false;
     }
 
-    void completeRace( cClient @client )
+    void completeRace( Client @client )
     {
         uint delta;
         String str;
@@ -207,29 +207,30 @@ class cPlayerTime
         }
 
         // set up for respawning the player with a delay
-        cEntity @respawner = G_SpawnEntity( "race_respawner" );
+        Entity @respawner = G_SpawnEntity( "race_respawner" );
+		@respawner.think = race_respawner_think;
         respawner.nextThink = levelTime + 5000;
         respawner.count = client.playerNum;
 
         G_AnnouncerSound( client, G_SoundIndex( "sounds/misc/timer_ploink" ), GS_MAX_TEAMS, false, null );
     }
 
-    void touchCheckPoint( cClient @client, int id )
+    bool touchCheckPoint( Client @client, int id )
     {
         uint delta;
         String str;
 
         if ( id < 0 || id >= numCheckpoints )
-            return;
+            return false;
 
         if ( !this.inRace )
-            return;
+            return false;
 
         if ( this.sectorTimes[id] != 0 ) // already past this checkPoint
-            return;
+            return false;
 
         if ( this.startTime > levelTime ) // something is very wrong here
-            return;
+            return false;
 
         this.sectorTimes[id] = levelTime - this.startTime;
 
@@ -280,12 +281,14 @@ class cPlayerTime
         this.currentSector++;
 
         G_AnnouncerSound( client, G_SoundIndex( "sounds/misc/timer_bip_bip" ), GS_MAX_TEAMS, false, null );
+		
+		return true;
     }
 }
 
 cPlayerTime[] cPlayerTimes( maxClients );
 
-cPlayerTime @RACE_GetPlayerTimer( cClient @client )
+cPlayerTime @RACE_GetPlayerTimer( Client @client )
 {
     if ( @client == null || client.playerNum < 0 )
         return null;
@@ -294,9 +297,9 @@ cPlayerTime @RACE_GetPlayerTimer( cClient @client )
 }
 
 // the player has finished the race. This entity times his automatic respawning
-void race_respawner_think( cEntity @respawner )
+void race_respawner_think( Entity @respawner )
 {
-    cClient @client = G_GetClient( respawner.count );
+    Client @client = G_GetClient( respawner.count );
 
     // the client may have respawned on his own. If the last time was erased, don't respawn him
     if ( !RACE_GetPlayerTimer( client ).inRace && RACE_GetPlayerTimer( client ).finishTime != 0 )
@@ -320,7 +323,7 @@ void race_respawner_think( cEntity @respawner )
  *   - spawnflag 16 used to prevent the removal of the holdable items (namely the
  *     medkit and teleport) from the player inventory.
  */
-void target_init_use( cEntity @self, cEntity @other, cEntity @activator )
+void target_init_use( Entity @self, Entity @other, Entity @activator )
 {
     int i;
 
@@ -340,12 +343,12 @@ void target_init_use( cEntity @self, cEntity @other, cEntity @activator )
     // weapons
     if ( ( self.spawnFlags & 4 ) == 0 )
     {
-        for ( int i = WEAP_GUNBLADE; i < WEAP_TOTAL; i++ )
+        for ( i = WEAP_GUNBLADE; i < WEAP_TOTAL; i++ )
         {
             activator.client.inventorySetCount( i, 0 );
         }
 
-        for ( int i = AMMO_WEAK_GUNBLADE; i < AMMO_TOTAL; i++ )
+        for ( i = AMMO_WEAK_GUNBLADE; i < AMMO_TOTAL; i++ )
         {
             activator.client.inventorySetCount( i, 0 );
         }
@@ -363,12 +366,12 @@ void target_init_use( cEntity @self, cEntity @other, cEntity @activator )
 }
 
 // doesn't need to do anything at all, just sit there, waiting
-void target_init( cEntity @self )
+void target_init( Entity @self )
 {
 	@self.use = target_init_use;
 }
 
-void target_checkpoint_use( cEntity @self, cEntity @other, cEntity @activator )
+void target_checkpoint_use( Entity @self, Entity @other, Entity @activator )
 {
     if ( @activator.client == null )
         return;
@@ -376,17 +379,19 @@ void target_checkpoint_use( cEntity @self, cEntity @other, cEntity @activator )
     if ( !RACE_GetPlayerTimer( activator.client ).inRace )
         return;
 
-    RACE_GetPlayerTimer( activator.client ).touchCheckPoint( activator.client, self.count );
+    if( RACE_GetPlayerTimer( activator.client ).touchCheckPoint( activator.client, self.count ) ) {
+		self.useTargets( activator );
+	}
 }
 
-void target_checkpoint( cEntity @self )
+void target_checkpoint( Entity @self )
 {
     self.count = numCheckpoints;
 	@self.use = target_checkpoint_use;
     numCheckpoints++;
 }
 
-void target_stoptimer_use( cEntity @self, cEntity @other, cEntity @activator )
+void target_stoptimer_use( Entity @self, Entity @other, Entity @activator )
 {
     if ( @activator.client == null )
         return;
@@ -397,22 +402,24 @@ void target_stoptimer_use( cEntity @self, cEntity @other, cEntity @activator )
     RACE_GetPlayerTimer( activator.client ).completeRace( activator.client );
 
     G_Print( activator.client.name + " crossed the finish line\n" );
+	
+	self.useTargets( activator );
 }
 
 // This sucks: some defrag maps have the entity classname with pseudo camel notation
 // and classname->function is case sensitive
 
-void target_stoptimer( cEntity @self )
+void target_stoptimer( Entity @self )
 {
 	@self.use = target_stoptimer_use;
 }
 
-void target_stopTimer( cEntity @self )
+void target_stopTimer( Entity @self )
 {
 	target_stoptimer( self );
 }
 
-void target_starttimer_use( cEntity @self, cEntity @other, cEntity @activator )
+void target_starttimer_use( Entity @self, Entity @other, Entity @activator )
 {
     if ( @activator.client == null )
         return;
@@ -424,17 +431,19 @@ void target_starttimer_use( cEntity @self, cEntity @other, cEntity @activator )
 
     G_Print( activator.client.name + " started a new race\n" );
 
-    int soundIndex = G_SoundIndex( "sounds/announcer/countdown/go0" + int( brandom( 1, 2 ) ) );
+    int soundIndex = G_SoundIndex( "sounds/announcer/countdown/go0" + (1 + (rand() & 1)) );
     G_AnnouncerSound( activator.client, soundIndex, GS_MAX_TEAMS, false, null );
+	
+	self.useTargets( activator );
 }
 
 // doesn't need to do anything at all, just sit there, waiting
-void target_starttimer( cEntity @ent )
+void target_starttimer( Entity @ent )
 {
 	@ent.use = target_starttimer_use;
 }
 
-void target_startTimer( cEntity @ent )
+void target_startTimer( Entity @ent )
 {
 	target_starttimer( ent );
 }
@@ -565,7 +574,7 @@ void RACE_LoadTopScores()
 }
 
 // a player has just died. The script is warned about it so it can account scores
-void RACE_playerKilled( cEntity @target, cEntity @attacker, cEntity @inflicter )
+void RACE_playerKilled( Entity @target, Entity @attacker, Entity @inflicter )
 {
     if ( @target == null || @target.client == null )
         return;
@@ -576,8 +585,8 @@ void RACE_playerKilled( cEntity @target, cEntity @attacker, cEntity @inflicter )
 void RACE_SetUpMatch()
 {
     int i, j;
-    cEntity @ent;
-    cTeam @team;
+    Entity @ent;
+    Team @team;
 
     gametype.shootingDisabled = false;
     gametype.readyAnnouncementEnabled = false;
@@ -605,7 +614,7 @@ void RACE_SetUpMatch()
 /// MODULE SCRIPT CALLS
 ///*****************************************************************
 
-bool GT_Command( cClient @client, String &cmdString, String &argsString, int argc )
+bool GT_Command( Client @client, const String &cmdString, const String &argsString, int argc )
 {
     if ( cmdString == "gametype" )
     {
@@ -654,13 +663,13 @@ bool GT_Command( cClient @client, String &cmdString, String &argsString, int arg
 // on the current bot status.
 // Player, and non-item entities don't have any weight set. So they will be ignored by the bot
 // unless a weight is assigned here.
-bool GT_UpdateBotStatus( cEntity @self )
+bool GT_UpdateBotStatus( Entity @self )
 {
     return false; // let the default code handle it itself
 }
 
 // select a spawning point for a player
-cEntity @GT_SelectSpawnPoint( cEntity @self )
+Entity @GT_SelectSpawnPoint( Entity @self )
 {
     return GENERIC_SelectBestRandomSpawnPoint( self, "info_player_deathmatch" );
 }
@@ -669,8 +678,8 @@ String @GT_ScoreboardMessage( uint maxlen )
 {
     String scoreboardMessage = "";
     String entry;
-    cTeam @team;
-    cEntity @ent;
+    Team @team;
+    Entity @ent;
     int i, playerID;
     int racing;
     //int readyIcon;
@@ -687,7 +696,7 @@ String @GT_ScoreboardMessage( uint maxlen )
     {
         @ent = @team.ent( i );
 
-        int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum + 1 ) : ent.playerNum;
+        playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum + 1 ) : ent.playerNum;
         racing = int( RACE_GetPlayerTimer( ent.client ).inRace ? 1 : 0 );
 
         entry = "&p " + playerID + " " + ent.client.clanName + " "
@@ -704,14 +713,14 @@ String @GT_ScoreboardMessage( uint maxlen )
 // Some game actions trigger score events. These are events not related to killing
 // oponents, like capturing a flag
 // Warning: client can be null
-void GT_scoreEvent( cClient @client, String &score_event, String &args )
+void GT_ScoreEvent( Client @client, const String &score_event, const String &args )
 {
     if ( score_event == "dmg" )
     {
     }
     else if ( score_event == "kill" )
     {
-        cEntity @attacker = null;
+        Entity @attacker = null;
 
         if ( @client != null )
             @attacker = @client.getEnt();
@@ -737,7 +746,7 @@ void GT_scoreEvent( cClient @client, String &score_event, String &args )
 
 // a player is being respawned. This can happen from several ways, as dying, changing team,
 // being moved to ghost state, be placed in respawn queue, being spawned from spawn queue, etc
-void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
+void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 {
     RACE_GetPlayerTimer( ent.client ).cancelRace();
 
@@ -745,7 +754,7 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
         return;
 
     // set player movement to pass through other players
-    ent.client.setPMoveFeatures( ent.client.pmoveFeatures | PMFEAT_GHOSTMOVE );
+    ent.client.pmoveFeatures = ent.client.pmoveFeatures | PMFEAT_GHOSTMOVE;
 
     if ( gametype.isInstagib )
         ent.client.inventoryGiveItem( WEAP_INSTAGUN );
@@ -761,7 +770,7 @@ void GT_playerRespawn( cEntity @ent, int old_team, int new_team )
     // add a teleportation effect
     ent.respawnEffect();
 
-    int soundIndex = G_SoundIndex( "sounds/announcer/countdown/ready0" + int( brandom( 1, 2 ) ) );
+    int soundIndex = G_SoundIndex( "sounds/announcer/countdown/ready0" + (1 + (rand() & 1)) );
     G_AnnouncerSound( ent.client, soundIndex, GS_MAX_TEAMS, false, null );
 }
 
@@ -792,7 +801,7 @@ void GT_ThinkRules()
     }
 
     // set all clients race stats
-    cClient @client;
+    Client @client;
 
     for ( int i = 0; i < maxClients; i++ )
     {
@@ -801,7 +810,7 @@ void GT_ThinkRules()
             continue;
 
 		// disable gunblade autoattack
-		client.setPMoveFeatures( client.pmoveFeatures & ~PMFEAT_GUNBLADEAUTOATTACK );
+		client.pmoveFeatures = client.pmoveFeatures & ~PMFEAT_GUNBLADEAUTOATTACK;
 
         // always clear all before setting
         client.setHUDStat( STAT_PROGRESS_SELF, 0 );
@@ -944,7 +953,6 @@ void GT_InitGametype()
                  + "set g_teams_allow_uneven \"0\"\n"
                  + "set g_countdown_time \"5\"\n"
                  + "set g_maxtimeouts \"-1\" // -1 = unlimited\n"
-                 + "set g_challengers_queue \"0\"\n"
                  + "\necho " + gametype.name + ".cfg executed\n";
 
         G_WriteFile( "configs/server/gametypes/" + gametype.name + ".cfg", config );
@@ -987,6 +995,8 @@ void GT_InitGametype()
 
     if ( gametype.isInstagib )
         gametype.spawnpointRadius *= 2;
+
+	gametype.inverseScore = true;
 
     // set spawnsystem type
     for ( int team = TEAM_PLAYERS; team < GS_MAX_TEAMS; team++ )
