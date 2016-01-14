@@ -1118,13 +1118,6 @@ void GT_MatchStateStarted()
 
     switch ( match.getState() )
     {
-    case MATCH_STATE_WARMUP:
-        RACE_SetUpMatch();
-        break;
-
-    case MATCH_STATE_COUNTDOWN:
-        break;
-
     case MATCH_STATE_PLAYTIME:
         RACE_SetUpMatch();
         break;
