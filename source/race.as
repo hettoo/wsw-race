@@ -25,7 +25,7 @@ uint   levelRecordFinishTime;
 String levelRecordPlayerName;
 
 // ch : MM
-const uint RECORD_SEND_INTERVAL = 5 * 60 * 1000;	// 5 minutes
+const uint RECORD_SEND_INTERVAL = 5 * 60 * 1000; // 5 minutes
 uint lastRecordSent = 0;
 
 class cRecordTime
@@ -99,7 +99,7 @@ class cPlayerTime
     int currentSector;
     bool inRace;
     bool postRace;
-	bool practicing;
+    bool practicing;
     bool arraysSetUp;
 
     void setupArrays( int size )
@@ -140,8 +140,8 @@ class cPlayerTime
 
     bool startRace( Client @client )
     {
-		if ( this.practicing || this.postRace )
-			return false;
+        if ( this.practicing || this.postRace )
+            return false;
 
         this.currentSector = 0;
         this.inRace = true;
@@ -152,7 +152,7 @@ class cPlayerTime
 
         client.newRaceRun( numCheckpoints );
 
-		return true;
+        return true;
     }
 
     void cancelRace()
@@ -199,9 +199,9 @@ class cPlayerTime
 
         G_CenterPrintMsg( client.getEnt(), "Current: " + RACE_TimeToString( this.finishTime ) + "\n"
                           + str + RACE_TimeToString( delta ) );
-		G_PrintMsg( client.getEnt(), S_COLOR_ORANGE + "Race finished: " + S_COLOR_WHITE + RACE_TimeToString( this.finishTime )
-						  + S_COLOR_ORANGE + " / Personal: " + RACE_TimeDiffString( this.finishTime, this.bestFinishTime )
-						  + S_COLOR_ORANGE + " / Server: " + RACE_TimeDiffString( this.finishTime, levelRecords[0].finishTime ) + "\n" );
+        G_PrintMsg( client.getEnt(), S_COLOR_ORANGE + "Race finished: " + S_COLOR_WHITE + RACE_TimeToString( this.finishTime )
+                          + S_COLOR_ORANGE + " / Personal: " + RACE_TimeDiffString( this.finishTime, this.bestFinishTime )
+                          + S_COLOR_ORANGE + " / Server: " + RACE_TimeDiffString( this.finishTime, levelRecords[0].finishTime ) + "\n" );
 
         if ( this.bestFinishTime == 0 || this.finishTime < this.bestFinishTime )
         {
@@ -217,9 +217,9 @@ class cPlayerTime
         {
             if ( levelRecords[top].finishTime == 0 || levelRecords[top].finishTime > this.finishTime )
             {
-				if ( top == 0 )
+                if ( top == 0 )
                 {
-					client.addAward( S_COLOR_GREEN + "Server record!" );
+                    client.addAward( S_COLOR_GREEN + "Server record!" );
                     G_PrintMsg( null, client.name + S_COLOR_YELLOW + " made a new server record: "
                             + S_COLOR_WHITE + RACE_TimeToString( this.finishTime ) + "\n" );
                 }
@@ -257,9 +257,9 @@ class cPlayerTime
 
         // set up for respawning the player with a delay
         Entity @respawner = G_SpawnEntity( "race_respawner" );
-		@respawner.think = race_respawner_think;
+        @respawner.think = race_respawner_think;
         respawner.nextThink = levelTime + 5000;
-		@respawner.think = race_respawner_think;
+        @respawner.think = race_respawner_think;
         respawner.count = client.playerNum;
 
         G_AnnouncerSound( client, G_SoundIndex( "sounds/misc/timer_ploink" ), GS_MAX_TEAMS, false, null );
@@ -295,16 +295,16 @@ class cPlayerTime
         if ( this.bestSectorTimes[id] == 0 || this.sectorTimes[id] <= this.bestSectorTimes[id] )
         {
             str = S_COLOR_GREEN;
-			if ( this.bestSectorTimes[id] == 0 )
-			{
-				delta = this.sectorTimes[id];
-				sep = " ";
-			}
-			else
-			{
-				delta = this.bestSectorTimes[id] - this.sectorTimes[id];
-				sep = "-";
-			}
+            if ( this.bestSectorTimes[id] == 0 )
+            {
+                delta = this.sectorTimes[id];
+                sep = " ";
+            }
+            else
+            {
+                delta = this.bestSectorTimes[id] - this.sectorTimes[id];
+                sep = "-";
+            }
         }
         else
         {
@@ -324,9 +324,9 @@ class cPlayerTime
 
         G_CenterPrintMsg( client.getEnt(), "Current: " + RACE_TimeToString( this.sectorTimes[id] ) + "\n"
                           + str + RACE_TimeToString( delta ) );
-		G_PrintMsg( client.getEnt(), S_COLOR_ORANGE + "Sector " + this.currentSector + ": " + S_COLOR_WHITE + RACE_TimeToString( this.sectorTimes[id] )
-						  + S_COLOR_ORANGE + " / Personal: " + RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id] )
-						  + S_COLOR_ORANGE + " / Server: " + RACE_TimeDiffString( this.sectorTimes[id], levelRecords[0].sectorTimes[id] ) + "\n" );
+        G_PrintMsg( client.getEnt(), S_COLOR_ORANGE + "Sector " + this.currentSector + ": " + S_COLOR_WHITE + RACE_TimeToString( this.sectorTimes[id] )
+                          + S_COLOR_ORANGE + " / Personal: " + RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id] )
+                          + S_COLOR_ORANGE + " / Server: " + RACE_TimeDiffString( this.sectorTimes[id], levelRecords[0].sectorTimes[id] ) + "\n" );
 
         // if beating the level record on this sector give an award
         if ( this.sectorTimes[id] < levelRecords[0].sectorTimes[id] )
@@ -336,7 +336,7 @@ class cPlayerTime
         // if beating his own record on this sector give an award
         else if ( this.sectorTimes[id] < this.bestSectorTimes[id] )
         {
-        	// ch : does racesow apply sector records only if race is completed?
+            // ch : does racesow apply sector records only if race is completed?
             client.addAward( "Personal record on sector " + this.currentSector + "!" );
             this.bestSectorTimes[id] = this.sectorTimes[id];
         }
@@ -344,38 +344,38 @@ class cPlayerTime
         this.currentSector++;
 
         G_AnnouncerSound( client, G_SoundIndex( "sounds/misc/timer_bip_bip" ), GS_MAX_TEAMS, false, null );
-		
-		return true;
+
+        return true;
     }
 
-	void enterPracticeMode( Client @client )
-	{
-		if ( this.practicing )
-			return;
+    void enterPracticeMode( Client @client )
+    {
+        if ( this.practicing )
+            return;
 
-		this.practicing = true;
-		G_CenterPrintMsg( client.getEnt(), S_COLOR_CYAN + "Entered practicemode" );
-		this.cancelRace();
-	}
+        this.practicing = true;
+        G_CenterPrintMsg( client.getEnt(), S_COLOR_CYAN + "Entered practicemode" );
+        this.cancelRace();
+    }
 
-	void leavePracticeMode( Client @client )
-	{
-		if ( !this.practicing )
-			return;
+    void leavePracticeMode( Client @client )
+    {
+        if ( !this.practicing )
+            return;
 
-		this.practicing = false;
-		G_CenterPrintMsg( client.getEnt(), S_COLOR_CYAN + "Left practicemode" );
-		if ( client.team != TEAM_SPECTATOR )
-			client.respawn( false );
-	}
+        this.practicing = false;
+        G_CenterPrintMsg( client.getEnt(), S_COLOR_CYAN + "Left practicemode" );
+        if ( client.team != TEAM_SPECTATOR )
+            client.respawn( false );
+    }
 
-	void togglePracticeMode( Client @client )
-	{
-		if ( this.practicing )
-			this.leavePracticeMode( client );
-		else
-			this.enterPracticeMode( client );
-	}
+    void togglePracticeMode( Client @client )
+    {
+        if ( this.practicing )
+            this.leavePracticeMode( client );
+        else
+            this.enterPracticeMode( client );
+    }
 }
 
 cPlayerTime[] cPlayerTimes( maxClients );
@@ -465,7 +465,7 @@ void target_init_use( Entity @self, Entity @other, Entity @activator )
 // doesn't need to do anything at all, just sit there, waiting
 void target_init( Entity @self )
 {
-	@self.use = target_init_use;
+    @self.use = target_init_use;
 }
 
 void target_checkpoint_use( Entity @self, Entity @other, Entity @activator )
@@ -477,14 +477,14 @@ void target_checkpoint_use( Entity @self, Entity @other, Entity @activator )
         return;
 
     if( RACE_GetPlayerTimer( activator.client ).touchCheckPoint( activator.client, self.count ) ) {
-		self.useTargets( activator );
-	}
+        self.useTargets( activator );
+    }
 }
 
 void target_checkpoint( Entity @self )
 {
     self.count = numCheckpoints;
-	@self.use = target_checkpoint_use;
+    @self.use = target_checkpoint_use;
     numCheckpoints++;
 }
 
@@ -499,8 +499,8 @@ void target_stoptimer_use( Entity @self, Entity @other, Entity @activator )
     RACE_GetPlayerTimer( activator.client ).completeRace( activator.client );
 
     G_Print( activator.client.name + " crossed the finish line\n" );
-	
-	self.useTargets( activator );
+
+    self.useTargets( activator );
 }
 
 // This sucks: some defrag maps have the entity classname with pseudo camel notation
@@ -508,12 +508,12 @@ void target_stoptimer_use( Entity @self, Entity @other, Entity @activator )
 
 void target_stoptimer( Entity @self )
 {
-	@self.use = target_stoptimer_use;
+    @self.use = target_stoptimer_use;
 }
 
 void target_stopTimer( Entity @self )
 {
-	target_stoptimer( self );
+    target_stoptimer( self );
 }
 
 void target_starttimer_use( Entity @self, Entity @other, Entity @activator )
@@ -526,24 +526,24 @@ void target_starttimer_use( Entity @self, Entity @other, Entity @activator )
 
     if ( RACE_GetPlayerTimer( activator.client ).startRace( activator.client ) )
     {
-	    G_Print( activator.client.name + " started a new race\n" );
+        G_Print( activator.client.name + " started a new race\n" );
 
         int soundIndex = G_SoundIndex( "sounds/announcer/countdown/go0" + (1 + (rand() & 1)) );
         G_AnnouncerSound( activator.client, soundIndex, GS_MAX_TEAMS, false, null );
-	    
-	    self.useTargets( activator );
+
+        self.useTargets( activator );
     }
 }
 
 // doesn't need to do anything at all, just sit there, waiting
 void target_starttimer( Entity @ent )
 {
-	@ent.use = target_starttimer_use;
+    @ent.use = target_starttimer_use;
 }
 
 void target_startTimer( Entity @ent )
 {
-	target_starttimer( ent );
+    target_starttimer( ent );
 }
 
 ///*****************************************************************
@@ -590,25 +590,25 @@ String RACE_TimeToString( uint time )
 
 String RACE_TimeDiffString( uint time, uint reference )
 {
-	String result;
+    String result;
 
-	if ( reference == 0 )
-		result = S_COLOR_WHITE + "--:--.---";
-	else if ( time == reference )
-		result = S_COLOR_WHITE + RACE_TimeToString( 0 );
-	else if ( time < reference )
-		result = S_COLOR_GREEN + "-" + RACE_TimeToString( reference - time );
-	else
-		result = S_COLOR_RED + "+" + RACE_TimeToString( time - reference );
+    if ( reference == 0 )
+        result = S_COLOR_WHITE + "--:--.---";
+    else if ( time == reference )
+        result = S_COLOR_WHITE + RACE_TimeToString( 0 );
+    else if ( time < reference )
+        result = S_COLOR_GREEN + "-" + RACE_TimeToString( reference - time );
+    else
+        result = S_COLOR_RED + "+" + RACE_TimeToString( time - reference );
 
-	return result;
+    return result;
 }
 
 void RACE_UpdateHUDTopScores()
 {
     for ( int i = 0; i < MAX_RECORDS; i++ )
     {
-		G_ConfigString( CS_GENERAL + i, "" ); // somehow it is not shown the first time if it isn't initialized like this
+        G_ConfigString( CS_GENERAL + i, "" ); // somehow it is not shown the first time if it isn't initialized like this
         if ( levelRecords[i].finishTime > 0 && levelRecords[i].playerName.len() > 0 )
             G_ConfigString( CS_GENERAL + i, "#" + ( i + 1 ) + " - " + levelRecords[i].playerName + " - " + RACE_TimeToString( levelRecords[i].finishTime ) );
     }
@@ -775,82 +775,82 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         if ( @client != null )
         {
             if ( RACE_GetPlayerTimer( client ).inRace )
-				RACE_GetPlayerTimer( client ).cancelRace();
+                RACE_GetPlayerTimer( client ).cancelRace();
 
             client.respawn( false );
         }
 
         return true;
     }
-	else if ( cmdString == "practicemode" )
-	{
-		RACE_GetPlayerTimer( client ).togglePracticeMode( client );
-		return true;
-	}
-	else if ( cmdString == "noclip" )
-	{
-		if ( !RACE_GetPlayerTimer( client ).practicing )
-		{
-			G_PrintMsg( client.getEnt(), "Noclip is only available in practicemode.\n" );
-			return false;
-		}
-		if ( client.team == TEAM_SPECTATOR )
-		{
-			G_PrintMsg( client.getEnt(), "Noclip is not available for spectators.\n" );
-			return false;
-		}
+    else if ( cmdString == "practicemode" )
+    {
+        RACE_GetPlayerTimer( client ).togglePracticeMode( client );
+        return true;
+    }
+    else if ( cmdString == "noclip" )
+    {
+        if ( !RACE_GetPlayerTimer( client ).practicing )
+        {
+            G_PrintMsg( client.getEnt(), "Noclip is only available in practicemode.\n" );
+            return false;
+        }
+        if ( client.team == TEAM_SPECTATOR )
+        {
+            G_PrintMsg( client.getEnt(), "Noclip is not available for spectators.\n" );
+            return false;
+        }
 
-		Entity @ent = client.getEnt();
-		String msg;
-		if ( ent.moveType == MOVETYPE_PLAYER )
-		{
-			ent.moveType = MOVETYPE_NOCLIP;
-			playerNoclipWeapons[ client.playerNum ] = ent.weapon;
-			msg = "noclip ON";
-		}
-		else
-		{
-			ent.moveType = MOVETYPE_PLAYER;
-			client.selectWeapon( playerNoclipWeapons[ client.playerNum ] );
-			msg = "noclip OFF";
-		}
+        Entity @ent = client.getEnt();
+        String msg;
+        if ( ent.moveType == MOVETYPE_PLAYER )
+        {
+            ent.moveType = MOVETYPE_NOCLIP;
+            playerNoclipWeapons[ client.playerNum ] = ent.weapon;
+            msg = "noclip ON";
+        }
+        else
+        {
+            ent.moveType = MOVETYPE_PLAYER;
+            client.selectWeapon( playerNoclipWeapons[ client.playerNum ] );
+            msg = "noclip OFF";
+        }
 
-		G_PrintMsg( ent, msg + "\n" );
+        G_PrintMsg( ent, msg + "\n" );
 
-		return true;
-	}
-	else if ( cmdString == "position" )
-	{
-		if ( argsString == "save" )
-		{
-			playerSavedPositions[ client.playerNum ] = client.getEnt().origin;
-			playerSavedAngles[ client.playerNum ] = client.getEnt().angles;
-		}
-		else if ( argsString == "load" )
-		{
-			if ( !RACE_GetPlayerTimer( client ).practicing && client.team != TEAM_SPECTATOR )
-			{
-				G_PrintMsg( client.getEnt(), "Position load is only available in practicemode.\n" );
-				return false;
-			}
+        return true;
+    }
+    else if ( cmdString == "position" )
+    {
+        if ( argsString == "save" )
+        {
+            playerSavedPositions[ client.playerNum ] = client.getEnt().origin;
+            playerSavedAngles[ client.playerNum ] = client.getEnt().angles;
+        }
+        else if ( argsString == "load" )
+        {
+            if ( !RACE_GetPlayerTimer( client ).practicing && client.team != TEAM_SPECTATOR )
+            {
+                G_PrintMsg( client.getEnt(), "Position load is only available in practicemode.\n" );
+                return false;
+            }
 
-			if ( playerSavedPositions[ client.playerNum ] == Vec3() )
-			{
-				G_PrintMsg( client.getEnt(), "No position has been saved yet.\n" );
-				return false;
-			}
+            if ( playerSavedPositions[ client.playerNum ] == Vec3() )
+            {
+                G_PrintMsg( client.getEnt(), "No position has been saved yet.\n" );
+                return false;
+            }
 
-			client.getEnt().origin = playerSavedPositions[ client.playerNum ];
-			client.getEnt().angles = playerSavedAngles[ client.playerNum ];
-		}
-		else
-		{
-			G_PrintMsg( client.getEnt(), "position <save | load>\n" );
-			return false;
-		}
+            client.getEnt().origin = playerSavedPositions[ client.playerNum ];
+            client.getEnt().angles = playerSavedAngles[ client.playerNum ];
+        }
+        else
+        {
+            G_PrintMsg( client.getEnt(), "position <save | load>\n" );
+            return false;
+        }
 
-		return true;
-	}
+        return true;
+    }
 
     return false;
 }
@@ -894,12 +894,12 @@ String @GT_ScoreboardMessage( uint maxlen )
         @ent = @team.ent( i );
 
         playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum + 1 ) : ent.playerNum;
-		if ( RACE_GetPlayerTimer( ent.client ).practicing )
-			racing = S_COLOR_CYAN + "No";
-		else if ( RACE_GetPlayerTimer( ent.client ).inRace )
-			racing = S_COLOR_GREEN + "Yes";
-		else
-			racing = S_COLOR_RED + "No";
+        if ( RACE_GetPlayerTimer( ent.client ).practicing )
+            racing = S_COLOR_CYAN + "No";
+        else if ( RACE_GetPlayerTimer( ent.client ).inRace )
+            racing = S_COLOR_GREEN + "Yes";
+        else
+            racing = S_COLOR_RED + "No";
 
         entry = "&p " + playerID + " " + ent.client.clanName + " "
                 + RACE_GetPlayerTimer( ent.client ).bestFinishTime + " "
@@ -938,36 +938,36 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
     }
     else if ( score_event == "enterGame" )
     {
-    	if( @client != null )
-		{
-			RACE_GetPlayerTimer( client ).clear();
+        if( @client != null )
+        {
+            RACE_GetPlayerTimer( client ).clear();
 
-			RACE_UpdateHUDTopScores();
-		}
+            RACE_UpdateHUDTopScores();
+        }
 
-    	// ch : begin fetching records over interweb
-    	// MM_FetchRaceRecords( client.getEnt() );
+        // ch : begin fetching records over interweb
+        // MM_FetchRaceRecords( client.getEnt() );
     }
-	else if ( score_event == "userinfochanged" )
-	{
-    	if( @client != null )
-		{
+    else if ( score_event == "userinfochanged" )
+    {
+        if( @client != null )
+        {
             // find out if he holds a record better than his current time
-			cPlayerTime @playerTimer = RACE_GetPlayerTimer( client );
+            cPlayerTime @playerTimer = RACE_GetPlayerTimer( client );
 
-			for ( int i = 0; i < MAX_RECORDS; i++ )
-			{
-				if ( levelRecords[i].playerName == client.name
+            for ( int i = 0; i < MAX_RECORDS; i++ )
+            {
+                if ( levelRecords[i].playerName == client.name
                         && ( playerTimer.bestFinishTime == 0 || levelRecords[i].finishTime < playerTimer.bestFinishTime ) )
-				{
-					playerTimer.bestFinishTime = levelRecords[i].finishTime;
-					for ( int j = 0; j < numCheckpoints; j++ )
-						playerTimer.bestSectorTimes[j] = levelRecords[i].sectorTimes[j];
-					break;
-				}
-			}
-		}
-	}
+                {
+                    playerTimer.bestFinishTime = levelRecords[i].finishTime;
+                    for ( int j = 0; j < numCheckpoints; j++ )
+                        playerTimer.bestSectorTimes[j] = levelRecords[i].sectorTimes[j];
+                    break;
+                }
+            }
+        }
+    }
 }
 
 // a player is being respawned. This can happen from several ways, as dying, changing team,
@@ -983,11 +983,11 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
     ent.client.pmoveFeatures = ent.client.pmoveFeatures | PMFEAT_GHOSTMOVE;
 
     // actually it could happen that a spawnpoint is at (0, 0, 0) and a user saves his position there... whatever
-	if ( RACE_GetPlayerTimer( ent.client ).practicing && playerSavedPositions[ ent.client.playerNum ] != Vec3() )
-	{
-		ent.origin = playerSavedPositions[ ent.client.playerNum ];
-		ent.angles = playerSavedAngles[ ent.client.playerNum ];
-	}
+    if ( RACE_GetPlayerTimer( ent.client ).practicing && playerSavedPositions[ ent.client.playerNum ] != Vec3() )
+    {
+        ent.origin = playerSavedPositions[ ent.client.playerNum ];
+        ent.angles = playerSavedAngles[ ent.client.playerNum ];
+    }
 
     if ( gametype.isInstagib )
         ent.client.inventoryGiveItem( WEAP_INSTAGUN );
@@ -1019,7 +1019,7 @@ void GT_ThinkRules()
     if ( match.getState() >= MATCH_STATE_POSTMATCH )
         return;
 
-	GENERIC_Think();
+    GENERIC_Think();
 
     if ( match.getState() == MATCH_STATE_PLAYTIME )
     {
@@ -1045,8 +1045,8 @@ void GT_ThinkRules()
         if ( client.state() < CS_SPAWNED )
             continue;
 
-		// disable gunblade autoattack
-		client.pmoveFeatures = client.pmoveFeatures & ~PMFEAT_GUNBLADEAUTOATTACK;
+        // disable gunblade autoattack
+        client.pmoveFeatures = client.pmoveFeatures & ~PMFEAT_GUNBLADEAUTOATTACK;
 
         // always clear all before setting
         client.setHUDStat( STAT_PROGRESS_SELF, 0 );
@@ -1110,11 +1110,11 @@ bool GT_MatchStateFinished( int incomingMatchState )
 void GT_MatchStateStarted()
 {
     // hettoo : skip warmup and countdown
-	if ( match.getState() < MATCH_STATE_PLAYTIME )
-	{
-		match.launchState( MATCH_STATE_PLAYTIME );
-		return;
-	}
+    if ( match.getState() < MATCH_STATE_PLAYTIME )
+    {
+        match.launchState( MATCH_STATE_PLAYTIME );
+        return;
+    }
 
     switch ( match.getState() )
     {
@@ -1232,14 +1232,14 @@ void GT_InitGametype()
     gametype.infiniteAmmo = true;
     gametype.canForceModels = true;
     gametype.canShowMinimap = false;
-	gametype.teamOnlyMinimap = true;
+    gametype.teamOnlyMinimap = true;
 
     gametype.spawnpointRadius = 0;
 
     if ( gametype.isInstagib )
         gametype.spawnpointRadius *= 2;
 
-	gametype.inverseScore = true;
+    gametype.inverseScore = true;
 
     // set spawnsystem type
     for ( int team = TEAM_PLAYERS; team < GS_MAX_TEAMS; team++ )
