@@ -498,8 +498,6 @@ void target_stoptimer_use( Entity @self, Entity @other, Entity @activator )
 
     RACE_GetPlayerTimer( activator.client ).completeRace( activator.client );
 
-    G_Print( activator.client.name + " crossed the finish line\n" );
-
     self.useTargets( activator );
 }
 
@@ -526,8 +524,6 @@ void target_starttimer_use( Entity @self, Entity @other, Entity @activator )
 
     if ( RACE_GetPlayerTimer( activator.client ).startRace( activator.client ) )
     {
-        G_Print( activator.client.name + " started a new race\n" );
-
         int soundIndex = G_SoundIndex( "sounds/announcer/countdown/go0" + (1 + (rand() & 1)) );
         G_AnnouncerSound( activator.client, soundIndex, GS_MAX_TEAMS, false, null );
 
