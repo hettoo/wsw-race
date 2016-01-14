@@ -220,7 +220,7 @@ class cPlayerTime
 				if ( top == 0 )
                 {
 					client.addAward( S_COLOR_GREEN + "Server record!" );
-                    G_PrintMsg( null, client.name + S_COLOR_GREEN + " made a new server record: "
+                    G_PrintMsg( null, client.name + S_COLOR_YELLOW + " made a new server record: "
                             + S_COLOR_WHITE + RACE_TimeToString( this.finishTime ) + "\n" );
                 }
 
@@ -595,7 +595,7 @@ String RACE_TimeDiffString( uint time, uint reference )
 	if ( reference == 0 )
 		result = S_COLOR_WHITE + "--:--.---";
 	else if ( time == reference )
-		result = S_COLOR_CYAN + RACE_TimeToString( 0 );
+		result = S_COLOR_WHITE + RACE_TimeToString( 0 );
 	else if ( time < reference )
 		result = S_COLOR_GREEN + "-" + RACE_TimeToString( reference - time );
 	else
