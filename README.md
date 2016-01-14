@@ -2,9 +2,7 @@
 
 Some basic features to make vanilla Warsow race playable.
 
-## Current changes
-
-The most important changes made are:
+## Main changes
 
 * Fixed the respawner after finishing.
 * Allow racerestart while not racing.
@@ -17,5 +15,3 @@ The most important changes made are:
 * Assign saved top times to their owners when they reappear.
 * Added practicemode with noclip and position save / load commands.
 * Disabled warmup.
-
-## Todo
