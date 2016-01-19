@@ -742,6 +742,9 @@ void RACE_SetUpMatch()
 /// MODULE SCRIPT CALLS
 ///*****************************************************************
 
+String randmap;
+uint randmap_time = 0;
+
 bool GT_Command( Client @client, const String &cmdString, const String &argsString, int argc )
 {
     if ( cmdString == "gametype" )
@@ -764,6 +767,97 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
     else if ( cmdString == "cvarinfo" )
     {
         GENERIC_CheatVarResponse( client, cmdString, argsString, argc );
+        return true;
+    }
+    else if ( cmdString == "callvotevalidate" )
+    {
+        String votename = argsString.getToken( 0 );
+
+        if ( votename == "randmap" )
+        {
+            String pattern = argsString.getToken( 1 ).tolower();
+            int size = 64;
+            String[] maps( size );
+            const String @map;
+            String lmap;
+            int i = 0;
+            int matches = 0;
+
+            do
+            {
+                @map = ML_GetMapByNum( i );
+                if ( @map != null)
+                {
+                    lmap = map.tolower();
+                    uint p;
+                    bool match;
+                    if ( pattern == "" )
+                    {
+                        match = true;
+                    }
+                    else
+                    {
+                        match = false;
+                        for ( p = 0; p < map.len(); p++ )
+                        {
+                            uint eq = 0;
+                            while ( eq < pattern.len() && p + eq < lmap.len() )
+                            {
+                                if ( lmap[ p + eq ] != pattern[ eq ] )
+                                    break;
+                                eq++;
+                            }
+                            if ( eq == pattern.len() )
+                            {
+                                match = true;
+                                break;
+                            }
+                        }
+                    }
+                    if ( match )
+                    {
+                        maps[ matches++ ] = map;
+                        if ( matches == size )
+                        {
+                            size *= 2;
+                            maps.resize( size );
+                        }
+                    }
+                }
+                i++;
+            }
+            while ( @map != null );
+
+            if ( matches == 0 )
+            {
+                client.printMessage( "No matching maps\n" );
+                return false;
+            }
+
+            if ( levelTime - randmap_time < 80 )
+            {
+                G_PrintMsg( null, S_COLOR_YELLOW + "Chosen map: " + S_COLOR_WHITE + randmap + S_COLOR_YELLOW + " (out of " + S_COLOR_WHITE + matches + S_COLOR_YELLOW + " matches)\n" );
+                return true;
+            }
+
+            randmap_time = levelTime;
+            randmap = maps[ rand() % matches ];
+        }
+        else
+        {
+            client.printMessage( "Unknown callvote " + votename + "\n" );
+            return false;
+        }
+
+        return true;
+    }
+    else if ( cmdString == "callvotepassed" )
+    {
+        String votename = argsString.getToken( 0 );
+
+        if ( votename == "randmap" )
+            G_CmdExecute( "map " + randmap );
+
         return true;
     }
     else if ( ( cmdString == "racerestart" ) || ( cmdString == "kill" ) )
@@ -847,6 +941,8 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
 
         return true;
     }
+
+    G_PrintMsg( null, "unknown: " + cmdString + "\n" );
 
     return false;
 }
@@ -1246,6 +1342,9 @@ void GT_InitGametype()
     G_RegisterCommand( "practicemode" );
     G_RegisterCommand( "noclip" );
     G_RegisterCommand( "position" );
+
+    // add votes
+    G_RegisterCallvote( "randmap", "<pattern>", "string", "Changes to a random map" );
 
     demoRecording = false;
 
