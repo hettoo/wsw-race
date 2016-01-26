@@ -867,6 +867,8 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
             if ( RACE_GetPlayerTimer( client ).inRace )
                 RACE_GetPlayerTimer( client ).cancelRace();
 
+            if ( client.team == TEAM_SPECTATOR && !gametype.isTeamBased )
+                client.team = TEAM_PLAYERS;
             client.respawn( false );
         }
 
