@@ -145,14 +145,14 @@ class cPlayerTime
 
     ~cPlayerTime() {}
 
-    bool preRace()
+    bool preRace( Client @client )
     {
-        return !this.inRace && !this.practicing && !this.postRace;
+        return !this.inRace && !this.practicing && !this.postRace && client.team != TEAM_SPECTATOR;
     }
 
     bool loadPosition( Client @client, bool verbose )
     {
-        if ( !RACE_GetPlayerTimer( client ).practicing && client.team != TEAM_SPECTATOR && !( playerPreracePosition[ client.playerNum ] && RACE_GetPlayerTimer( client ).preRace() ) )
+        if ( !RACE_GetPlayerTimer( client ).practicing && client.team != TEAM_SPECTATOR && !( playerPreracePosition[ client.playerNum ] && RACE_GetPlayerTimer( client ).preRace( client ) ) )
         {
             if ( verbose )
                 G_PrintMsg( client.getEnt(), "Position load is only available in practicemode.\n" );
@@ -444,8 +444,8 @@ void race_respawner_think( Entity @respawner )
 {
     Client @client = G_GetClient( respawner.count );
 
-    // the client may have respawned on his own. If the last time was erased, don't respawn him
-    if ( !RACE_GetPlayerTimer( client ).inRace && RACE_GetPlayerTimer( client ).finishTime != 0 )
+    // the client may have respawned on their own, so check if they are in postRace
+    if ( RACE_GetPlayerTimer( client ).postRace && client.team != TEAM_SPECTATOR )
         client.respawn( false );
 
     respawner.freeEntity(); // free the respawner
@@ -962,7 +962,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         String action = argsString.getToken( 0 );
         if ( action == "save" )
         {
-            playerPreracePosition[ client.playerNum ] = RACE_GetPlayerTimer( client ).preRace();
+            playerPreracePosition[ client.playerNum ] = RACE_GetPlayerTimer( client ).preRace( client );
             playerSavedPositions[ client.playerNum ] = client.getEnt().origin;
             playerSavedAngles[ client.playerNum ] = client.getEnt().angles;
         }
