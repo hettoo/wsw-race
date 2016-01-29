@@ -155,8 +155,11 @@ class cPlayerTime
         return true;
     }
 
-    void cancelRace()
+    void cancelRace( Client @client )
     {
+        if ( this.inRace )
+            G_PrintMsg( client.getEnt(), S_COLOR_ORANGE + "Race cancelled\n" );
+
         this.inRace = false;
         this.postRace = false;
         this.finishTime = 0;
@@ -355,7 +358,7 @@ class cPlayerTime
 
         this.practicing = true;
         G_CenterPrintMsg( client.getEnt(), S_COLOR_CYAN + "Entered practicemode" );
-        this.cancelRace();
+        this.cancelRace( client );
     }
 
     void leavePracticeMode( Client @client )
@@ -707,7 +710,7 @@ void RACE_playerKilled( Entity @target, Entity @attacker, Entity @inflicter )
     if ( @target == null || @target.client == null )
         return;
 
-    RACE_GetPlayerTimer( target.client ).cancelRace();
+    RACE_GetPlayerTimer( target.client ).cancelRace( target.client );
 }
 
 void RACE_SetUpMatch()
@@ -865,7 +868,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         if ( @client != null )
         {
             if ( RACE_GetPlayerTimer( client ).inRace )
-                RACE_GetPlayerTimer( client ).cancelRace();
+                RACE_GetPlayerTimer( client ).cancelRace( client );
 
             if ( client.team == TEAM_SPECTATOR && !gametype.isTeamBased )
                 client.team = TEAM_PLAYERS;
@@ -1068,7 +1071,7 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
 // being moved to ghost state, be placed in respawn queue, being spawned from spawn queue, etc
 void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 {
-    RACE_GetPlayerTimer( ent.client ).cancelRace();
+    RACE_GetPlayerTimer( ent.client ).cancelRace( ent.client );
 
     if ( ent.isGhosting() )
         return;
