@@ -89,6 +89,13 @@ class cRecordTime
 
 cRecordTime[] levelRecords( MAX_RECORDS );
 
+// hettoo : practicemode
+int[] playerNoclipWeapons( maxClients );
+bool[] playerPreracePosition( maxClients );
+Vec3[] playerSavedPositions( maxClients );
+Vec3[] playerSavedAngles( maxClients );
+float[] playerSavedSpeed( maxClients );
+
 class cPlayerTime
 {
     uint[] sectorTimes;
@@ -141,6 +148,42 @@ class cPlayerTime
     bool preRace()
     {
         return !this.inRace && !this.practicing && !this.postRace;
+    }
+
+    bool loadPosition( Client @client, bool verbose )
+    {
+        if ( !RACE_GetPlayerTimer( client ).practicing && client.team != TEAM_SPECTATOR && !( playerPreracePosition[ client.playerNum ] && RACE_GetPlayerTimer( client ).preRace() ) )
+        {
+            if ( verbose )
+                G_PrintMsg( client.getEnt(), "Position load is only available in practicemode.\n" );
+            return false;
+        }
+
+        if ( playerSavedPositions[ client.playerNum ] == Vec3() )
+        {
+            if ( verbose )
+                G_PrintMsg( client.getEnt(), "No position has been saved yet.\n" );
+            return false;
+        }
+
+        client.getEnt().origin = playerSavedPositions[ client.playerNum ];
+        client.getEnt().angles = playerSavedAngles[ client.playerNum ];
+
+        if ( RACE_GetPlayerTimer( client ).practicing )
+        {
+            Entity @ent = client.getEnt();
+            if ( @ent != null && ent.moveType != MOVETYPE_NOCLIP )
+            {
+                Vec3 a, b, c;
+                playerSavedAngles[ client.playerNum ].angleVectors( a, b, c );
+                a.z = 0;
+                a.normalize();
+                a *= playerSavedSpeed[ client.playerNum ];
+                ent.set_velocity( a );
+            }
+        }
+
+        return true;
     }
 
     bool startRace( Client @client )
@@ -387,12 +430,6 @@ class cPlayerTime
 }
 
 cPlayerTime[] cPlayerTimes( maxClients );
-
-// hettoo : practicemode
-int[] playerNoclipWeapons( maxClients );
-bool[] playerPreracePosition( maxClients );
-Vec3[] playerSavedPositions( maxClients );
-Vec3[] playerSavedAngles( maxClients );
 
 cPlayerTime @RACE_GetPlayerTimer( Client @client )
 {
@@ -922,32 +959,30 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
     }
     else if ( cmdString == "position" )
     {
-        if ( argsString == "save" )
+        String action = argsString.getToken( 0 );
+        if ( action == "save" )
         {
             playerPreracePosition[ client.playerNum ] = RACE_GetPlayerTimer( client ).preRace();
             playerSavedPositions[ client.playerNum ] = client.getEnt().origin;
             playerSavedAngles[ client.playerNum ] = client.getEnt().angles;
         }
-        else if ( argsString == "load" )
+        else if ( action == "load" )
         {
-            if ( !RACE_GetPlayerTimer( client ).practicing && client.team != TEAM_SPECTATOR && !( playerPreracePosition[ client.playerNum ] && RACE_GetPlayerTimer( client ).preRace() ) )
-            {
-                G_PrintMsg( client.getEnt(), "Position load is only available in practicemode.\n" );
-                return false;
-            }
-
-            if ( playerSavedPositions[ client.playerNum ] == Vec3() )
-            {
-                G_PrintMsg( client.getEnt(), "No position has been saved yet.\n" );
-                return false;
-            }
-
-            client.getEnt().origin = playerSavedPositions[ client.playerNum ];
-            client.getEnt().angles = playerSavedAngles[ client.playerNum ];
+            return RACE_GetPlayerTimer( client ).loadPosition( client, true );
+        }
+        else if ( action == "speed" && argsString.getToken( 1 ) != "" )
+        {
+            String speed = argsString.getToken( 1 );
+            if( speed.locate( "+", 0 ) == 0 )
+                playerSavedSpeed[ client.playerNum ] += speed.substr( 1 ).toFloat();
+            else if( speed.locate( "-", 0 ) == 0 )
+                playerSavedSpeed[ client.playerNum ] -= speed.substr( 1 ).toFloat();
+            else
+                playerSavedSpeed[ client.playerNum ] = speed.toFloat();
         }
         else
         {
-            G_PrintMsg( client.getEnt(), "position <save | load>\n" );
+            G_PrintMsg( client.getEnt(), "position <save | load | speed <value>>\n" );
             return false;
         }
 
@@ -1086,12 +1121,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
     // set player movement to pass through other players
     ent.client.pmoveFeatures = ent.client.pmoveFeatures | PMFEAT_GHOSTMOVE;
 
-    // actually it could happen that a spawnpoint is at (0, 0, 0) and a user saves his position there... whatever
-    if ( RACE_GetPlayerTimer( ent.client ).practicing && playerSavedPositions[ ent.client.playerNum ] != Vec3() )
-    {
-        ent.origin = playerSavedPositions[ ent.client.playerNum ];
-        ent.angles = playerSavedAngles[ ent.client.playerNum ];
-    }
+    RACE_GetPlayerTimer( ent.client ).loadPosition( ent.client, false );
 
     if ( gametype.isInstagib )
         ent.client.inventoryGiveItem( WEAP_INSTAGUN );
