@@ -157,7 +157,7 @@ class cPlayerTime
 
     void cancelRace( Client @client )
     {
-        if ( this.inRace )
+        if ( this.inRace && this.currentSector > 0 )
             G_PrintMsg( client.getEnt(), S_COLOR_ORANGE + "Race cancelled\n" );
 
         this.inRace = false;
