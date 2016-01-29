@@ -138,6 +138,11 @@ class cPlayerTime
 
     ~cPlayerTime() {}
 
+    bool preRace()
+    {
+        return !this.inRace && !this.practicing && !this.postRace;
+    }
+
     bool startRace( Client @client )
     {
         if ( this.practicing || this.postRace )
@@ -385,6 +390,7 @@ cPlayerTime[] cPlayerTimes( maxClients );
 
 // hettoo : practicemode
 int[] playerNoclipWeapons( maxClients );
+bool[] playerPreracePosition( maxClients );
 Vec3[] playerSavedPositions( maxClients );
 Vec3[] playerSavedAngles( maxClients );
 
@@ -918,12 +924,13 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
     {
         if ( argsString == "save" )
         {
+            playerPreracePosition[ client.playerNum ] = RACE_GetPlayerTimer( client ).preRace();
             playerSavedPositions[ client.playerNum ] = client.getEnt().origin;
             playerSavedAngles[ client.playerNum ] = client.getEnt().angles;
         }
         else if ( argsString == "load" )
         {
-            if ( !RACE_GetPlayerTimer( client ).practicing && client.team != TEAM_SPECTATOR )
+            if ( !RACE_GetPlayerTimer( client ).practicing && client.team != TEAM_SPECTATOR && !( playerPreracePosition[ client.playerNum ] && RACE_GetPlayerTimer( client ).preRace() ) )
             {
                 G_PrintMsg( client.getEnt(), "Position load is only available in practicemode.\n" );
                 return false;
