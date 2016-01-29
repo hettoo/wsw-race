@@ -152,7 +152,7 @@ class cPlayerTime
 
     bool loadPosition( Client @client, bool verbose )
     {
-        if ( !RACE_GetPlayerTimer( client ).practicing && client.team != TEAM_SPECTATOR && !( playerPreracePosition[ client.playerNum ] && RACE_GetPlayerTimer( client ).preRace( client ) ) )
+        if ( !this.practicing && client.team != TEAM_SPECTATOR && !( playerPreracePosition[ client.playerNum ] && this.preRace( client ) ) )
         {
             if ( verbose )
                 G_PrintMsg( client.getEnt(), "Position load is only available in practicemode.\n" );
@@ -169,7 +169,7 @@ class cPlayerTime
         client.getEnt().origin = playerSavedPositions[ client.playerNum ];
         client.getEnt().angles = playerSavedAngles[ client.playerNum ];
 
-        if ( RACE_GetPlayerTimer( client ).practicing )
+        if ( this.practicing )
         {
             Entity @ent = client.getEnt();
             if ( @ent != null && ent.moveType != MOVETYPE_NOCLIP )
