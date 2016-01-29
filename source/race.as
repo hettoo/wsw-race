@@ -106,6 +106,9 @@ class Player
     int noclipWeapon;
     Vec3 savedPosition;
     Vec3 savedAngles;
+    int savedWeapon;
+    bool[] savedWeapons;
+    int[] savedAmmos;
     bool savedInPreRace;
     float savedSpeed;
 
@@ -128,6 +131,8 @@ class Player
         this.bestFinishTime = 0;
 
         this.savedPosition = Vec3();
+        this.savedWeapons.resize( WEAP_TOTAL );
+        this.savedAmmos.resize( WEAP_TOTAL );
         this.savedSpeed = 0;
 
         if ( !this.arraysSetUp )
@@ -172,6 +177,15 @@ class Player
         client.getEnt().origin = this.savedPosition;
         client.getEnt().angles = this.savedAngles;
 
+        for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
+        {
+            if ( this.savedWeapons[ i ] )
+                client.inventoryGiveItem( i );
+            Item @item = G_GetItem( i );
+            client.inventorySetCount( item.ammoTag, this.savedAmmos[ i ] );
+        }
+        client.selectWeapon( this.savedWeapon );
+
         if ( this.practicing )
         {
             Entity @ent = client.getEnt();
@@ -193,6 +207,23 @@ class Player
         }
 
         return true;
+    }
+
+    void savePosition( Client @client )
+    {
+        this.savedInPreRace = this.preRace( client );
+        this.savedPosition = client.getEnt().origin;
+        this.savedAngles = client.getEnt().angles;
+        for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
+        {
+            this.savedWeapons[i] = client.canSelectWeapon( i );
+            Item @item = G_GetItem( i );
+            this.savedAmmos[i] = client.inventoryCount( item.ammoTag );
+        }
+        if ( client.getEnt().moveType == MOVETYPE_NOCLIP )
+            this.savedWeapon = this.noclipWeapon;
+        else
+            this.savedWeapon = client.weapon;
     }
 
     bool startRace( Client @client )
@@ -972,10 +1003,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         String action = argsString.getToken( 0 );
         if ( action == "save" )
         {
-            Player @player = RACE_GetPlayer( client );
-            player.savedInPreRace = player.preRace( client );
-            player.savedPosition = client.getEnt().origin;
-            player.savedAngles = client.getEnt().angles;
+            RACE_GetPlayer( client ).savePosition( client );
         }
         else if ( action == "load" )
         {
@@ -1133,8 +1161,6 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
     // set player movement to pass through other players
     ent.client.pmoveFeatures = ent.client.pmoveFeatures | PMFEAT_GHOSTMOVE;
 
-    RACE_GetPlayer( ent.client ).loadPosition( ent.client, false );
-
     if ( gametype.isInstagib )
         ent.client.inventoryGiveItem( WEAP_INSTAGUN );
     else
@@ -1145,6 +1171,8 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         ent.client.selectWeapon( WEAP_ROCKETLAUNCHER );
     else
         ent.client.selectWeapon( -1 ); // auto-select best weapon in the inventory
+
+    RACE_GetPlayer( ent.client ).loadPosition( ent.client, false );
 
     // add a teleportation effect
     ent.respawnEffect();
