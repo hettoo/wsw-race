@@ -182,6 +182,12 @@ class cPlayerTime
                 ent.set_velocity( a );
             }
         }
+        else if ( this.preRace( client ) )
+        {
+            Entity @ent = client.getEnt();
+            if ( @ent != null )
+                ent.set_velocity( Vec3() );
+        }
 
         return true;
     }
@@ -308,7 +314,6 @@ class cPlayerTime
 
         // set up for respawning the player with a delay
         Entity @respawner = G_SpawnEntity( "race_respawner" );
-        @respawner.think = race_respawner_think;
         respawner.nextThink = levelTime + 5000;
         @respawner.think = race_respawner_think;
         respawner.count = client.playerNum;
