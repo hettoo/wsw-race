@@ -524,8 +524,8 @@ void target_starttimer_use( Entity @self, Entity @other, Entity @activator )
 
     if ( RACE_GetPlayerTimer( activator.client ).startRace( activator.client ) )
     {
-        int soundIndex = G_SoundIndex( "sounds/announcer/countdown/go0" + (1 + (rand() & 1)) );
-        G_AnnouncerSound( activator.client, soundIndex, GS_MAX_TEAMS, false, null );
+        //int soundIndex = G_SoundIndex( "sounds/announcer/countdown/go0" + (1 + (rand() & 1)) );
+        //G_AnnouncerSound( activator.client, soundIndex, GS_MAX_TEAMS, false, null );
 
         self.useTargets( activator );
     }
@@ -1099,8 +1099,8 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 
     if ( !RACE_GetPlayerTimer( ent.client ).practicing )
     {
-        int soundIndex = G_SoundIndex( "sounds/announcer/countdown/ready0" + (1 + (rand() & 1)) );
-        G_AnnouncerSound( ent.client, soundIndex, GS_MAX_TEAMS, false, null );
+        //int soundIndex = G_SoundIndex( "sounds/announcer/countdown/ready0" + (1 + (rand() & 1)) );
+        //G_AnnouncerSound( ent.client, soundIndex, GS_MAX_TEAMS, false, null );
     }
 }
 
