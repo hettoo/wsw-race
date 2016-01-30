@@ -564,9 +564,8 @@ void target_checkpoint_use( Entity @self, Entity @other, Entity @activator )
     if ( !player.inRace )
         return;
 
-    if( player.touchCheckPoint( activator.client, self.count ) ) {
+    if ( player.touchCheckPoint( activator.client, self.count ) )
         self.useTargets( activator );
-    }
 }
 
 void target_checkpoint( Entity @self )
@@ -1021,9 +1020,9 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         {
             Player @player = RACE_GetPlayer( client );
             String speed = argsString.getToken( 1 );
-            if( speed.locate( "+", 0 ) == 0 )
+            if ( speed.locate( "+", 0 ) == 0 )
                 player.savedSpeed += speed.substr( 1 ).toFloat();
-            else if( speed.locate( "-", 0 ) == 0 )
+            else if ( speed.locate( "-", 0 ) == 0 )
                 player.savedSpeed -= speed.substr( 1 ).toFloat();
             else
                 player.savedSpeed = speed.toFloat();
@@ -1127,10 +1126,9 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
     }
     else if ( score_event == "enterGame" )
     {
-        if( @client != null )
+        if ( @client != null )
         {
             RACE_GetPlayer( client ).clear();
-
             RACE_UpdateHUDTopScores();
         }
 
@@ -1139,7 +1137,7 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
     }
     else if ( score_event == "userinfochanged" )
     {
-        if( @client != null )
+        if ( @client != null )
         {
             // find out if he holds a record better than his current time
             Player @player= RACE_GetPlayer( client );
@@ -1268,7 +1266,7 @@ void GT_ThinkRules()
     }
 
     // ch : send intermediate results
-    if( ( lastRecordSent + RECORD_SEND_INTERVAL ) >= levelTime )
+    if ( ( lastRecordSent + RECORD_SEND_INTERVAL ) >= levelTime )
     {
 
     }
