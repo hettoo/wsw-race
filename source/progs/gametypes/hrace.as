@@ -867,6 +867,8 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
 
         if ( votename == "randmap" )
         {
+            Cvar mapname( "mapname", "", 0 );
+            String current = mapname.string.tolower();
             String pattern = argsString.getToken( 1 ).tolower();
             int size = 64;
             String[] maps( size );
@@ -882,14 +884,13 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
                 {
                     lmap = map.tolower();
                     uint p;
-                    bool match;
+                    bool match = false;
                     if ( pattern == "" )
                     {
                         match = true;
                     }
                     else
                     {
-                        match = false;
                         for ( p = 0; p < map.len(); p++ )
                         {
                             uint eq = 0;
@@ -906,7 +907,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
                             }
                         }
                     }
-                    if ( match )
+                    if ( match && map != current )
                     {
                         maps[ matches++ ] = map;
                         if ( matches == size )
