@@ -1,9 +1,20 @@
 # Warsow race
 
-Some basic features to make vanilla Warsow race playable.
+Some basic features intended to make vanilla Warsow race playable.
 
-## Main changes
+## New changes
 
+* Weapon information is now saved when saving a position.
+* Allow loading prerace-saved positions in prerace.
+* Added setting a speed for the saved position (only in practicemode).
+* Disabled annoying announcer sounds.
+* Simple randmap vote with a pattern to search for.
+* The kill command will now make spectators join.
+
+## Earlier changes
+
+* Nice checkpoint feedback in the console.
+* Disabled starting a race while alive after finishing.
 * Fixed the respawner after finishing.
 * Allow racerestart while not racing.
 * Linked kill to racerestart.
