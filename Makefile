@@ -3,31 +3,25 @@ EXECUTE_DIR = .
 EXECUTABLE = wsw-server
 MOD = basewsw
 
-NAME = race
+NAME = hrace
 THIS = Makefile
 SOURCE_DIR = source
 GAMETYPES_DIR = /progs/gametypes/
-SOURCE_DESTINATION_DIR = $(GAMETYPES_DIR)
-TMP_DIR = tmp
 BASE_MOD = basewsw
 CONFIG_DIR = configs/server/gametypes
 FILES = $(shell find $(SOURCE_DIR))
 CFG = $(NAME).cfg
 
-PK3 = $(NAME)-hettoo-000.pk3
-EVERY_PK3 = $(NAME)-hettoo-*.pk3
+PK3 = $(NAME)-000.pk3
+EVERY_PK3 = $(NAME)-*.pk3
 
 all: dist
 
 dist: $(PK3)
 
 $(PK3): $(FILES) $(THIS)
-	rm -rf $(TMP_DIR)
-	mkdir -p $(TMP_DIR)$(SOURCE_DESTINATION_DIR)
 	rm -f $(PK3)
-	cp -r $(SOURCE_DIR)/* $(TMP_DIR)$(SOURCE_DESTINATION_DIR)
-	cd $(TMP_DIR) && zip ../$(PK3) -r -xi *
-	rm -r $(TMP_DIR)
+	cd $(SOURCE_DIR) && zip ../$(PK3) -r -xi *
 
 local: dist
 	cp $(PK3) $(WSW_DIR)/$(BASE_MOD)/

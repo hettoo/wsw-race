@@ -4,6 +4,6 @@
 
 generic/quickmenu.as;
 generic/matchstates.as;
-race.as;
+hrace.as;
 
 legacy/quake1.as;
