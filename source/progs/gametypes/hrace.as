@@ -180,10 +180,10 @@ class Player
 
         for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
         {
-            if ( this.savedWeapons[ i ] )
+            if ( this.savedWeapons[i] )
                 client.inventoryGiveItem( i );
             Item @item = G_GetItem( i );
-            client.inventorySetCount( item.ammoTag, this.savedAmmos[ i ] );
+            client.inventorySetCount( item.ammoTag, this.savedAmmos[i] );
         }
         client.selectWeapon( this.savedWeapon );
 
@@ -476,7 +476,7 @@ Player @RACE_GetPlayer( Client @client )
     if ( @client == null || client.playerNum < 0 )
         return null;
 
-    return @players[ client.playerNum ];
+    return @players[client.playerNum];
 }
 
 // the player has finished the race. This entity times his automatic respawning
@@ -850,7 +850,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         response += "----------------\n";
         response += "Version: " + gametype.version + "\n";
         response += "Author: " + gametype.author + "\n";
-        response += "Mod: " + fs_game.string + (!manifest.empty() ? " (manifest: " + manifest + ")" : "") + "\n";
+        response += "Mod: " + fs_game.string + ( !manifest.empty() ? " (manifest: " + manifest + ")" : "" ) + "\n";
         response += "----------------\n";
 
         G_PrintMsg( client.getEnt(), response );
@@ -896,7 +896,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
                             uint eq = 0;
                             while ( eq < pattern.len() && p + eq < lmap.len() )
                             {
-                                if ( lmap[ p + eq ] != pattern[ eq ] )
+                                if ( lmap[p + eq] != pattern[eq] )
                                     break;
                                 eq++;
                             }
@@ -909,7 +909,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
                     }
                     if ( match && map != current )
                     {
-                        maps[ matches++ ] = map;
+                        maps[matches++] = map;
                         if ( matches == size )
                         {
                             size *= 2;
@@ -934,7 +934,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
             }
 
             randmap_time = levelTime;
-            randmap = maps[ rand() % matches ];
+            randmap = maps[rand() % matches];
         }
         else
         {
@@ -1251,7 +1251,7 @@ void GT_ThinkRules()
         // all stats are set to 0 each frame, so it's only needed to set a stat if it's going to get a value
         @player = RACE_GetPlayer( client );
         if ( player.inRace )
-            client.setHUDStat( STAT_TIME_SELF, (levelTime - player.startTime) / 100 );
+            client.setHUDStat( STAT_TIME_SELF, ( levelTime - player.startTime ) / 100 );
 
         client.setHUDStat( STAT_TIME_BEST, player.bestFinishTime / 100 );
         client.setHUDStat( STAT_TIME_RECORD, levelRecords[0].finishTime / 100 );
@@ -1386,7 +1386,7 @@ void GT_InitGametype()
 
     gametype.spawnableItemsMask = ( IT_AMMO | IT_WEAPON | IT_POWERUP );
     if ( gametype.isInstagib )
-        gametype.spawnableItemsMask &= ~uint(G_INSTAGIB_NEGATE_ITEMMASK);
+        gametype.spawnableItemsMask &= ~uint( G_INSTAGIB_NEGATE_ITEMMASK );
 
     gametype.respawnableItemsMask = gametype.spawnableItemsMask;
     gametype.dropableItemsMask = 0;
