@@ -102,6 +102,9 @@ class Player
     bool practicing;
     bool arraysSetUp;
 
+    bool heardReady;
+    bool heardGo;
+
     // hettoo : practicemode
     int noclipWeapon;
     Vec3 savedPosition;
@@ -129,6 +132,9 @@ class Player
         this.startTime = 0;
         this.finishTime = 0;
         this.bestFinishTime = 0;
+
+        this.heardReady = false;
+        this.heardGo = false;
 
         this.savedPosition = Vec3();
         this.savedWeapons.resize( WEAP_TOTAL );
@@ -615,8 +621,12 @@ void target_starttimer_use( Entity @self, Entity @other, Entity @activator )
 
     if ( player.startRace( activator.client ) )
     {
-        //int soundIndex = G_SoundIndex( "sounds/announcer/countdown/go0" + (1 + (rand() & 1)) );
-        //G_AnnouncerSound( activator.client, soundIndex, GS_MAX_TEAMS, false, null );
+        if ( !player.heardGo )
+        {
+            int soundIndex = G_SoundIndex( "sounds/announcer/countdown/go0" + (1 + (rand() & 1)) );
+            G_AnnouncerSound( activator.client, soundIndex, GS_MAX_TEAMS, false, null );
+            player.heardGo = true;
+        }
 
         self.useTargets( activator );
     }
@@ -1186,10 +1196,11 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
     // add a teleportation effect
     ent.respawnEffect();
 
-    if ( !player.practicing )
+    if ( !player.practicing && !player.heardReady )
     {
-        //int soundIndex = G_SoundIndex( "sounds/announcer/countdown/ready0" + (1 + (rand() & 1)) );
-        //G_AnnouncerSound( ent.client, soundIndex, GS_MAX_TEAMS, false, null );
+        int soundIndex = G_SoundIndex( "sounds/announcer/countdown/ready0" + (1 + (rand() & 1)) );
+        G_AnnouncerSound( ent.client, soundIndex, GS_MAX_TEAMS, false, null );
+        player.heardReady = true;
     }
 }
 
