@@ -313,6 +313,8 @@ class Player
         {
             if ( levelRecords[top].finishTime == 0 || levelRecords[top].finishTime > this.finishTime )
             {
+                String cleanName = client.name.removeColorTokens().tolower();
+
                 if ( top == 0 )
                 {
                     client.addAward( S_COLOR_GREEN + "Server record!" );
@@ -323,7 +325,7 @@ class Player
                 int remove = MAX_RECORDS - 1;
                 for ( int i = 0; i < MAX_RECORDS; i++ )
                 {
-                    if ( levelRecords[i].playerName == client.name )
+                    if ( levelRecords[i].playerName.removeColorTokens().tolower() == cleanName )
                     {
                         if ( i < top )
                         {
@@ -768,10 +770,11 @@ void RACE_LoadTopScores()
             }
 
             // check if he already has a score
+            String cleanName = nameToken.removeColorTokens().tolower();
             bool exists = false;
             for ( int j = 0; j < i; j++ )
             {
-                if ( levelRecords[j].playerName == nameToken )
+                if ( levelRecords[j].playerName.removeColorTokens().tolower() == cleanName )
                 {
                     exists = true;
                     break;
@@ -1140,18 +1143,22 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
     {
         if ( @client != null )
         {
-            // find out if he holds a record better than his current time
-            Player @player= RACE_GetPlayer( client );
-
-            for ( int i = 0; i < MAX_RECORDS; i++ )
+            String cleanName = client.name.removeColorTokens().tolower();
+            if ( cleanName != "player" )
             {
-                if ( levelRecords[i].playerName == client.name
-                        && ( player.bestFinishTime == 0 || levelRecords[i].finishTime < player.bestFinishTime ) )
+                // find out if he holds a record better than his current time
+                Player @player= RACE_GetPlayer( client );
+
+                for ( int i = 0; i < MAX_RECORDS; i++ )
                 {
-                    player.bestFinishTime = levelRecords[i].finishTime;
-                    for ( int j = 0; j < numCheckpoints; j++ )
-                        player.bestSectorTimes[j] = levelRecords[i].sectorTimes[j];
-                    break;
+                    if ( levelRecords[i].playerName.removeColorTokens().tolower() == cleanName
+                            && ( player.bestFinishTime == 0 || levelRecords[i].finishTime < player.bestFinishTime ) )
+                    {
+                        player.bestFinishTime = levelRecords[i].finishTime;
+                        for ( int j = 0; j < numCheckpoints; j++ )
+                            player.bestSectorTimes[j] = levelRecords[i].sectorTimes[j];
+                        break;
+                    }
                 }
             }
         }
