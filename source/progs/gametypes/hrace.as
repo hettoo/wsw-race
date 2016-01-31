@@ -275,27 +275,26 @@ class Player
         // send the final time to MM
         client.setRaceTime( -1, this.finishTime );
 
-        // print the time differences with the best race of this player
-        // green if player's best time at this sector, red if not improving previous best time
-        if ( this.bestFinishTime == 0 )
+        str = "";
+        if ( this.bestFinishTime != 0 )
         {
-            delta = this.finishTime;
-            str = S_COLOR_GREEN + " ";
-        }
-        else if ( this.finishTime <= this.bestFinishTime )
-        {
-            delta = this.bestFinishTime - this.finishTime;
-            str = S_COLOR_GREEN + "-";
-        }
-        else
-        {
-            delta = this.finishTime - this.bestFinishTime;
-            str = S_COLOR_RED + "+";
+            // print the time differences with the best race of this player
+            // green if player's best time at this sector, red if not improving previous best time
+            if ( this.finishTime <= this.bestFinishTime )
+            {
+                delta = this.bestFinishTime - this.finishTime;
+                str = S_COLOR_GREEN + "-";
+            }
+            else
+            {
+                delta = this.finishTime - this.bestFinishTime;
+                str = S_COLOR_RED + "+";
+            }
+            str += RACE_TimeToString( delta );
         }
 
         Entity @ent = client.getEnt();
-        G_CenterPrintMsg( ent, "Current: " + RACE_TimeToString( this.finishTime ) + "\n"
-                          + str + RACE_TimeToString( delta ) );
+        G_CenterPrintMsg( ent, "Current: " + RACE_TimeToString( this.finishTime ) + "\n" + str );
         G_PrintMsg( ent, S_COLOR_ORANGE + "Race finished: " + S_COLOR_WHITE + RACE_TimeToString( this.finishTime )
                        + S_COLOR_ORANGE + " / Personal: " + RACE_TimeDiffString( this.finishTime, this.bestFinishTime )
                        + S_COLOR_ORANGE + " / Server: " + RACE_TimeDiffString( this.finishTime, levelRecords[0].finishTime ) + "\n" );
@@ -385,29 +384,7 @@ class Player
 
         // print some output and give awards if earned
 
-        // green if player's best time at this sector, red if not improving previous best time
-        // '-' means improved / equal, '+' means worse and no sign means no time was set yet
-        String sep;
-        if ( this.bestSectorTimes[id] == 0 || this.sectorTimes[id] <= this.bestSectorTimes[id] )
-        {
-            str = S_COLOR_GREEN;
-            if ( this.bestSectorTimes[id] == 0 )
-            {
-                delta = this.sectorTimes[id];
-                sep = " ";
-            }
-            else
-            {
-                delta = this.bestSectorTimes[id] - this.sectorTimes[id];
-                sep = "-";
-            }
-        }
-        else
-        {
-            sep = "+";
-            delta = this.sectorTimes[id] - this.bestSectorTimes[id];
-            str = S_COLOR_RED;
-        }
+        str = "";
         for ( int i = 0; i < MAX_RECORDS; i++ )
         {
             if ( this.sectorTimes[id] <= levelRecords[i].sectorTimes[id] )
@@ -416,11 +393,25 @@ class Player
                 break;
             }
         }
-        str += sep;
+        if ( this.bestSectorTimes[id] != 0 )
+        {
+            // green if player's best time at this sector, red if not improving previous best time
+            // '-' means improved / equal, '+' means worse
+            if ( this.sectorTimes[id] <= this.bestSectorTimes[id] )
+            {
+                delta = this.bestSectorTimes[id] - this.sectorTimes[id];
+                str = S_COLOR_GREEN + str + "-";
+            }
+            else
+            {
+                delta = this.sectorTimes[id] - this.bestSectorTimes[id];
+                str = S_COLOR_RED + str + "+";
+            }
+            str += RACE_TimeToString( delta );
+        }
 
         Entity @ent = client.getEnt();
-        G_CenterPrintMsg( ent, "Current: " + RACE_TimeToString( this.sectorTimes[id] ) + "\n"
-                          + str + RACE_TimeToString( delta ) );
+        G_CenterPrintMsg( ent, "Current: " + RACE_TimeToString( this.sectorTimes[id] ) + "\n" + str );
         G_PrintMsg( ent, S_COLOR_ORANGE + "Sector " + this.currentSector + ": " + S_COLOR_WHITE + RACE_TimeToString( this.sectorTimes[id] )
                        + S_COLOR_ORANGE + " / Personal: " + RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id] )
                        + S_COLOR_ORANGE + " / Server: " + RACE_TimeDiffString( this.sectorTimes[id], levelRecords[0].sectorTimes[id] ) + "\n" );
