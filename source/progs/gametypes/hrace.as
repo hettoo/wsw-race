@@ -395,7 +395,11 @@ class Player
                 break;
             }
         }
-        if ( this.bestSectorTimes[id] != 0 )
+        if ( this.bestSectorTimes[id] == 0 )
+        {
+            str = S_COLOR_GREEN + str;
+        }
+        else
         {
             // green if player's best time at this sector, red if not improving previous best time
             // '-' means improved / equal, '+' means worse
@@ -1147,7 +1151,7 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
             if ( cleanName != "player" )
             {
                 // find out if he holds a record better than his current time
-                Player @player= RACE_GetPlayer( client );
+                Player @player = RACE_GetPlayer( client );
 
                 for ( int i = 0; i < MAX_RECORDS; i++ )
                 {
