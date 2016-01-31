@@ -4,6 +4,7 @@ Some basic features intended to make vanilla Warsow race playable.
 
 ## New changes
 
+* Color- and case-insensitive name associations for records.
 * Weapon information is now saved when saving a position.
 * Allow loading prerace-saved positions in prerace.
 * Added setting a speed for the saved position (only in practicemode).
