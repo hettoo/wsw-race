@@ -33,6 +33,7 @@ class RecordTime
     uint[] sectorTimes;
     uint   finishTime;
     String playerName;
+    String login;
     bool arraysSetUp;
 
     void setupArrays( int size )
@@ -56,6 +57,7 @@ class RecordTime
     void clear()
     {
         this.playerName = "";
+        this.login = "";
         this.finishTime = 0;
 
         for ( int i = 0; i < numCheckpoints; i++ )
@@ -69,6 +71,7 @@ class RecordTime
 
         this.finishTime = other.finishTime;
         this.playerName = other.playerName;
+        this.login = other.login;
         for ( int i = 0; i < numCheckpoints; i++ )
             this.sectorTimes[i] = other.sectorTimes[i];
     }
@@ -82,6 +85,10 @@ class RecordTime
 
         this.finishTime = player.finishTime;
         this.playerName = client.name;
+        if ( client.getUserInfoKey( "cl_mm_session" ).toInt() > 0 )
+            this.login = client.getUserInfoKey( "cl_mm_login" );
+        else
+            this.login = "";
         for ( int i = 0; i < numCheckpoints; i++ )
             this.sectorTimes[i] = player.sectorTimes[i];
     }
@@ -314,6 +321,9 @@ class Player
             if ( levelRecords[top].finishTime == 0 || levelRecords[top].finishTime > this.finishTime )
             {
                 String cleanName = client.name.removeColorTokens().tolower();
+                String login = "";
+                if ( client.getUserInfoKey( "cl_mm_session" ).toInt() > 0 )
+                    login = client.getUserInfoKey( "cl_mm_login" );
 
                 if ( top == 0 )
                 {
@@ -325,7 +335,7 @@ class Player
                 int remove = MAX_RECORDS - 1;
                 for ( int i = 0; i < MAX_RECORDS; i++ )
                 {
-                    if ( levelRecords[i].playerName.removeColorTokens().tolower() == cleanName )
+                    if ( levelRecords[i].login == "" ? levelRecords[i].playerName.removeColorTokens().tolower() == cleanName : levelRecords[i].login == login )
                     {
                         if ( i < top )
                         {
@@ -719,7 +729,10 @@ void RACE_WriteTopScores()
     {
         if ( levelRecords[i].finishTime > 0 && levelRecords[i].playerName.len() > 0 )
         {
-            topScores += "\"" + int( levelRecords[i].finishTime ) + "\" \"" + levelRecords[i].playerName + "\" ";
+            topScores += "\"" + int( levelRecords[i].finishTime );
+            if ( levelRecords[i].login != "" )
+                topScores += "|" + levelRecords[i].login; // optionally storing it in a token with another value provides backwards compatibility
+            topScores += "\" \"" + levelRecords[i].playerName + "\" ";
 
             // add the sectors
             topScores += "\"" + numCheckpoints+ "\" ";
@@ -743,8 +756,9 @@ void RACE_LoadTopScores()
 
     if ( topScores.len() > 0 )
     {
-        String timeToken, nameToken, sectorToken;
+        String timeToken, loginToken, nameToken, sectorToken;
         int count = 0;
+        uint sep;
 
         int i = 0;
         while ( i < MAX_RECORDS )
@@ -752,6 +766,17 @@ void RACE_LoadTopScores()
             timeToken = topScores.getToken( count++ );
             if ( timeToken.len() == 0 )
                 break;
+
+            sep = timeToken.locate( "|", 0 );
+            if ( sep == timeToken.len() )
+            {
+                loginToken = "";
+            }
+            else
+            {
+                loginToken = timeToken.substr( sep + 1 );
+                timeToken = timeToken.substr( 0, sep );
+            }
 
             nameToken = topScores.getToken( count++ );
             if ( nameToken.len() == 0 )
@@ -778,7 +803,8 @@ void RACE_LoadTopScores()
             bool exists = false;
             for ( int j = 0; j < i; j++ )
             {
-                if ( levelRecords[j].playerName.removeColorTokens().tolower() == cleanName )
+                if ( ( loginToken != "" && levelRecords[j].login == loginToken )
+                        || levelRecords[j].playerName.removeColorTokens().tolower() == cleanName )
                 {
                     exists = true;
                     break;
@@ -792,6 +818,7 @@ void RACE_LoadTopScores()
 
             levelRecords[i].finishTime = uint( timeToken.toInt() );
             levelRecords[i].playerName = nameToken;
+            levelRecords[i].login = loginToken;
 
             i++;
         }
@@ -1145,17 +1172,16 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
     }
     else if ( score_event == "userinfochanged" )
     {
-        if ( @client != null )
+        if ( @client != null && client.getUserInfoKey( "cl_mm_session" ).toInt() > 0 )
         {
-            String cleanName = client.name.removeColorTokens().tolower();
-            if ( cleanName != "player" )
+            String login = client.getUserInfoKey( "cl_mm_login" );
+            if ( login != "" )
             {
                 // find out if he holds a record better than his current time
                 Player @player = RACE_GetPlayer( client );
-
                 for ( int i = 0; i < MAX_RECORDS; i++ )
                 {
-                    if ( levelRecords[i].playerName.removeColorTokens().tolower() == cleanName
+                    if ( levelRecords[i].login == login
                             && ( player.bestFinishTime == 0 || levelRecords[i].finishTime < player.bestFinishTime ) )
                     {
                         player.bestFinishTime = levelRecords[i].finishTime;
