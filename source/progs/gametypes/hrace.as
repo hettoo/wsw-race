@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 int numCheckpoints = 0;
 bool demoRecording = false;
-const int MAX_RECORDS = 3;
+const int MAX_RECORDS = 100;
 
 uint[] levelRecordSectors;
 uint   levelRecordFinishTime;
@@ -904,6 +904,9 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
             Cvar mapname( "mapname", "", 0 );
             String current = mapname.string.tolower();
             String pattern = argsString.getToken( 1 ).tolower();
+						bool anyMap = false;
+						if ( pattern == "any" )
+							anyMap = true;
             int size = 64;
             String[] maps( size );
             const String @map;
@@ -941,7 +944,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
                             }
                         }
                     }
-                    if ( match && map != current )
+                    if ( ( match && map != current) || anyMap )
                     {
                         maps[matches++] = map;
                         if ( matches == size )
@@ -963,8 +966,14 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
 
             if ( levelTime - randmap_time < 80 )
             {
+							if ( anyMap )
+							{
+                G_PrintMsg( null, S_COLOR_YELLOW + "Chosen map: " + S_COLOR_WHITE + randmap + "\n" );
+                return true;
+							} else {
                 G_PrintMsg( null, S_COLOR_YELLOW + "Chosen map: " + S_COLOR_WHITE + randmap + S_COLOR_YELLOW + " (out of " + S_COLOR_WHITE + matches + S_COLOR_YELLOW + " matches)\n" );
                 return true;
+							}
             }
 
             randmap_time = levelTime;
@@ -983,7 +992,12 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         String votename = argsString.getToken( 0 );
 
         if ( votename == "randmap" )
-            G_CmdExecute( "map " + randmap );
+				{
+					G_CmdExecute("set g_maprotation 1\n");
+					G_CmdExecute("set g_maplist \""+randmap+"\"\n");
+					match.launchState(MATCH_STATE_POSTMATCH);
+					return true;
+				}
 
         return true;
     }
@@ -1070,6 +1084,24 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
 
         return true;
     }
+		else if ( cmdString == "top" )
+		{
+			RecordTime@ top_record = @levelRecords[0];
+			for ( uint i = 0; i < levelRecords.length; i++ )
+			{
+				if ( i >= 20 )
+					break;
+				RecordTime@ record = @levelRecords[i];
+				if ( record.playerName == "" )
+					continue;
+				String line = (i+1) + ". " + S_COLOR_GREEN + RACE_TimeToString(record.finishTime);
+				line += " " + S_COLOR_YELLOW + "+[" + RACE_TimeToString(record.finishTime - top_record.finishTime) + "] ";
+				line += S_COLOR_WHITE + record.playerName + "\n";
+				client.printMessage(line);
+			}
+
+			return true;
+		}
 
     G_PrintMsg( null, "unknown: " + cmdString + "\n" );
 
@@ -1309,6 +1341,22 @@ void GT_ThinkRules()
     {
 
     }
+
+		// MSC : Weapon pickup fixing
+		for ( int i = 0; i < numEntities; i++ )
+		{
+			Entity@ ent = @G_GetEntity(i);
+			if ( ent.classname.substr(0,7) == "weapon_" )
+			{
+				Entity@[] targeting = ent.findTargeting();
+				if ( targeting.length > 0 )
+					continue;
+				ent.svflags &= ~SVF_NOCLIENT;
+				ent.solid = SOLID_TRIGGER;
+				ent.attenuation = 0.0;
+				ent.nextThink = 0;
+			}
+		}
 }
 
 // The game has detected the end of the match state, but it
@@ -1484,9 +1532,12 @@ void GT_InitGametype()
     G_RegisterCommand( "practicemode" );
     G_RegisterCommand( "noclip" );
     G_RegisterCommand( "position" );
+		G_RegisterCommand( "top" );
 
     // add votes
-    G_RegisterCallvote( "randmap", "<pattern>", "string", "Changes to a random map" );
+    G_RegisterCallvote( "randmap", "<pattern / any>", "string", "Changes to a random map" );
+		G_CmdExecute("set g_maprotation 0\n");
+		G_CmdExecute("set g_maplist \"\"\n");
 
     demoRecording = false;
 
