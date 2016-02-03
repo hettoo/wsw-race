@@ -119,8 +119,14 @@ class Player
     int savedWeapon;
     bool[] savedWeapons;
     int[] savedAmmos;
-    bool savedInPreRace;
     float savedSpeed;
+
+    // MSC : seperate prerace
+    Vec3 preracePosition;
+    Vec3 preraceAngles;
+    int preraceWeapon;
+    bool[] preraceWeapons;
+    int[] preraceAmmos;
 
     void setupArrays( int size )
     {
@@ -148,6 +154,11 @@ class Player
         this.savedAmmos.resize( WEAP_TOTAL );
         this.savedSpeed = 0;
 
+        // MSC : seperate prerace
+        this.preracePosition = Vec3();
+        this.preraceWeapons.resize( WEAP_TOTAL );
+        this.preraceAmmos.resize( WEAP_TOTAL );
+
         if ( !this.arraysSetUp )
             return;
 
@@ -174,34 +185,34 @@ class Player
     bool loadPosition( Client @client, bool verbose )
     {
         Entity @ent = client.getEnt();
-        if ( !this.practicing && client.team != TEAM_SPECTATOR && !( this.savedInPreRace && this.preRace( client ) ) )
+        if ( !this.practicing && client.team != TEAM_SPECTATOR && !this.preRace( client ) )
         {
             if ( verbose )
-                G_PrintMsg( ent, "Position load is only available in practicemode.\n" );
+                G_PrintMsg( ent, "Position load is only available in practicemode or prerace.\n" );
             return false;
         }
-
-        if ( this.savedPosition == Vec3() )
-        {
-            if ( verbose )
-                G_PrintMsg( ent, "No position has been saved yet.\n" );
-            return false;
-        }
-
-        ent.origin = this.savedPosition;
-        ent.angles = this.savedAngles;
-
-        for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
-        {
-            if ( this.savedWeapons[i] )
-                client.inventoryGiveItem( i );
-            Item @item = G_GetItem( i );
-            client.inventorySetCount( item.ammoTag, this.savedAmmos[i] );
-        }
-        client.selectWeapon( this.savedWeapon );
 
         if ( this.practicing )
         {
+            if ( this.savedPosition == Vec3() )
+            {
+                if ( verbose )
+                    G_PrintMsg( ent, "No position has been saved yet.\n" );
+                return false;
+            }
+
+            ent.origin = this.savedPosition;
+            ent.angles = this.savedAngles;
+
+            for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
+            {
+                if ( this.savedWeapons[i] )
+                    client.inventoryGiveItem( i );
+                Item @item = G_GetItem( i );
+                client.inventorySetCount( item.ammoTag, this.savedAmmos[i] );
+            }
+            client.selectWeapon( this.savedWeapon );
+
             if ( ent.moveType != MOVETYPE_NOCLIP )
             {
                 Vec3 a, b, c;
@@ -211,8 +222,28 @@ class Player
                 a *= this.savedSpeed;
                 ent.set_velocity( a );
             }
+        } else {
+            if ( this.preracePosition == Vec3() )
+            {
+                if ( verbose )
+                    G_PrintMsg( ent, "No position has been saved yet.\n" );
+                return false;
+            }
+
+            ent.origin = this.preracePosition;
+            ent.angles = this.preraceAngles;
+
+            for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
+            {
+                if ( this.preraceWeapons[i] )
+                    client.inventoryGiveItem( i );
+                Item @item = G_GetItem( i );
+                client.inventorySetCount( item.ammoTag, this.preraceAmmos[i] );
+            }
+            client.selectWeapon( this.preraceWeapon );
         }
-        else if ( this.preRace( client ) )
+
+        if ( this.preRace( client ) )
         {
             ent.set_velocity( Vec3() );
         }
@@ -223,19 +254,72 @@ class Player
     void savePosition( Client @client )
     {
         Entity @ent = client.getEnt();
-        this.savedInPreRace = this.preRace( client );
-        this.savedPosition = ent.origin;
-        this.savedAngles = ent.angles;
-        for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
+
+        if ( this.practicing )
         {
-            this.savedWeapons[i] = client.canSelectWeapon( i );
-            Item @item = G_GetItem( i );
-            this.savedAmmos[i] = client.inventoryCount( item.ammoTag );
+          this.savedPosition = ent.origin;
+          this.savedAngles = ent.angles;
+          for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
+          {
+              this.savedWeapons[i] = client.canSelectWeapon( i );
+              Item @item = G_GetItem( i );
+              this.savedAmmos[i] = client.inventoryCount( item.ammoTag );
+          }
+          if ( ent.moveType == MOVETYPE_NOCLIP )
+              this.savedWeapon = this.noclipWeapon;
+          else
+              this.savedWeapon = client.weapon;
         }
-        if ( ent.moveType == MOVETYPE_NOCLIP )
-            this.savedWeapon = this.noclipWeapon;
-        else
-            this.savedWeapon = client.weapon;
+        else if ( this.preRace( client ) ) // MSC : seperate prerace
+        {
+          this.preracePosition = ent.origin;
+          this.preraceAngles = ent.angles;
+          for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
+          {
+              this.preraceWeapons[i] = client.canSelectWeapon( i );
+              Item @item = G_GetItem( i );
+              this.preraceAmmos[i] = client.inventoryCount( item.ammoTag );
+          }
+          this.preraceWeapon = client.weapon;
+        } else {
+            G_PrintMsg( ent, "Position save is only available in practicemode or prerace.\n" );
+        }
+    }
+
+    void clearPosition( Client @client )
+    {
+      Entity @ent = client.getEnt();
+
+      if ( this.practicing )
+      {
+        if ( this.savedPosition == Vec3() )
+        {
+          G_PrintMsg( ent, "No position has been saved yet.\n" );
+          return;
+        }
+        this.savedPosition = Vec3();
+        this.savedWeapons.resize( WEAP_TOTAL );
+        this.savedAmmos.resize( WEAP_TOTAL );
+        this.savedSpeed = 0;
+
+        G_PrintMsg( ent, "Practicemode position has been cleared.\n" );
+        return;
+      } else if ( this.preRace( client ) )
+      {
+        if ( this.preracePosition == Vec3() )
+        {
+          G_PrintMsg( ent, "No position has been saved yet.\n" );
+          return;
+        }
+        this.preracePosition = Vec3();
+        this.preraceWeapons.resize( WEAP_TOTAL );
+        this.preraceAmmos.resize( WEAP_TOTAL );
+
+        G_PrintMsg( ent, "Prerace position has been cleared.\n" );
+        return;
+      }
+
+      G_PrintMsg( ent, "Can't clear position while in race.\n" );
     }
 
     bool startRace( Client @client )
@@ -869,6 +953,7 @@ void RACE_SetUpMatch()
 ///*****************************************************************
 
 String randmap;
+uint randmap_matches;
 uint randmap_time = 0;
 
 bool GT_Command( Client @client, const String &cmdString, const String &argsString, int argc )
@@ -904,9 +989,9 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
             Cvar mapname( "mapname", "", 0 );
             String current = mapname.string.tolower();
             String pattern = argsString.getToken( 1 ).tolower();
-						bool anyMap = false;
-						if ( pattern == "any" )
-							anyMap = true;
+            bool anyMap = false;
+            if ( pattern == "any" )
+              anyMap = true;
             int size = 64;
             String[] maps( size );
             const String @map;
@@ -914,70 +999,73 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
             int i = 0;
             int matches = 0;
 
-            do
+            if ( levelTime - randmap_time > 1100 )
             {
-                @map = ML_GetMapByNum( i );
-                if ( @map != null)
-                {
-                    lmap = map.tolower();
-                    uint p;
-                    bool match = false;
-                    if ( pattern == "" )
-                    {
-                        match = true;
-                    }
-                    else
-                    {
-                        for ( p = 0; p < map.len(); p++ )
-                        {
-                            uint eq = 0;
-                            while ( eq < pattern.len() && p + eq < lmap.len() )
-                            {
-                                if ( lmap[p + eq] != pattern[eq] )
-                                    break;
-                                eq++;
-                            }
-                            if ( eq == pattern.len() )
-                            {
-                                match = true;
-                                break;
-                            }
-                        }
-                    }
-                    if ( ( match && map != current) || anyMap )
-                    {
-                        maps[matches++] = map;
-                        if ( matches == size )
-                        {
-                            size *= 2;
-                            maps.resize( size );
-                        }
-                    }
-                }
-                i++;
-            }
-            while ( @map != null );
+              do
+              {
+                  @map = ML_GetMapByNum( i );
+                  if ( @map != null)
+                  {
+                      lmap = map.tolower();
+                      uint p;
+                      bool match = false;
+                      if ( pattern == "" )
+                      {
+                          match = true;
+                      }
+                      else
+                      {
+                          for ( p = 0; p < map.len(); p++ )
+                          {
+                              uint eq = 0;
+                              while ( eq < pattern.len() && p + eq < lmap.len() )
+                              {
+                                  if ( lmap[p + eq] != pattern[eq] )
+                                      break;
+                                  eq++;
+                              }
+                              if ( eq == pattern.len() )
+                              {
+                                  match = true;
+                                  break;
+                              }
+                          }
+                      }
+                      if ( ( match && map != current) || anyMap )
+                      {
+                          maps[matches++] = map;
+                          if ( matches == size )
+                          {
+                              size *= 2;
+                              maps.resize( size );
+                          }
+                      }
+                  }
+                  i++;
+              }
+              while ( @map != null );
 
-            if ( matches == 0 )
-            {
-                client.printMessage( "No matching maps\n" );
-                return false;
+              if ( matches == 0 )
+              {
+                  client.printMessage( "No matching maps\n" );
+                  return false;
+              }
+
+              randmap = maps[rand() % matches];
+              randmap_matches = matches;
             }
 
             if ( levelTime - randmap_time < 80 )
             {
-							if ( anyMap )
-							{
+              if ( anyMap )
+              {
                 G_PrintMsg( null, S_COLOR_YELLOW + "Chosen map: " + S_COLOR_WHITE + randmap + "\n" );
-                return true;
-							} else {
-                G_PrintMsg( null, S_COLOR_YELLOW + "Chosen map: " + S_COLOR_WHITE + randmap + S_COLOR_YELLOW + " (out of " + S_COLOR_WHITE + matches + S_COLOR_YELLOW + " matches)\n" );
-                return true;
-							}
+              } else {
+                G_PrintMsg( null, S_COLOR_YELLOW + "Chosen map: " + S_COLOR_WHITE + randmap + S_COLOR_YELLOW + " (out of " + S_COLOR_WHITE + randmap_matches + S_COLOR_YELLOW + " matches)\n" );
+              }
             }
 
             randmap_time = levelTime;
-            randmap = maps[rand() % matches];
         }
         else
         {
@@ -992,12 +1080,12 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         String votename = argsString.getToken( 0 );
 
         if ( votename == "randmap" )
-				{
-					G_CmdExecute("set g_maprotation 1\n");
-					G_CmdExecute("set g_maplist \""+randmap+"\"\n");
-					match.launchState(MATCH_STATE_POSTMATCH);
-					return true;
-				}
+        {
+          G_CmdExecute("set g_maprotation 1\n");
+          G_CmdExecute("set g_maplist \""+randmap+"\"\n");
+          match.launchState(MATCH_STATE_POSTMATCH);
+          return true;
+        }
 
         return true;
     }
@@ -1076,32 +1164,45 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
             else
                 player.savedSpeed = speed.toFloat();
         }
+        else if ( action == "clear" )
+        {
+            RACE_GetPlayer( client ).clearPosition( client );
+        }
         else
         {
-            G_PrintMsg( client.getEnt(), "position <save | load | speed <value>>\n" );
+            G_PrintMsg( client.getEnt(), "position <save | load | clear | speed <value>>\n" );
             return false;
         }
 
         return true;
     }
-		else if ( cmdString == "top" )
-		{
-			RecordTime@ top_record = @levelRecords[0];
-			for ( uint i = 0; i < levelRecords.length; i++ )
-			{
-				if ( i >= 20 )
-					break;
-				RecordTime@ record = @levelRecords[i];
-				if ( record.playerName == "" )
-					continue;
-				String line = (i+1) + ". " + S_COLOR_GREEN + RACE_TimeToString(record.finishTime);
-				line += " " + S_COLOR_YELLOW + "+[" + RACE_TimeToString(record.finishTime - top_record.finishTime) + "] ";
-				line += S_COLOR_WHITE + record.playerName + "\n";
-				client.printMessage(line);
-			}
+    else if ( cmdString == "top" )
+    {
+      Cvar mapname( "mapname", "", 0 );
+      client.printMessage( S_COLOR_ORANGE + "Toplist for " + S_COLOR_YELLOW + mapname.string + S_COLOR_ORANGE + ":\n");
 
-			return true;
-		}
+      RecordTime@ top_record = @levelRecords[0];
+
+      if ( top_record.playerName == "" )
+      {
+        client.printMessage( S_COLOR_ORANGE + "No records for this map yet.\n");
+        return true;
+      }
+      for ( uint i = 0; i < levelRecords.length; i++ )
+      {
+        if ( i >= 20 )
+          break;
+        RecordTime@ record = @levelRecords[i];
+        if ( record.playerName == "" )
+          continue;
+        String line = (i+1) + ". " + S_COLOR_GREEN + RACE_TimeToString(record.finishTime);
+        line += " " + S_COLOR_YELLOW + "+[" + RACE_TimeToString(record.finishTime - top_record.finishTime) + "] ";
+        line += S_COLOR_WHITE + record.playerName + "\n";
+        client.printMessage(line);
+      }
+
+      return true;
+    }
 
     G_PrintMsg( null, "unknown: " + cmdString + "\n" );
 
@@ -1342,21 +1443,21 @@ void GT_ThinkRules()
 
     }
 
-		// MSC : Weapon pickup fixing
-		for ( int i = 0; i < numEntities; i++ )
-		{
-			Entity@ ent = @G_GetEntity(i);
-			if ( ent.classname.substr(0,7) == "weapon_" )
-			{
-				Entity@[] targeting = ent.findTargeting();
-				if ( targeting.length > 0 )
-					continue;
-				ent.svflags &= ~SVF_NOCLIENT;
-				ent.solid = SOLID_TRIGGER;
-				ent.attenuation = 0.0;
-				ent.nextThink = 0;
-			}
-		}
+    // MSC : Weapon pickup fixing
+    for ( int i = 0; i < numEntities; i++ )
+    {
+      Entity@ ent = @G_GetEntity(i);
+      if ( ent.classname.substr(0,7) == "weapon_" )
+      {
+        Entity@[] targeting = ent.findTargeting();
+        if ( targeting.length > 0 )
+          continue;
+        ent.svflags &= ~SVF_NOCLIENT;
+        ent.solid = SOLID_TRIGGER;
+        ent.attenuation = 0.0;
+        ent.nextThink = 0;
+      }
+    }
 }
 
 // The game has detected the end of the match state, but it
@@ -1425,15 +1526,15 @@ void GT_SpawnGametype()
 
     RACE_LoadTopScores();
 
-		// MSC: fix "trigger once" start triggers and various other stuff
-		for ( int i = 0; i < numEntities; i++ )
-		{
-			Entity@ ent = @G_GetEntity(i);
-			if ( ent.classname == "trigger_multiple" && ent.wait < 0 )
-			{
-				ent.wait = 0.2;
-			}
-		}
+    // MSC: fix "trigger once" start triggers and various other stuff
+    for ( int i = 0; i < numEntities; i++ )
+    {
+      Entity@ ent = @G_GetEntity(i);
+      if ( ent.classname == "trigger_multiple" && ent.wait < 0 )
+      {
+        ent.wait = 0.2;
+      }
+    }
 }
 
 // Important: This function is called before any entity is spawned, and
@@ -1532,12 +1633,12 @@ void GT_InitGametype()
     G_RegisterCommand( "practicemode" );
     G_RegisterCommand( "noclip" );
     G_RegisterCommand( "position" );
-		G_RegisterCommand( "top" );
+    G_RegisterCommand( "top" );
 
     // add votes
     G_RegisterCallvote( "randmap", "<pattern / any>", "string", "Changes to a random map" );
-		G_CmdExecute("set g_maprotation 0\n");
-		G_CmdExecute("set g_maplist \"\"\n");
+    G_CmdExecute("set g_maprotation 0\n");
+    G_CmdExecute("set g_maplist \"\"\n");
 
     demoRecording = false;
 
