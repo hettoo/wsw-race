@@ -12,6 +12,8 @@ Some basic features intended to make vanilla Warsow race playable.
 * Limited annoying announcer sounds to once per player.
 * Simple randmap vote with a pattern to search for.
 * The kill command will now make spectators join.
+* Top command lists saved records
+* Fixes to defrag map triggers and slow weapon pickups
 
 ## Earlier changes
 
