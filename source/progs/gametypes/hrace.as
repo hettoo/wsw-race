@@ -1376,6 +1376,16 @@ void GT_SpawnGametype()
         levelRecords[i].setupArrays( numCheckpoints );
 
     RACE_LoadTopScores();
+
+		// MSC: fix "trigger once" start triggers and various other stuff
+		for ( int i = 0; i < numEntities; i++ )
+		{
+			Entity@ ent = @G_GetEntity(i);
+			if ( ent.classname == "trigger_multiple" && ent.wait < 0 )
+			{
+				ent.wait = 0.2;
+			}
+		}
 }
 
 // Important: This function is called before any entity is spawned, and
