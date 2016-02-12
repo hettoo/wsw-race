@@ -257,7 +257,7 @@ class Player
     {
         Entity @ent = client.getEnt();
 
-        if ( this.practicing )
+        if ( !this.preRace( client ) )
         {
           this.savedPosition = ent.origin;
           this.savedAngles = ent.angles;
