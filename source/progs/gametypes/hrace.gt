@@ -4,6 +4,10 @@
 
 generic/quickmenu.as;
 generic/matchstates.as;
-hrace.as;
 
 legacy/quake1.as;
+
+hrace/entities/trigger_push_velocity.as;
+hrace/entities/target_delay.as;
+
+hrace.as;
