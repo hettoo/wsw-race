@@ -1169,6 +1169,26 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
 
         return true;
     }
+    else if ( cmdString == "top" )
+    {
+        RecordTime @top = levelRecords[0];
+        for ( int i = MAX_RECORDS - 1; i >= 0; i-- )
+        {
+            RecordTime @record = levelRecords[i];
+            if ( record.finishTime != 0 )
+            {
+                String s = ( i + 1 ) + ". " + S_COLOR_GREEN + RACE_TimeToString( record.finishTime ) + " " +
+                           S_COLOR_YELLOW + "+[" + RACE_TimeToString(record.finishTime - top.finishTime) + "] " +
+                           S_COLOR_WHITE + record.playerName;
+                if ( record.login != "" )
+                    s += " (" + S_COLOR_YELLOW + record.login + S_COLOR_WHITE + ")";
+                s += "\n";
+                client.printMessage( s );
+            }
+        }
+
+        return true;
+    }
 
     G_PrintMsg( null, "unknown: " + cmdString + "\n" );
 
@@ -1578,6 +1598,7 @@ void GT_InitGametype()
     G_RegisterCommand( "practicemode" );
     G_RegisterCommand( "noclip" );
     G_RegisterCommand( "position" );
+    G_RegisterCommand( "top" );
 
     // add votes
     G_RegisterCallvote( "randmap", "<*|pattern>", "string", "Changes to a random map" );
