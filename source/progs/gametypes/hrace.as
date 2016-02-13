@@ -306,7 +306,7 @@ class Player
 
         G_PrintMsg( ent, "Practicemode position has been cleared.\n" );
         return;
-      } else if ( this.preRace( client ) )
+      } else if ( !this.practicing )
       {
         if ( this.preracePosition == Vec3() )
         {
@@ -321,7 +321,10 @@ class Player
         return;
       }
 
-      G_PrintMsg( ent, "Can't clear position while in race.\n" );
+        this.preracePosition = Vec3();
+        this.preraceWeapons.resize( WEAP_TOTAL );
+        this.preraceAmmos.resize( WEAP_TOTAL );
+        G_PrintMsg( ent, "Shit worx?\n" );
     }
 
     bool startRace( Client @client )
