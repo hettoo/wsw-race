@@ -296,7 +296,7 @@ class Player
       {
         if ( this.savedPosition == Vec3() )
         {
-          G_PrintMsg( ent, "No position has been saved yet.\n" );
+          G_PrintMsg( ent, "No practicemode position has been saved yet.\n" );
           return;
         }
         this.savedPosition = Vec3();
@@ -310,7 +310,7 @@ class Player
       {
         if ( this.preracePosition == Vec3() )
         {
-          G_PrintMsg( ent, "No position has been saved yet.\n" );
+          G_PrintMsg( ent, "No prerace position has been saved yet.\n" );
           return;
         }
         this.preracePosition = Vec3();
