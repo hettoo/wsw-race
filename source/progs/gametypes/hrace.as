@@ -840,9 +840,10 @@ void RACE_UpdateHUDTopScores()
 void RACE_WriteTopScores()
 {
     String topScores;
-    Cvar mapName( "mapname", "", 0 );
+    Cvar mapNameVar( "mapname", "", 0 );
+    String mapName = mapNameVar.string.tolower();
 
-    topScores = "//" + mapName.string + " top scores\n\n";
+    topScores = "//" + mapName + " top scores\n\n";
 
     for ( int i = 0; i < MAX_RECORDS; i++ )
     {
@@ -863,15 +864,16 @@ void RACE_WriteTopScores()
         }
     }
 
-    G_WriteFile( "topscores/race/" + mapName.string + ".txt", topScores );
+    G_WriteFile( "topscores/race/" + mapName + ".txt", topScores );
 }
 
 void RACE_LoadTopScores()
 {
     String topScores;
-    Cvar mapName( "mapname", "", 0 );
+    Cvar mapNameVar( "mapname", "", 0 );
+    String mapName = mapNameVar.string.tolower();
 
-    topScores = G_LoadFile( "topscores/race/" + mapName.string + ".txt" );
+    topScores = G_LoadFile( "topscores/race/" + mapName + ".txt" );
 
     if ( topScores.len() > 0 )
     {
