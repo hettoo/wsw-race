@@ -221,9 +221,12 @@ class Player
         {
             s += '"Enter practicemode" "practicemode" ' +
                  '"Save position" "position save" ';
-            if ( ( this.preRace( client ) || client.team == TEAM_SPECTATOR ) && position.saved )
-                s += '"Load position" "position load" ' +
-                     '"Clear position" "position clear" ';
+            if ( position.saved )
+            {
+                if ( this.preRace( client ) || client.team == TEAM_SPECTATOR )
+                    s += '"Load position" "position load" ';
+                s += '"Clear position" "position clear" ';
+            }
         }
 
         GENERIC_SetQuickMenu( client, s );
@@ -363,6 +366,8 @@ class Player
             this.sectorTimes[i] = 0;
 
         client.newRaceRun( numCheckpoints );
+
+        this.setQuickMenu( client );
 
         return true;
     }
@@ -1601,7 +1606,7 @@ void GT_InitGametype()
     G_RegisterCommand( "top" );
 
     // add votes
-    G_RegisterCallvote( "randmap", "<*|pattern>", "string", "Changes to a random map" );
+    G_RegisterCallvote( "randmap", "<* | pattern>", "string", "Changes to a random map" );
 
     demoRecording = false;
 
