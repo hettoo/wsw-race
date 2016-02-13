@@ -4,6 +4,7 @@ Some basic features intended to make vanilla Warsow race playable.
 
 ## New changes
 
+* Added quickmenu with basic commands.
 * Associate records with login names when possible.
 * Color- and case-insensitive nickname associations for records.
 * Weapon information is now saved when saving a position.
