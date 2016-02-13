@@ -131,6 +131,95 @@ class Position
     }
 }
 
+class Table
+{
+    uint columns;
+    bool[] lefts;
+    String[] seps;
+    uint[] maxs;
+    String[] items;
+
+    Table( String format )
+    {
+        columns = 0;
+        seps.push_back( "" );
+        for ( uint i = 0; i < format.len(); i++ )
+        {
+            String c = format.substr( i, 1 );
+            if ( c == "l" || c == "r" )
+            {
+                this.columns++;
+                this.lefts.push_back( c == "l" );
+                this.seps.push_back( "" );
+                this.maxs.push_back( 0 );
+            }
+            else
+            {
+                this.seps[this.seps.size() - 1] += c;
+            }
+        }
+    }
+
+    ~Table() {}
+
+    void clear()
+    {
+        this.items.resize( 0 );
+    }
+
+    void reset()
+    {
+        this.clear();
+        for ( uint i = 0; i < this.columns; i++ )
+            this.maxs[i] = 0;
+    }
+
+    void addCell( String cell )
+    {
+        int column = this.items.size() % this.columns;
+        uint len = cell.removeColorTokens().len();
+        if ( len > this.maxs[column] )
+            this.maxs[column] = len;
+        this.items.push_back( cell );
+    }
+
+    uint numRows()
+    {
+        int rows = this.items.size() / this.columns;
+        if ( this.items.size() % this.columns != 0 )
+            rows++;
+        return rows;
+    }
+
+    String getRow( uint n )
+    {
+        String row = "";
+        for ( uint i = 0; i < this.columns; i++ )
+        {
+            uint j = n * this.columns + i;
+            if ( j < this.items.size() )
+            {
+                row += this.seps[i];
+
+                int d = this.maxs[i] - this.items[j].removeColorTokens().len();
+                String pad = "";
+                for ( int k = 0; k < d; k++ )
+                    pad += " ";
+
+                if ( !this.lefts[i] )
+                    row += pad;
+
+                row += this.items[j];
+
+                if ( this.lefts[i] )
+                    row += pad;
+            }
+        }
+        row += this.seps[this.columns];
+        return row;
+    }
+}
+
 class Player
 {
     uint[] sectorTimes;
@@ -138,6 +227,7 @@ class Player
     uint startTime;
     uint finishTime;
     uint bestFinishTime;
+    Table report( S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "r " + S_COLOR_ORANGE + "/ l r " + S_COLOR_ORANGE + "/ l r" );
     int currentSector;
     bool inRace;
     bool postRace;
@@ -365,6 +455,8 @@ class Player
         for ( int i = 0; i < numCheckpoints; i++ )
             this.sectorTimes[i] = 0;
 
+        this.report.reset();
+
         client.newRaceRun( numCheckpoints );
 
         this.setQuickMenu( client );
@@ -375,7 +467,13 @@ class Player
     void cancelRace( Client @client )
     {
         if ( this.inRace && this.currentSector > 0 )
-            G_PrintMsg( client.getEnt(), S_COLOR_ORANGE + "Race canceled\n" );
+        {
+            Entity @ent = client.getEnt();
+            uint rows = this.report.numRows();
+            for ( uint i = 0; i < rows; i++ )
+                G_PrintMsg( ent, this.report.getRow( i ) + "\n" );
+            G_PrintMsg( ent, S_COLOR_ORANGE + "Race canceled\n" );
+        }
 
         this.inRace = false;
         this.postRace = false;
@@ -419,9 +517,15 @@ class Player
 
         Entity @ent = client.getEnt();
         G_CenterPrintMsg( ent, "Current: " + RACE_TimeToString( this.finishTime ) + "\n" + str );
-        G_PrintMsg( ent, S_COLOR_ORANGE + "Race finished: " + S_COLOR_WHITE + RACE_TimeToString( this.finishTime )
-                       + S_COLOR_ORANGE + " / Personal: " + RACE_TimeDiffString( this.finishTime, this.bestFinishTime )
-                       + S_COLOR_ORANGE + " / Server: " + RACE_TimeDiffString( this.finishTime, levelRecords[0].finishTime ) + "\n" );
+        this.report.addCell( "Race finished:" );
+        this.report.addCell( RACE_TimeToString( this.finishTime ) );
+        this.report.addCell( "Personal:" );
+        this.report.addCell( RACE_TimeDiffString( this.finishTime, this.bestFinishTime ) );
+        this.report.addCell( "Server:" );
+        this.report.addCell( RACE_TimeDiffString( this.finishTime, levelRecords[0].finishTime ) );
+        uint rows = this.report.numRows();
+        for ( uint i = 0; i < rows; i++ )
+            G_PrintMsg( ent, this.report.getRow( i ) + "\n" );
 
         if ( this.bestFinishTime == 0 || this.finishTime < this.bestFinishTime )
         {
@@ -545,9 +649,12 @@ class Player
 
         Entity @ent = client.getEnt();
         G_CenterPrintMsg( ent, "Current: " + RACE_TimeToString( this.sectorTimes[id] ) + "\n" + str );
-        G_PrintMsg( ent, S_COLOR_ORANGE + "Sector " + this.currentSector + ": " + S_COLOR_WHITE + RACE_TimeToString( this.sectorTimes[id] )
-                       + S_COLOR_ORANGE + " / Personal: " + RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id] )
-                       + S_COLOR_ORANGE + " / Server: " + RACE_TimeDiffString( this.sectorTimes[id], levelRecords[0].sectorTimes[id] ) + "\n" );
+        this.report.addCell( "Sector " + this.currentSector + ":" );
+        this.report.addCell( RACE_TimeToString( this.sectorTimes[id] ) );
+        this.report.addCell( "Personal:" );
+        this.report.addCell( RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id] ) );
+        this.report.addCell( "Server:" );
+        this.report.addCell( RACE_TimeDiffString( this.sectorTimes[id], levelRecords[0].sectorTimes[id] ) );
 
         // if beating the level record on this sector give an award
         if ( this.sectorTimes[id] < levelRecords[0].sectorTimes[id] )
@@ -983,83 +1090,6 @@ void RACE_SetUpMatch()
 
     // ch : clear last recordSentTime
     lastRecordSent = levelTime;
-}
-
-class Table
-{
-    uint columns;
-    bool[] lefts;
-    String[] seps;
-    uint[] maxs;
-    String[] items;
-
-    Table( String format )
-    {
-        columns = 0;
-        seps.push_back( "" );
-        for ( uint i = 0; i < format.len(); i++ )
-        {
-            String c = format.substr( i, 1 );
-            if ( c == "l" || c == "r" )
-            {
-                this.columns++;
-                this.lefts.push_back( c == "l" );
-                this.seps.push_back( "" );
-                this.maxs.push_back( 0 );
-            }
-            else
-            {
-                this.seps[this.seps.size() - 1] += c;
-            }
-        }
-    }
-
-    ~Table() {}
-
-    void addCell( String cell )
-    {
-        int column = this.items.size() % this.columns;
-        uint len = cell.removeColorTokens().len();
-        if ( len > this.maxs[column] )
-            this.maxs[column] = len;
-        this.items.push_back( cell );
-    }
-
-    uint numRows()
-    {
-        int rows = this.items.size() / this.columns;
-        if ( this.items.size() % this.columns != 0 )
-            rows++;
-        return rows;
-    }
-
-    String getRow( uint n )
-    {
-        String row = "";
-        for ( uint i = 0; i < this.columns; i++ )
-        {
-            uint j = n * this.columns + i;
-            if ( j < this.items.size() )
-            {
-                row += this.seps[i];
-
-                int d = this.maxs[i] - this.items[j].removeColorTokens().len();
-                String pad = "";
-                for ( int k = 0; k < d; k++ )
-                    pad += " ";
-
-                if ( !this.lefts[i] )
-                    row += pad;
-
-                row += this.items[j];
-
-                if ( this.lefts[i] )
-                    row += pad;
-            }
-        }
-        row += this.seps[this.columns];
-        return row;
-    }
 }
 
 ///*****************************************************************
