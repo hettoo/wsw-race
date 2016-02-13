@@ -934,6 +934,7 @@ void RACE_SetUpMatch()
 ///*****************************************************************
 
 String randmap;
+String randmap_passed = "";
 uint randmap_time = 0;
 
 bool GT_Command( Client @client, const String &cmdString, const String &argsString, int argc )
@@ -1048,7 +1049,10 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         String votename = argsString.getToken( 0 );
 
         if ( votename == "randmap" )
-            G_CmdExecute( "map " + randmap );
+        {
+            randmap_passed = randmap;
+            match.launchState( MATCH_STATE_POSTMATCH );
+        }
 
         return true;
     }
@@ -1363,6 +1367,9 @@ bool GT_MatchStateFinished( int incomingMatchState )
 
         // ch : also send rest of results
         RACE_WriteTopScores();
+
+        if ( randmap_passed != "" )
+            G_CmdExecute( "map " + randmap_passed );
     }
 
     return true;
