@@ -171,6 +171,68 @@ class Player
         return !this.inRace && !this.practicing && !this.postRace && client.team != TEAM_SPECTATOR;
     }
 
+    void setQuickMenu( Client @client )
+    {
+        String s = '';
+
+        s += '"Restart race" "racerestart" ';
+        if ( this.practicing )
+        {
+            s += '"Leave practicemode" "practicemode" ' +
+                 '"Save position" "position save" ';
+            if ( this.savedPosition != Vec3() )
+                s += '"Load position" "position load" ';
+            if ( client.team != TEAM_SPECTATOR )
+            {
+                if ( client.getEnt().moveType == MOVETYPE_NOCLIP )
+                    s += '"Noclip off" "noclip" ';
+                else
+                    s += '"Noclip on" "noclip" ';
+            }
+        }
+        else
+        {
+            s += '"Enter practicemode" "practicemode" ';
+        }
+
+        GENERIC_SetQuickMenu( client, s );
+    }
+
+    bool toggleNoclip( Client @client )
+    {
+        Entity @ent = client.getEnt();
+        if ( !this.practicing )
+        {
+            G_PrintMsg( ent, "Noclip is only available in practicemode.\n" );
+            return false;
+        }
+        if ( client.team == TEAM_SPECTATOR )
+        {
+            G_PrintMsg( ent, "Noclip is not available for spectators.\n" );
+            return false;
+        }
+
+        String msg;
+        if ( ent.moveType == MOVETYPE_PLAYER )
+        {
+            ent.moveType = MOVETYPE_NOCLIP;
+            this.noclipWeapon = ent.weapon;
+            msg = "noclip ON";
+        }
+        else
+        {
+            ent.moveType = MOVETYPE_PLAYER;
+            client.selectWeapon( this.noclipWeapon );
+            msg = "noclip OFF";
+        }
+
+        G_PrintMsg( ent, msg + "\n" );
+
+        this.setQuickMenu( client );
+
+        return true;
+    }
+
     bool loadPosition( Client @client, bool verbose )
     {
         Entity @ent = client.getEnt();
@@ -236,6 +298,7 @@ class Player
             this.savedWeapon = this.noclipWeapon;
         else
             this.savedWeapon = client.weapon;
+        this.setQuickMenu( client );
     }
 
     bool startRace( Client @client )
@@ -460,6 +523,7 @@ class Player
         this.practicing = true;
         G_CenterPrintMsg( client.getEnt(), S_COLOR_CYAN + "Entered practicemode" );
         this.cancelRace( client );
+        this.setQuickMenu( client );
     }
 
     void leavePracticeMode( Client @client )
@@ -471,6 +535,7 @@ class Player
         G_CenterPrintMsg( client.getEnt(), S_COLOR_CYAN + "Left practicemode" );
         if ( client.team != TEAM_SPECTATOR )
             client.respawn( false );
+        this.setQuickMenu( client );
     }
 
     void togglePracticeMode( Client @client )
@@ -1009,36 +1074,8 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
     }
     else if ( cmdString == "noclip" )
     {
-        Entity @ent = client.getEnt();
         Player @player = RACE_GetPlayer( client );
-        if ( !player.practicing )
-        {
-            G_PrintMsg( ent, "Noclip is only available in practicemode.\n" );
-            return false;
-        }
-        if ( client.team == TEAM_SPECTATOR )
-        {
-            G_PrintMsg( ent, "Noclip is not available for spectators.\n" );
-            return false;
-        }
-
-        String msg;
-        if ( ent.moveType == MOVETYPE_PLAYER )
-        {
-            ent.moveType = MOVETYPE_NOCLIP;
-            player.noclipWeapon = ent.weapon;
-            msg = "noclip ON";
-        }
-        else
-        {
-            ent.moveType = MOVETYPE_PLAYER;
-            client.selectWeapon( player.noclipWeapon );
-            msg = "noclip OFF";
-        }
-
-        G_PrintMsg( ent, msg + "\n" );
-
-        return true;
+        return player.toggleNoclip( client );
     }
     else if ( cmdString == "position" )
     {
@@ -1201,6 +1238,8 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 {
     Player @player = RACE_GetPlayer( ent.client );
     player.cancelRace( ent.client );
+
+    player.setQuickMenu( ent.client );
 
     if ( ent.isGhosting() )
         return;
