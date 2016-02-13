@@ -4,6 +4,7 @@ Some basic features intended to make vanilla Warsow race playable.
 
 ## New changes
 
+* Sector reports are now buffered until the end of the race.
 * Top command to display records in reverse order.
 * More records are now stored (30).
 * Added quickmenu with basic commands.
