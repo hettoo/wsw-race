@@ -110,13 +110,18 @@ class Position
 
     Position()
     {
-        this.saved = false;
         this.weapons.resize( WEAP_TOTAL );
         this.ammos.resize( WEAP_TOTAL );
-        this.speed = 0;
+        this.clear();
     }
 
     ~Position() {}
+
+    void clear()
+    {
+        this.saved = false;
+        this.speed = 0;
+    }
 
     void set( Vec3 location, Vec3 angles )
     {
@@ -202,7 +207,8 @@ class Player
             s += '"Leave practicemode" "practicemode" ' +
                  '"Save position" "position save" ';
             if ( position.saved )
-                s += '"Load position" "position load" ';
+                s += '"Load position" "position load" ' +
+                     '"Clear position" "position clear" ';
             if ( client.team != TEAM_SPECTATOR )
             {
                 if ( client.getEnt().moveType == MOVETYPE_NOCLIP )
@@ -216,7 +222,8 @@ class Player
             s += '"Enter practicemode" "practicemode" ' +
                  '"Save position" "position save" ';
             if ( ( this.preRace( client ) || client.team == TEAM_SPECTATOR ) && position.saved )
-                s += '"Load position" "position load" ';
+                s += '"Load position" "position load" ' +
+                     '"Clear position" "position clear" ';
         }
 
         GENERIC_SetQuickMenu( client, s );
@@ -1148,9 +1155,15 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
             else
                 position.speed = speed.toFloat();
         }
+        else if ( action == "clear" )
+        {
+            Player @player = RACE_GetPlayer( client );
+            player.savedPosition( client ).clear();
+            player.setQuickMenu( client );
+        }
         else
         {
-            G_PrintMsg( client.getEnt(), "position <save | load | speed <value>>\n" );
+            G_PrintMsg( client.getEnt(), "position <save | load | speed <value> | clear>\n" );
             return false;
         }
 
