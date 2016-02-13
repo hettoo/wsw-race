@@ -1026,12 +1026,10 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
             Cvar mapname( "mapname", "", 0 );
             String current = mapname.string.tolower();
             String pattern = argsString.getToken( 1 ).tolower();
-            int size = 64;
-            String[] maps( size );
+            String[] maps;
             const String @map;
             String lmap;
             int i = 0;
-            int matches = 0;
 
             if ( pattern == "*" )
                 pattern = "";
@@ -1067,20 +1065,13 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
                         }
                     }
                     if ( match && map != current )
-                    {
-                        maps[matches++] = map;
-                        if ( matches == size )
-                        {
-                            size *= 2;
-                            maps.resize( size );
-                        }
-                    }
+                        maps.push_back( map );
                 }
                 i++;
             }
             while ( @map != null );
 
-            if ( matches == 0 )
+            if ( maps.size() == 0 )
             {
                 client.printMessage( "No matching maps\n" );
                 return false;
@@ -1088,12 +1079,12 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
 
             if ( levelTime - randmap_time < 80 )
             {
-                G_PrintMsg( null, S_COLOR_YELLOW + "Chosen map: " + S_COLOR_WHITE + randmap + S_COLOR_YELLOW + " (out of " + S_COLOR_WHITE + matches + S_COLOR_YELLOW + " matches)\n" );
+                G_PrintMsg( null, S_COLOR_YELLOW + "Chosen map: " + S_COLOR_WHITE + randmap + S_COLOR_YELLOW + " (out of " + S_COLOR_WHITE + maps.size() + S_COLOR_YELLOW + " matches)\n" );
                 return true;
             }
 
             randmap_time = levelTime;
-            randmap = maps[rand() % matches];
+            randmap = maps[rand() % maps.size()];
         }
         else
         {
