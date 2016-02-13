@@ -977,6 +977,9 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
             int i = 0;
             int matches = 0;
 
+            if ( pattern == "*" )
+                pattern = "";
+
             do
             {
                 @map = ML_GetMapByNum( i );
@@ -1522,7 +1525,7 @@ void GT_InitGametype()
     G_RegisterCommand( "position" );
 
     // add votes
-    G_RegisterCallvote( "randmap", "<pattern>", "string", "Changes to a random map" );
+    G_RegisterCallvote( "randmap", "<*|pattern>", "string", "Changes to a random map" );
 
     demoRecording = false;
 
