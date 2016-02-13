@@ -985,6 +985,83 @@ void RACE_SetUpMatch()
     lastRecordSent = levelTime;
 }
 
+class Table
+{
+    uint columns;
+    bool[] lefts;
+    String[] seps;
+    uint[] maxs;
+    String[] items;
+
+    Table( String format )
+    {
+        columns = 0;
+        seps.push_back( "" );
+        for ( uint i = 0; i < format.len(); i++ )
+        {
+            String c = format.substr( i, 1 );
+            if ( c == "l" || c == "r" )
+            {
+                this.columns++;
+                this.lefts.push_back( c == "l" );
+                this.seps.push_back( "" );
+                this.maxs.push_back( 0 );
+            }
+            else
+            {
+                this.seps[this.seps.size() - 1] += c;
+            }
+        }
+    }
+
+    ~Table() {}
+
+    void addCell( String cell )
+    {
+        int column = this.items.size() % this.columns;
+        uint len = cell.removeColorTokens().len();
+        if ( len > this.maxs[column] )
+            this.maxs[column] = len;
+        this.items.push_back( cell );
+    }
+
+    uint numRows()
+    {
+        int rows = this.items.size() / this.columns;
+        if ( this.items.size() % this.columns != 0 )
+            rows++;
+        return rows;
+    }
+
+    String getRow( uint n )
+    {
+        String row = "";
+        for ( uint i = 0; i < this.columns; i++ )
+        {
+            uint j = n * this.columns + i;
+            if ( j < this.items.size() )
+            {
+                row += this.seps[i];
+
+                int d = this.maxs[i] - this.items[j].removeColorTokens().len();
+                String pad = "";
+                for ( int k = 0; k < d; k++ )
+                    pad += " ";
+
+                if ( !this.lefts[i] )
+                    row += pad;
+
+                row += this.items[j];
+
+                if ( this.lefts[i] )
+                    row += pad;
+            }
+        }
+        row += this.seps[this.columns];
+        return row;
+    }
+}
+
 ///*****************************************************************
 /// MODULE SCRIPT CALLS
 ///*****************************************************************
@@ -1176,20 +1253,25 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         }
         else
         {
+            Table table( "r r r l l" );
             for ( int i = MAX_RECORDS - 1; i >= 0; i-- )
             {
                 RecordTime @record = levelRecords[i];
                 if ( record.finishTime != 0 )
                 {
-                    String s = ( i + 1 ) + ". " + S_COLOR_GREEN + RACE_TimeToString( record.finishTime ) + " " +
-                               S_COLOR_YELLOW + "+[" + RACE_TimeToString(record.finishTime - top.finishTime) + "] " +
-                               S_COLOR_WHITE + record.playerName;
+                    table.addCell( ( i + 1 ) + "." );
+                    table.addCell( S_COLOR_GREEN + RACE_TimeToString( record.finishTime ) );
+                    table.addCell( S_COLOR_YELLOW + "+[" + RACE_TimeToString( record.finishTime - top.finishTime ) + "]" );
+                    table.addCell( S_COLOR_WHITE + record.playerName );
                     if ( record.login != "" )
-                        s += " (" + S_COLOR_YELLOW + record.login + S_COLOR_WHITE + ")";
-                    s += "\n";
-                    client.printMessage( s );
+                        table.addCell( "(" + S_COLOR_YELLOW + record.login + S_COLOR_WHITE + ")" );
+                    else
+                        table.addCell( "" );
                 }
             }
+            uint rows = table.numRows();
+            for ( uint i = 0; i < rows; i++ )
+                client.printMessage( table.getRow( i ) + "\n" );
         }
 
         return true;
