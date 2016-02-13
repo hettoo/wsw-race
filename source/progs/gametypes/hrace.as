@@ -97,6 +97,35 @@ class RecordTime
 
 RecordTime[] levelRecords( MAX_RECORDS );
 
+class Position
+{
+    bool saved;
+    Vec3 location;
+    Vec3 angles;
+    bool skipWeapons;
+    int weapon;
+    bool[] weapons;
+    int[] ammos;
+    float speed;
+
+    Position()
+    {
+        this.saved = false;
+        this.weapons.resize( WEAP_TOTAL );
+        this.ammos.resize( WEAP_TOTAL );
+        this.speed = 0;
+    }
+
+    ~Position() {}
+
+    void set( Vec3 location, Vec3 angles )
+    {
+        this.saved = true;
+        this.location = location;
+        this.angles = angles;
+    }
+}
+
 class Player
 {
     uint[] sectorTimes;
@@ -115,13 +144,8 @@ class Player
 
     // hettoo : practicemode
     int noclipWeapon;
-    Vec3 savedPosition;
-    Vec3 savedAngles;
-    int savedWeapon;
-    bool[] savedWeapons;
-    int[] savedAmmos;
-    bool savedInPreRace;
-    float savedSpeed;
+    Position practicePosition;
+    Position preRacePosition;
 
     void setupArrays( int size )
     {
@@ -143,11 +167,6 @@ class Player
 
         this.heardReady = false;
         this.heardGo = false;
-
-        this.savedPosition = Vec3();
-        this.savedWeapons.resize( WEAP_TOTAL );
-        this.savedAmmos.resize( WEAP_TOTAL );
-        this.savedSpeed = 0;
 
         if ( !this.arraysSetUp )
             return;
@@ -175,13 +194,14 @@ class Player
     void setQuickMenu( Client @client )
     {
         String s = '';
+        Position @position = this.savedPosition( client );
 
         s += '"Restart race" "racerestart" ';
         if ( this.practicing )
         {
             s += '"Leave practicemode" "practicemode" ' +
                  '"Save position" "position save" ';
-            if ( this.savedPosition != Vec3() )
+            if ( position.saved )
                 s += '"Load position" "position load" ';
             if ( client.team != TEAM_SPECTATOR )
             {
@@ -193,7 +213,10 @@ class Player
         }
         else
         {
-            s += '"Enter practicemode" "practicemode" ';
+            s += '"Enter practicemode" "practicemode" ' +
+                 '"Save position" "position save" ';
+            if ( ( this.preRace( client ) || client.team == TEAM_SPECTATOR ) && position.saved )
+                s += '"Load position" "position load" ';
         }
 
         GENERIC_SetQuickMenu( client, s );
@@ -234,44 +257,57 @@ class Player
         return true;
     }
 
+    Position @savedPosition( Client @client )
+    {
+        if ( this.preRace( client ) )
+            return preRacePosition;
+        else
+            return practicePosition;
+    }
+
     bool loadPosition( Client @client, bool verbose )
     {
         Entity @ent = client.getEnt();
-        if ( !this.practicing && client.team != TEAM_SPECTATOR && !( this.savedInPreRace && this.preRace( client ) ) )
+        if ( !this.practicing && client.team != TEAM_SPECTATOR && !this.preRace( client ) )
         {
             if ( verbose )
                 G_PrintMsg( ent, "Position load is only available in practicemode.\n" );
             return false;
         }
 
-        if ( this.savedPosition == Vec3() )
+        Position @position = this.savedPosition( client );
+
+        if ( !position.saved )
         {
             if ( verbose )
                 G_PrintMsg( ent, "No position has been saved yet.\n" );
             return false;
         }
 
-        ent.origin = this.savedPosition;
-        ent.angles = this.savedAngles;
+        ent.origin = position.location;
+        ent.angles = position.angles;
 
-        for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
+        if ( !position.skipWeapons )
         {
-            if ( this.savedWeapons[i] )
-                client.inventoryGiveItem( i );
-            Item @item = G_GetItem( i );
-            client.inventorySetCount( item.ammoTag, this.savedAmmos[i] );
+            for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
+            {
+                if ( position.weapons[i] )
+                    client.inventoryGiveItem( i );
+                Item @item = G_GetItem( i );
+                client.inventorySetCount( item.ammoTag, position.ammos[i] );
+            }
+            client.selectWeapon( position.weapon );
         }
-        client.selectWeapon( this.savedWeapon );
 
         if ( this.practicing )
         {
             if ( ent.moveType != MOVETYPE_NOCLIP )
             {
                 Vec3 a, b, c;
-                this.savedAngles.angleVectors( a, b, c );
+                position.angles.angleVectors( a, b, c );
                 a.z = 0;
                 a.normalize();
-                a *= this.savedSpeed;
+                a *= position.speed;
                 ent.set_velocity( a );
             }
         }
@@ -285,20 +321,25 @@ class Player
 
     void savePosition( Client @client )
     {
+        Position @position = this.savedPosition( client );
         Entity @ent = client.getEnt();
-        this.savedInPreRace = this.preRace( client );
-        this.savedPosition = ent.origin;
-        this.savedAngles = ent.angles;
-        for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
+
+        position.set( ent.origin, ent.angles );
+        if ( client.team == TEAM_SPECTATOR )
         {
-            this.savedWeapons[i] = client.canSelectWeapon( i );
-            Item @item = G_GetItem( i );
-            this.savedAmmos[i] = client.inventoryCount( item.ammoTag );
+            position.skipWeapons = true;
         }
-        if ( ent.moveType == MOVETYPE_NOCLIP )
-            this.savedWeapon = this.noclipWeapon;
         else
-            this.savedWeapon = client.weapon;
+        {
+            position.skipWeapons = false;
+            for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
+            {
+                position.weapons[i] = client.canSelectWeapon( i );
+                Item @item = G_GetItem( i );
+                position.ammos[i] = client.inventoryCount( item.ammoTag );
+            }
+            position.weapon = ent.moveType == MOVETYPE_NOCLIP ? this.noclipWeapon : client.weapon;
+        }
         this.setQuickMenu( client );
     }
 
@@ -1098,14 +1139,14 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         }
         else if ( action == "speed" && argsString.getToken( 1 ) != "" )
         {
-            Player @player = RACE_GetPlayer( client );
+            Position @position = RACE_GetPlayer( client ).savedPosition( client );
             String speed = argsString.getToken( 1 );
             if ( speed.locate( "+", 0 ) == 0 )
-                player.savedSpeed += speed.substr( 1 ).toFloat();
+                position.speed += speed.substr( 1 ).toFloat();
             else if ( speed.locate( "-", 0 ) == 0 )
-                player.savedSpeed -= speed.substr( 1 ).toFloat();
+                position.speed -= speed.substr( 1 ).toFloat();
             else
-                player.savedSpeed = speed.toFloat();
+                position.speed = speed.toFloat();
         }
         else
         {
