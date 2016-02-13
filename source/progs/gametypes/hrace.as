@@ -18,7 +18,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 int numCheckpoints = 0;
 bool demoRecording = false;
-const int MAX_RECORDS = 3;
+const int MAX_RECORDS = 30;
+const int HUD_RECORDS = 3;
 
 uint[] levelRecordSectors;
 uint   levelRecordFinishTime;
@@ -775,7 +776,7 @@ String RACE_TimeDiffString( uint time, uint reference )
 
 void RACE_UpdateHUDTopScores()
 {
-    for ( int i = 0; i < MAX_RECORDS; i++ )
+    for ( int i = 0; i < HUD_RECORDS; i++ )
     {
         G_ConfigString( CS_GENERAL + i, "" ); // somehow it is not shown the first time if it isn't initialized like this
         if ( levelRecords[i].finishTime > 0 && levelRecords[i].playerName.len() > 0 )
