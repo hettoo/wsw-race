@@ -1256,7 +1256,15 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
 
             if ( client.team == TEAM_SPECTATOR && !gametype.isTeamBased )
                 client.team = TEAM_PLAYERS;
-            client.respawn( false );
+            
+            if( ent.moveType != MOVETYPE_NOCLIP )
+            {
+                client.respawn( false );
+            }
+            else if (ent.moveType == MOVETYPE_NOCLIP)
+            {
+              player.loadPosition( ent.client, false );  
+            }
         }
 
         return true;
