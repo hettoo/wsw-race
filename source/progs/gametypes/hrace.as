@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+
 int numCheckpoints = 0;
 bool demoRecording = false;
 const int MAX_RECORDS = 30;
@@ -222,6 +223,7 @@ class Table
 
 class Player
 {
+    Client @client;
     uint[] sectorTimes;
     uint[] bestSectorTimes;
     uint startTime;
@@ -252,6 +254,7 @@ class Player
 
     void clear()
     {
+        @this.client = null;
         this.currentSector = 0;
         this.inRace = false;
         this.postRace = false;
@@ -281,23 +284,23 @@ class Player
 
     ~Player() {}
 
-    bool preRace( Client @client )
+    bool preRace()
     {
-        return !this.inRace && !this.practicing && !this.postRace && client.team != TEAM_SPECTATOR;
+        return !this.inRace && !this.practicing && !this.postRace && this.client.team != TEAM_SPECTATOR;
     }
 
-    void setQuickMenu( Client @client )
+    void setQuickMenu()
     {
         String s = '';
-        Position @position = this.savedPosition( client );
+        Position @position = this.savedPosition();
 
         s += '"Restart race" "racerestart" ';
         if ( this.practicing )
         {
             s += '"Leave practicemode" "practicemode" ';
-            if ( client.team != TEAM_SPECTATOR )
+            if ( this.client.team != TEAM_SPECTATOR )
             {
-                if ( client.getEnt().moveType == MOVETYPE_NOCLIP )
+                if ( this.client.getEnt().moveType == MOVETYPE_NOCLIP )
                     s += '"Noclip off" "noclip" ';
                 else
                     s += '"Noclip on" "noclip" ';
@@ -316,23 +319,23 @@ class Player
             s += '"Enter practicemode" "practicemode" ' +
                  '"" "" ' +
                  '"Save position" "position save" ';
-            if ( position.saved && ( this.preRace( client ) || client.team == TEAM_SPECTATOR ) )
+            if ( position.saved && ( this.preRace() || this.client.team == TEAM_SPECTATOR ) )
                 s += '"Load position" "position load" ' +
                      '"Clear position" "position clear" ';
         }
 
-        GENERIC_SetQuickMenu( client, s );
+        GENERIC_SetQuickMenu( this.client, s );
     }
 
-    bool toggleNoclip( Client @client )
+    bool toggleNoclip()
     {
-        Entity @ent = client.getEnt();
+        Entity @ent = this.client.getEnt();
         if ( !this.practicing )
         {
             G_PrintMsg( ent, "Noclip is only available in practicemode.\n" );
             return false;
         }
-        if ( client.team == TEAM_SPECTATOR )
+        if ( this.client.team == TEAM_SPECTATOR )
         {
             G_PrintMsg( ent, "Noclip is not available for spectators.\n" );
             return false;
@@ -348,36 +351,36 @@ class Player
         else
         {
             ent.moveType = MOVETYPE_PLAYER;
-            client.selectWeapon( this.noclipWeapon );
+            this.client.selectWeapon( this.noclipWeapon );
             msg = "noclip OFF";
         }
 
         G_PrintMsg( ent, msg + "\n" );
 
-        this.setQuickMenu( client );
+        this.setQuickMenu();
 
         return true;
     }
 
-    Position @savedPosition( Client @client )
+    Position @savedPosition()
     {
-        if ( this.preRace( client ) )
+        if ( this.preRace() )
             return preRacePosition;
         else
             return practicePosition;
     }
 
-    bool loadPosition( Client @client, bool verbose )
+    bool loadPosition( bool verbose )
     {
-        Entity @ent = client.getEnt();
-        if ( !this.practicing && client.team != TEAM_SPECTATOR && !this.preRace( client ) )
+        Entity @ent = this.client.getEnt();
+        if ( !this.practicing && this.client.team != TEAM_SPECTATOR && !this.preRace() )
         {
             if ( verbose )
                 G_PrintMsg( ent, "Position load is not available during a race.\n" );
             return false;
         }
 
-        Position @position = this.savedPosition( client );
+        Position @position = this.savedPosition();
 
         if ( !position.saved )
         {
@@ -394,11 +397,11 @@ class Player
             for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
             {
                 if ( position.weapons[i] )
-                    client.inventoryGiveItem( i );
+                    this.client.inventoryGiveItem( i );
                 Item @item = G_GetItem( i );
-                client.inventorySetCount( item.ammoTag, position.ammos[i] );
+                this.client.inventorySetCount( item.ammoTag, position.ammos[i] );
             }
-            client.selectWeapon( position.weapon );
+            this.client.selectWeapon( position.weapon );
         }
 
         if ( this.practicing )
@@ -413,7 +416,7 @@ class Player
                 ent.set_velocity( a );
             }
         }
-        else if ( this.preRace( client ) )
+        else if ( this.preRace() )
         {
             ent.set_velocity( Vec3() );
         }
@@ -421,13 +424,13 @@ class Player
         return true;
     }
 
-    void savePosition( Client @client )
+    void savePosition()
     {
-        Position @position = this.savedPosition( client );
-        Entity @ent = client.getEnt();
+        Position @position = this.savedPosition();
+        Entity @ent = this.client.getEnt();
 
         position.set( ent.origin, ent.angles );
-        if ( client.team == TEAM_SPECTATOR )
+        if ( this.client.team == TEAM_SPECTATOR )
         {
             position.skipWeapons = true;
         }
@@ -436,32 +439,32 @@ class Player
             position.skipWeapons = false;
             for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
             {
-                position.weapons[i] = client.canSelectWeapon( i );
+                position.weapons[i] = this.client.canSelectWeapon( i );
                 Item @item = G_GetItem( i );
-                position.ammos[i] = client.inventoryCount( item.ammoTag );
+                position.ammos[i] = this.client.inventoryCount( item.ammoTag );
             }
-            position.weapon = ent.moveType == MOVETYPE_NOCLIP ? this.noclipWeapon : client.weapon;
+            position.weapon = ent.moveType == MOVETYPE_NOCLIP ? this.noclipWeapon : this.client.weapon;
         }
-        this.setQuickMenu( client );
+        this.setQuickMenu();
     }
 
-    bool clearPosition( Client @client )
+    bool clearPosition()
     {
-        if ( !this.practicing && client.team != TEAM_SPECTATOR && !this.preRace( client ) )
+        if ( !this.practicing && this.client.team != TEAM_SPECTATOR && !this.preRace() )
         {
-            G_PrintMsg( client.getEnt(), "Position clear is not available during a race.\n" );
+            G_PrintMsg( this.client.getEnt(), "Position clear is not available during a race.\n" );
             return false;
         }
 
-        this.savedPosition( client ).clear();
-        this.setQuickMenu( client );
+        this.savedPosition().clear();
+        this.setQuickMenu();
 
         return true;
     }
 
-    bool startRace( Client @client )
+    bool startRace()
     {
-        if ( !this.preRace( client ) )
+        if ( !this.preRace() )
             return false;
 
         this.currentSector = 0;
@@ -473,18 +476,18 @@ class Player
 
         this.report.reset();
 
-        client.newRaceRun( numCheckpoints );
+        this.client.newRaceRun( numCheckpoints );
 
-        this.setQuickMenu( client );
+        this.setQuickMenu();
 
         return true;
     }
 
-    void cancelRace( Client @client )
+    void cancelRace()
     {
         if ( this.inRace && this.currentSector > 0 )
         {
-            Entity @ent = client.getEnt();
+            Entity @ent = this.client.getEnt();
             uint rows = this.report.numRows();
             for ( uint i = 0; i < rows; i++ )
                 G_PrintMsg( ent, this.report.getRow( i ) + "\n" );
@@ -496,7 +499,7 @@ class Player
         this.finishTime = 0;
     }
 
-    void completeRace( Client @client )
+    void completeRace()
     {
         uint delta;
         String str;
@@ -504,14 +507,14 @@ class Player
         if ( this.startTime > levelTime ) // something is very wrong here
             return;
 
-        client.addAward( S_COLOR_CYAN + "Race Finished!" );
+        this.client.addAward( S_COLOR_CYAN + "Race Finished!" );
 
         this.finishTime = levelTime - this.startTime;
         this.inRace = false;
         this.postRace = true;
 
         // send the final time to MM
-        client.setRaceTime( -1, this.finishTime );
+        this.client.setRaceTime( -1, this.finishTime );
 
         str = "";
         if ( this.bestFinishTime != 0 )
@@ -531,7 +534,7 @@ class Player
             str += RACE_TimeToString( delta );
         }
 
-        Entity @ent = client.getEnt();
+        Entity @ent = this.client.getEnt();
         G_CenterPrintMsg( ent, "Current: " + RACE_TimeToString( this.finishTime ) + "\n" + str );
         this.report.addCell( "Race finished:" );
         this.report.addCell( RACE_TimeToString( this.finishTime ) );
@@ -545,7 +548,7 @@ class Player
 
         if ( this.bestFinishTime == 0 || this.finishTime < this.bestFinishTime )
         {
-            client.addAward( S_COLOR_YELLOW + "Personal record!" );
+            this.client.addAward( S_COLOR_YELLOW + "Personal record!" );
             // copy all the sectors into the new personal record backup
             this.bestFinishTime = this.finishTime;
             for ( int i = 0; i < numCheckpoints; i++ )
@@ -557,15 +560,15 @@ class Player
         {
             if ( levelRecords[top].finishTime == 0 || levelRecords[top].finishTime > this.finishTime )
             {
-                String cleanName = client.name.removeColorTokens().tolower();
+                String cleanName = this.client.name.removeColorTokens().tolower();
                 String login = "";
-                if ( client.getUserInfoKey( "cl_mm_session" ).toInt() > 0 )
-                    login = client.getUserInfoKey( "cl_mm_login" );
+                if ( this.client.getUserInfoKey( "cl_mm_session" ).toInt() > 0 )
+                    login = this.client.getUserInfoKey( "cl_mm_login" );
 
                 if ( top == 0 )
                 {
-                    client.addAward( S_COLOR_GREEN + "Server record!" );
-                    G_PrintMsg( null, client.name + S_COLOR_YELLOW + " made a new server record: "
+                    this.client.addAward( S_COLOR_GREEN + "Server record!" );
+                    G_PrintMsg( null, this.client.name + S_COLOR_YELLOW + " made a new server record: "
                             + S_COLOR_WHITE + RACE_TimeToString( this.finishTime ) + "\n" );
                 }
 
@@ -590,7 +593,7 @@ class Player
                     for ( int i = remove; i > top; i-- )
                         levelRecords[i].Copy( levelRecords[i - 1] );
 
-                    levelRecords[top].Store( client );
+                    levelRecords[top].Store( this.client );
 
                     RACE_WriteTopScores();
                     RACE_UpdateHUDTopScores();
@@ -604,12 +607,12 @@ class Player
         Entity @respawner = G_SpawnEntity( "race_respawner" );
         respawner.nextThink = levelTime + 5000;
         @respawner.think = race_respawner_think;
-        respawner.count = client.playerNum;
+        respawner.count = this.client.playerNum;
 
-        G_AnnouncerSound( client, G_SoundIndex( "sounds/misc/timer_ploink" ), GS_MAX_TEAMS, false, null );
+        G_AnnouncerSound( this.client, G_SoundIndex( "sounds/misc/timer_ploink" ), GS_MAX_TEAMS, false, null );
     }
 
-    bool touchCheckPoint( Client @client, int id )
+    bool touchCheckPoint( int id )
     {
         uint delta;
         String str;
@@ -629,7 +632,7 @@ class Player
         this.sectorTimes[id] = levelTime - this.startTime;
 
         // send this checkpoint to MM
-        client.setRaceTime( id, this.sectorTimes[id] );
+        this.client.setRaceTime( id, this.sectorTimes[id] );
 
         // print some output and give awards if earned
 
@@ -663,7 +666,7 @@ class Player
             str += RACE_TimeToString( delta );
         }
 
-        Entity @ent = client.getEnt();
+        Entity @ent = this.client.getEnt();
         G_CenterPrintMsg( ent, "Current: " + RACE_TimeToString( this.sectorTimes[id] ) + "\n" + str );
         this.report.addCell( "Sector " + this.currentSector + ":" );
         this.report.addCell( RACE_TimeToString( this.sectorTimes[id] ) );
@@ -675,52 +678,52 @@ class Player
         // if beating the level record on this sector give an award
         if ( this.sectorTimes[id] < levelRecords[0].sectorTimes[id] )
         {
-            client.addAward( "Sector record on sector " + this.currentSector + "!" );
+            this.client.addAward( "Sector record on sector " + this.currentSector + "!" );
         }
         // if beating his own record on this sector give an award
         else if ( this.sectorTimes[id] < this.bestSectorTimes[id] )
         {
             // ch : does racesow apply sector records only if race is completed?
-            client.addAward( "Personal record on sector " + this.currentSector + "!" );
+            this.client.addAward( "Personal record on sector " + this.currentSector + "!" );
             this.bestSectorTimes[id] = this.sectorTimes[id];
         }
 
         this.currentSector++;
 
-        G_AnnouncerSound( client, G_SoundIndex( "sounds/misc/timer_bip_bip" ), GS_MAX_TEAMS, false, null );
+        G_AnnouncerSound( this.client, G_SoundIndex( "sounds/misc/timer_bip_bip" ), GS_MAX_TEAMS, false, null );
 
         return true;
     }
 
-    void enterPracticeMode( Client @client )
+    void enterPracticeMode()
     {
         if ( this.practicing )
             return;
 
         this.practicing = true;
-        G_CenterPrintMsg( client.getEnt(), S_COLOR_CYAN + "Entered practicemode" );
-        this.cancelRace( client );
-        this.setQuickMenu( client );
+        G_CenterPrintMsg( this.client.getEnt(), S_COLOR_CYAN + "Entered practicemode" );
+        this.cancelRace();
+        this.setQuickMenu();
     }
 
-    void leavePracticeMode( Client @client )
+    void leavePracticeMode()
     {
         if ( !this.practicing )
             return;
 
         this.practicing = false;
-        G_CenterPrintMsg( client.getEnt(), S_COLOR_CYAN + "Left practicemode" );
-        if ( client.team != TEAM_SPECTATOR )
-            client.respawn( false );
-        this.setQuickMenu( client );
+        G_CenterPrintMsg( this.client.getEnt(), S_COLOR_CYAN + "Left practicemode" );
+        if ( this.client.team != TEAM_SPECTATOR )
+            this.client.respawn( false );
+        this.setQuickMenu();
     }
 
-    void togglePracticeMode( Client @client )
+    void togglePracticeMode()
     {
         if ( this.practicing )
-            this.leavePracticeMode( client );
+            this.leavePracticeMode();
         else
-            this.enterPracticeMode( client );
+            this.enterPracticeMode();
     }
 }
 
@@ -731,7 +734,10 @@ Player @RACE_GetPlayer( Client @client )
     if ( @client == null || client.playerNum < 0 )
         return null;
 
-    return @players[client.playerNum];
+    Player @player = players[client.playerNum];
+    @player.client = client;
+
+    return player;
 }
 
 // the player has finished the race. This entity times his automatic respawning
@@ -819,7 +825,7 @@ void target_checkpoint_use( Entity @self, Entity @other, Entity @activator )
     if ( !player.inRace )
         return;
 
-    if ( player.touchCheckPoint( activator.client, self.count ) )
+    if ( player.touchCheckPoint( self.count ) )
         self.useTargets( activator );
 }
 
@@ -840,7 +846,7 @@ void target_stoptimer_use( Entity @self, Entity @other, Entity @activator )
     if ( !player.inRace )
         return;
 
-    player.completeRace( activator.client );
+    player.completeRace();
 
     self.useTargets( activator );
 }
@@ -868,7 +874,7 @@ void target_starttimer_use( Entity @self, Entity @other, Entity @activator )
     if ( player.inRace )
         return;
 
-    if ( player.startRace( activator.client ) )
+    if ( player.startRace() )
     {
         if ( !player.heardGo )
         {
@@ -1077,7 +1083,7 @@ void RACE_playerKilled( Entity @target, Entity @attacker, Entity @inflicter )
     if ( @target == null || @target.client == null )
         return;
 
-    RACE_GetPlayer( target.client ).cancelRace( target.client );
+    RACE_GetPlayer( target.client ).cancelRace();
 }
 
 void RACE_SetUpMatch()
@@ -1235,7 +1241,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         {
             Player @player = RACE_GetPlayer( client );
             if ( player.inRace )
-                player.cancelRace( client );
+                player.cancelRace();
 
             if ( client.team == TEAM_SPECTATOR && !gametype.isTeamBased )
                 client.team = TEAM_PLAYERS;
@@ -1246,28 +1252,28 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
     }
     else if ( cmdString == "practicemode" )
     {
-        RACE_GetPlayer( client ).togglePracticeMode( client );
+        RACE_GetPlayer( client ).togglePracticeMode();
         return true;
     }
     else if ( cmdString == "noclip" )
     {
         Player @player = RACE_GetPlayer( client );
-        return player.toggleNoclip( client );
+        return player.toggleNoclip();
     }
     else if ( cmdString == "position" )
     {
         String action = argsString.getToken( 0 );
         if ( action == "save" )
         {
-            RACE_GetPlayer( client ).savePosition( client );
+            RACE_GetPlayer( client ).savePosition();
         }
         else if ( action == "load" )
         {
-            return RACE_GetPlayer( client ).loadPosition( client, true );
+            return RACE_GetPlayer( client ).loadPosition( true );
         }
         else if ( action == "speed" && argsString.getToken( 1 ) != "" )
         {
-            Position @position = RACE_GetPlayer( client ).savedPosition( client );
+            Position @position = RACE_GetPlayer( client ).savedPosition();
             String speed = argsString.getToken( 1 );
             if ( speed.locate( "+", 0 ) == 0 )
                 position.speed += speed.substr( 1 ).toFloat();
@@ -1278,7 +1284,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         }
         else if ( action == "clear" )
         {
-            return RACE_GetPlayer( client ).clearPosition( client );
+            return RACE_GetPlayer( client ).clearPosition();
         }
         else
         {
@@ -1450,9 +1456,9 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
 void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 {
     Player @player = RACE_GetPlayer( ent.client );
-    player.cancelRace( ent.client );
+    player.cancelRace();
 
-    player.setQuickMenu( ent.client );
+    player.setQuickMenu();
 
     if ( ent.isGhosting() )
         return;
@@ -1471,7 +1477,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
     else
         ent.client.selectWeapon( -1 ); // auto-select best weapon in the inventory
 
-    player.loadPosition( ent.client, false );
+    player.loadPosition( false );
 
     // add a teleportation effect
     ent.respawnEffect();
