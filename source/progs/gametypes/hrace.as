@@ -32,7 +32,7 @@ uint lastRecordSent = 0;
 class RecordTime
 {
     uint[] sectorTimes;
-    uint   finishTime;
+    uint finishTime;
     String playerName;
     String login;
     bool arraysSetUp;
@@ -142,20 +142,20 @@ class Table
     Table( String format )
     {
         columns = 0;
-        seps.push_back( "" );
-        for ( uint i = 0; i < format.len(); i++ )
+        seps.insertLast( "" );
+        for ( uint i = 0; i < format.length(); i++ )
         {
             String c = format.substr( i, 1 );
             if ( c == "l" || c == "r" )
             {
                 this.columns++;
-                this.lefts.push_back( c == "l" );
-                this.seps.push_back( "" );
-                this.maxs.push_back( 0 );
+                this.lefts.insertLast( c == "l" );
+                this.seps.insertLast( "" );
+                this.maxs.insertLast( 0 );
             }
             else
             {
-                this.seps[this.seps.size() - 1] += c;
+                this.seps[this.seps.length() - 1] += c;
             }
         }
     }
@@ -176,17 +176,17 @@ class Table
 
     void addCell( String cell )
     {
-        int column = this.items.size() % this.columns;
-        uint len = cell.removeColorTokens().len();
+        int column = this.items.length() % this.columns;
+        uint len = cell.removeColorTokens().length();
         if ( len > this.maxs[column] )
             this.maxs[column] = len;
-        this.items.push_back( cell );
+        this.items.insertLast( cell );
     }
 
     uint numRows()
     {
-        int rows = this.items.size() / this.columns;
-        if ( this.items.size() % this.columns != 0 )
+        int rows = this.items.length() / this.columns;
+        if ( this.items.length() % this.columns != 0 )
             rows++;
         return rows;
     }
@@ -197,11 +197,11 @@ class Table
         for ( uint i = 0; i < this.columns; i++ )
         {
             uint j = n * this.columns + i;
-            if ( j < this.items.size() )
+            if ( j < this.items.length() )
             {
                 row += this.seps[i];
 
-                int d = this.maxs[i] - this.items[j].removeColorTokens().len();
+                int d = this.maxs[i] - this.items[j].removeColorTokens().length();
                 String pad = "";
                 for ( int k = 0; k < d; k++ )
                     pad += " ";
@@ -939,7 +939,7 @@ void RACE_UpdateHUDTopScores()
     for ( int i = 0; i < HUD_RECORDS; i++ )
     {
         G_ConfigString( CS_GENERAL + i, "" ); // somehow it is not shown the first time if it isn't initialized like this
-        if ( levelRecords[i].finishTime > 0 && levelRecords[i].playerName.len() > 0 )
+        if ( levelRecords[i].finishTime > 0 && levelRecords[i].playerName.length() > 0 )
             G_ConfigString( CS_GENERAL + i, "#" + ( i + 1 ) + " - " + levelRecords[i].playerName + " - " + RACE_TimeToString( levelRecords[i].finishTime ) );
     }
 }
@@ -954,7 +954,7 @@ void RACE_WriteTopScores()
 
     for ( int i = 0; i < MAX_RECORDS; i++ )
     {
-        if ( levelRecords[i].finishTime > 0 && levelRecords[i].playerName.len() > 0 )
+        if ( levelRecords[i].finishTime > 0 && levelRecords[i].playerName.length() > 0 )
         {
             topScores += "\"" + int( levelRecords[i].finishTime );
             if ( levelRecords[i].login != "" )
@@ -982,7 +982,7 @@ void RACE_LoadTopScores()
 
     topScores = G_LoadFile( "topscores/race/" + mapName + ".txt" );
 
-    if ( topScores.len() > 0 )
+    if ( topScores.length() > 0 )
     {
         String timeToken, loginToken, nameToken, sectorToken;
         int count = 0;
@@ -992,11 +992,11 @@ void RACE_LoadTopScores()
         while ( i < MAX_RECORDS )
         {
             timeToken = topScores.getToken( count++ );
-            if ( timeToken.len() == 0 )
+            if ( timeToken.length() == 0 )
                 break;
 
             sep = timeToken.locate( "|", 0 );
-            if ( sep == timeToken.len() )
+            if ( sep == timeToken.length() )
             {
                 loginToken = "";
             }
@@ -1007,11 +1007,11 @@ void RACE_LoadTopScores()
             }
 
             nameToken = topScores.getToken( count++ );
-            if ( nameToken.len() == 0 )
+            if ( nameToken.length() == 0 )
                 break;
 
             sectorToken = topScores.getToken( count++ );
-            if ( sectorToken.len() == 0 )
+            if ( sectorToken.length() == 0 )
                 break;
 
             int numSectors = sectorToken.toInt();
@@ -1020,7 +1020,7 @@ void RACE_LoadTopScores()
             for ( int j = 0; j < numSectors; j++ )
             {
                 sectorToken = topScores.getToken( count++ );
-                if ( sectorToken.len() == 0 )
+                if ( sectorToken.length() == 0 )
                     break;
 
                 levelRecords[i].sectorTimes[j] = uint( sectorToken.toInt() );
@@ -1155,16 +1155,16 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
                     }
                     else
                     {
-                        for ( p = 0; p < map.len(); p++ )
+                        for ( p = 0; p < map.length(); p++ )
                         {
                             uint eq = 0;
-                            while ( eq < pattern.len() && p + eq < lmap.len() )
+                            while ( eq < pattern.length() && p + eq < lmap.length() )
                             {
                                 if ( lmap[p + eq] != pattern[eq] )
                                     break;
                                 eq++;
                             }
-                            if ( eq == pattern.len() )
+                            if ( eq == pattern.length() )
                             {
                                 match = true;
                                 break;
@@ -1172,13 +1172,13 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
                         }
                     }
                     if ( match && map != current )
-                        maps.push_back( map );
+                        maps.insertLast( map );
                 }
                 i++;
             }
             while ( @map != null );
 
-            if ( maps.size() == 0 )
+            if ( maps.length() == 0 )
             {
                 client.printMessage( "No matching maps\n" );
                 return false;
@@ -1186,12 +1186,12 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
 
             if ( levelTime - randmap_time < 80 )
             {
-                G_PrintMsg( null, S_COLOR_YELLOW + "Chosen map: " + S_COLOR_WHITE + randmap + S_COLOR_YELLOW + " (out of " + S_COLOR_WHITE + maps.size() + S_COLOR_YELLOW + " matches)\n" );
+                G_PrintMsg( null, S_COLOR_YELLOW + "Chosen map: " + S_COLOR_WHITE + randmap + S_COLOR_YELLOW + " (out of " + S_COLOR_WHITE + maps.length() + S_COLOR_YELLOW + " matches)\n" );
                 return true;
             }
 
             randmap_time = levelTime;
-            randmap = maps[rand() % maps.size()];
+            randmap = maps[rand() % maps.length()];
         }
         else
         {
@@ -1343,7 +1343,7 @@ String @GT_ScoreboardMessage( uint maxlen )
 
     // &t = team tab, team tag, team score (doesn't apply), team ping (doesn't apply)
     entry = "&t " + int( TEAM_PLAYERS ) + " 0 " + team.ping + " ";
-    if ( scoreboardMessage.len() + entry.len() < maxlen )
+    if ( scoreboardMessage.length() + entry.length() < maxlen )
         scoreboardMessage += entry;
 
     // "Name Time Ping Racing"
@@ -1364,7 +1364,7 @@ String @GT_ScoreboardMessage( uint maxlen )
                 + player.bestFinishTime + " "
                 + ent.client.ping + " " + racing + " ";
 
-        if ( scoreboardMessage.len() + entry.len() < maxlen )
+        if ( scoreboardMessage.length() + entry.length() < maxlen )
             scoreboardMessage += entry;
     }
 
@@ -1534,11 +1534,11 @@ void GT_ThinkRules()
         client.setHUDStat( STAT_TIME_ALPHA, -9999 );
         client.setHUDStat( STAT_TIME_BETA, -9999 );
 
-        if ( levelRecords[0].playerName.len() > 0 )
+        if ( levelRecords[0].playerName.length() > 0 )
             client.setHUDStat( STAT_MESSAGE_OTHER, CS_GENERAL );
-        if ( levelRecords[1].playerName.len() > 0 )
+        if ( levelRecords[1].playerName.length() > 0 )
             client.setHUDStat( STAT_MESSAGE_ALPHA, CS_GENERAL + 1 );
-        if ( levelRecords[2].playerName.len() > 0 )
+        if ( levelRecords[2].playerName.length() > 0 )
             client.setHUDStat( STAT_MESSAGE_BETA, CS_GENERAL + 2 );
     }
 
