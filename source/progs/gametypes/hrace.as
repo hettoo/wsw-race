@@ -304,7 +304,7 @@ class Player
             }
             else
             {
-                s += '"" ""';
+                s += '"" "" ';
             }
             s += '"Save position" "position save" ';
             if ( position.saved )
@@ -314,16 +314,11 @@ class Player
         else
         {
             s += '"Enter practicemode" "practicemode" ' +
-                 '"" ""' +
+                 '"" "" ' +
                  '"Save position" "position save" ';
-            if ( position.saved )
-            {
-                if ( this.preRace( client ) || client.team == TEAM_SPECTATOR )
-                    s += '"Load position" "position load" ';
-                else
-                    s += '"" ""';
-                s += '"Clear position" "position clear" ';
-            }
+            if ( position.saved && ( this.preRace( client ) || client.team == TEAM_SPECTATOR ) )
+                s += '"Load position" "position load" ' +
+                     '"Clear position" "position clear" ';
         }
 
         GENERIC_SetQuickMenu( client, s );
@@ -378,7 +373,7 @@ class Player
         if ( !this.practicing && client.team != TEAM_SPECTATOR && !this.preRace( client ) )
         {
             if ( verbose )
-                G_PrintMsg( ent, "Position load is only available in practicemode.\n" );
+                G_PrintMsg( ent, "Position load is not available during a race.\n" );
             return false;
         }
 
@@ -448,6 +443,20 @@ class Player
             position.weapon = ent.moveType == MOVETYPE_NOCLIP ? this.noclipWeapon : client.weapon;
         }
         this.setQuickMenu( client );
+    }
+
+    bool clearPosition( Client @client )
+    {
+        if ( !this.practicing && client.team != TEAM_SPECTATOR && !this.preRace( client ) )
+        {
+            G_PrintMsg( client.getEnt(), "Position clear is not available during a race.\n" );
+            return false;
+        }
+
+        this.savedPosition( client ).clear();
+        this.setQuickMenu( client );
+
+        return true;
     }
 
     bool startRace( Client @client )
@@ -1269,9 +1278,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         }
         else if ( action == "clear" )
         {
-            Player @player = RACE_GetPlayer( client );
-            player.savedPosition( client ).clear();
-            player.setQuickMenu( client );
+            return RACE_GetPlayer( client ).clearPosition( client );
         }
         else
         {
