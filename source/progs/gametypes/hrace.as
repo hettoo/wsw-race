@@ -487,14 +487,6 @@ class Player
         // print some output and give awards if earned
 
         str = "";
-        for ( int i = 0; i < MAX_RECORDS; i++ )
-        {
-            if ( this.sectorTimes[id] <= levelRecords[i].sectorTimes[id] )
-            {
-                str += "-R#" + ( i + 1 ); // extra id when on server record beating time
-                break;
-            }
-        }
         if ( this.bestSectorTimes[id] == 0 )
         {
             str = S_COLOR_GREEN + str;
