@@ -294,11 +294,7 @@ class Player
         s += '"Restart race" "racerestart" ';
         if ( this.practicing )
         {
-            s += '"Leave practicemode" "practicemode" ' +
-                 '"Save position" "position save" ';
-            if ( position.saved )
-                s += '"Load position" "position load" ' +
-                     '"Clear position" "position clear" ';
+            s += '"Leave practicemode" "practicemode" ';
             if ( client.team != TEAM_SPECTATOR )
             {
                 if ( client.getEnt().moveType == MOVETYPE_NOCLIP )
@@ -306,15 +302,26 @@ class Player
                 else
                     s += '"Noclip on" "noclip" ';
             }
+            else
+            {
+                s += '"" ""';
+            }
+            s += '"Save position" "position save" ';
+            if ( position.saved )
+                s += '"Load position" "position load" ' +
+                     '"Clear position" "position clear" ';
         }
         else
         {
             s += '"Enter practicemode" "practicemode" ' +
+                 '"" ""' +
                  '"Save position" "position save" ';
             if ( position.saved )
             {
                 if ( this.preRace( client ) || client.team == TEAM_SPECTATOR )
                     s += '"Load position" "position load" ';
+                else
+                    s += '"" ""';
                 s += '"Clear position" "position clear" ';
             }
         }
