@@ -945,9 +945,9 @@ String RACE_TimeDiffString( uint time, uint reference )
     String result;
 
     if ( reference == 0 )
-        result = S_COLOR_WHITE + " --:--.---";
+        result = S_COLOR_WHITE + "--:--.---";
     else if ( time == reference )
-        result = S_COLOR_WHITE + " " + RACE_TimeToString( 0 );
+        result = S_COLOR_WHITE + RACE_TimeToString( 0 );
     else if ( time < reference )
         result = S_COLOR_GREEN + "-" + RACE_TimeToString( reference - time );
     else
