@@ -1291,7 +1291,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
                 {
                     table.addCell( ( i + 1 ) + "." );
                     table.addCell( S_COLOR_GREEN + RACE_TimeToString( record.finishTime ) );
-                    table.addCell( S_COLOR_YELLOW + "+[" + RACE_TimeToString( record.finishTime - top.finishTime ) + "]" );
+                    table.addCell( S_COLOR_YELLOW + "[+" + RACE_TimeToString( record.finishTime - top.finishTime ) + "]" );
                     table.addCell( S_COLOR_WHITE + record.playerName );
                     if ( record.login != "" )
                         table.addCell( "(" + S_COLOR_YELLOW + record.login + S_COLOR_WHITE + ")" );
