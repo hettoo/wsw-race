@@ -23,7 +23,7 @@ const int MAX_RECORDS = 30;
 const int HUD_RECORDS = 3;
 
 uint[] levelRecordSectors;
-uint   levelRecordFinishTime;
+uint levelRecordFinishTime;
 String levelRecordPlayerName;
 
 // ch : MM
@@ -32,6 +32,7 @@ uint lastRecordSent = 0;
 
 class RecordTime
 {
+    bool saved;
     uint[] sectorTimes;
     uint finishTime;
     String playerName;
@@ -50,6 +51,7 @@ class RecordTime
 
     RecordTime()
     {
+        this.saved = false;
         this.arraysSetUp = false;
         this.finishTime = 0;
     }
@@ -58,6 +60,7 @@ class RecordTime
 
     void clear()
     {
+        this.saved = false;
         this.playerName = "";
         this.login = "";
         this.finishTime = 0;
@@ -85,6 +88,7 @@ class RecordTime
 
         Player @player = RACE_GetPlayer( client );
 
+        this.saved = true;
         this.finishTime = player.finishTime;
         this.playerName = client.name;
         if ( client.getUserInfoKey( "cl_mm_session" ).toInt() > 0 )
@@ -228,6 +232,7 @@ class Player
     uint[] bestSectorTimes;
     uint startTime;
     uint finishTime;
+    bool hasTime;
     uint bestFinishTime;
     Table report( S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "r " + S_COLOR_ORANGE + "/ l r " + S_COLOR_ORANGE + "/ l r" );
     int currentSector;
@@ -261,6 +266,7 @@ class Player
         this.practicing = false;
         this.startTime = 0;
         this.finishTime = 0;
+        this.hasTime = false;
         this.bestFinishTime = 0;
 
         this.heardReady = false;
@@ -520,7 +526,7 @@ class Player
 
         for ( int i = 0; i < MAX_RECORDS; i++ )
         {
-            if ( this.finishTime <= levelRecords[i].finishTime )
+            if ( !levelRecords[i].saved || this.finishTime <= levelRecords[i].finishTime )
             {
                 str += " (" + S_COLOR_GREEN + "#" + ( i + 1 ) + S_COLOR_WHITE + ")"; // extra id when on server record beating time
                 break;
@@ -539,10 +545,11 @@ class Player
         for ( uint i = 0; i < rows; i++ )
             G_PrintMsg( ent, this.report.getRow( i ) + "\n" );
 
-        if ( this.bestFinishTime == 0 || this.finishTime < this.bestFinishTime )
+        if ( !this.hasTime || this.finishTime < this.bestFinishTime )
         {
             this.client.addAward( S_COLOR_YELLOW + "Personal record!" );
             // copy all the sectors into the new personal record backup
+            this.hasTime = true;
             this.bestFinishTime = this.finishTime;
             for ( int i = 0; i < numCheckpoints; i++ )
                 this.bestSectorTimes[i] = this.sectorTimes[i];
@@ -551,7 +558,7 @@ class Player
         // see if the player improved one of the top scores
         for ( int top = 0; top < MAX_RECORDS; top++ )
         {
-            if ( levelRecords[top].finishTime == 0 || levelRecords[top].finishTime > this.finishTime )
+            if ( !levelRecords[top].saved || this.finishTime < levelRecords[top].finishTime )
             {
                 String cleanName = this.client.name.removeColorTokens().tolower();
                 String login = "";
@@ -933,7 +940,7 @@ void RACE_UpdateHUDTopScores()
     for ( int i = 0; i < HUD_RECORDS; i++ )
     {
         G_ConfigString( CS_GENERAL + i, "" ); // somehow it is not shown the first time if it isn't initialized like this
-        if ( levelRecords[i].finishTime > 0 && levelRecords[i].playerName.length() > 0 )
+        if ( levelRecords[i].saved && levelRecords[i].playerName.length() > 0 )
             G_ConfigString( CS_GENERAL + i, "#" + ( i + 1 ) + " - " + levelRecords[i].playerName + " - " + RACE_TimeToString( levelRecords[i].finishTime ) );
     }
 }
@@ -948,7 +955,7 @@ void RACE_WriteTopScores()
 
     for ( int i = 0; i < MAX_RECORDS; i++ )
     {
-        if ( levelRecords[i].finishTime > 0 && levelRecords[i].playerName.length() > 0 )
+        if ( levelRecords[i].saved && levelRecords[i].playerName.length() > 0 )
         {
             topScores += "\"" + int( levelRecords[i].finishTime );
             if ( levelRecords[i].login != "" )
@@ -1038,6 +1045,7 @@ void RACE_LoadTopScores()
                 continue;
             }
 
+            levelRecords[i].saved = true;
             levelRecords[i].finishTime = uint( timeToken.toInt() );
             levelRecords[i].playerName = nameToken;
             levelRecords[i].login = loginToken;
@@ -1269,7 +1277,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
     else if ( cmdString == "top" )
     {
         RecordTime @top = levelRecords[0];
-        if ( top.finishTime == 0 )
+        if ( !top.saved )
         {
             client.printMessage( S_COLOR_RED + "No records yet.\n" );
         }
@@ -1279,7 +1287,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
             for ( int i = MAX_RECORDS - 1; i >= 0; i-- )
             {
                 RecordTime @record = levelRecords[i];
-                if ( record.finishTime != 0 )
+                if ( record.saved )
                 {
                     table.addCell( ( i + 1 ) + "." );
                     table.addCell( S_COLOR_GREEN + RACE_TimeToString( record.finishTime ) );
@@ -1409,9 +1417,12 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
                 Player @player = RACE_GetPlayer( client );
                 for ( int i = 0; i < MAX_RECORDS; i++ )
                 {
+                    if ( !levelRecords[i].saved )
+                        break;
                     if ( levelRecords[i].login == login
-                            && ( player.bestFinishTime == 0 || levelRecords[i].finishTime < player.bestFinishTime ) )
+                            && ( !player.hasTime || levelRecords[i].finishTime < player.bestFinishTime ) )
                     {
+                        player.hasTime = true;
                         player.bestFinishTime = levelRecords[i].finishTime;
                         for ( int j = 0; j < numCheckpoints; j++ )
                             player.bestSectorTimes[j] = levelRecords[i].sectorTimes[j];
