@@ -516,32 +516,25 @@ class Player
         // send the final time to MM
         this.client.setRaceTime( -1, this.finishTime );
 
-        str = "";
-        if ( this.bestFinishTime != 0 )
+        str = "Current: " + RACE_TimeToString( this.finishTime );
+
+        for ( int i = 0; i < MAX_RECORDS; i++ )
         {
-            // print the time differences with the best race of this player
-            // green if player's best time at this sector, red if not improving previous best time
-            if ( this.finishTime <= this.bestFinishTime )
+            if ( this.finishTime <= levelRecords[i].finishTime )
             {
-                delta = this.bestFinishTime - this.finishTime;
-                str = S_COLOR_GREEN + "-";
+                str += " (" + S_COLOR_GREEN + "#" + ( i + 1 ) + S_COLOR_WHITE + ")"; // extra id when on server record beating time
+                break;
             }
-            else
-            {
-                delta = this.finishTime - this.bestFinishTime;
-                str = S_COLOR_RED + "+";
-            }
-            str += RACE_TimeToString( delta );
         }
 
         Entity @ent = this.client.getEnt();
-        G_CenterPrintMsg( ent, "Current: " + RACE_TimeToString( this.finishTime ) + "\n" + str );
+        G_CenterPrintMsg( ent, str + "\n" + RACE_TimeDiffString( this.finishTime, this.bestFinishTime, true ) );
         this.report.addCell( "Race finished:" );
         this.report.addCell( RACE_TimeToString( this.finishTime ) );
         this.report.addCell( "Personal:" );
-        this.report.addCell( RACE_TimeDiffString( this.finishTime, this.bestFinishTime ) );
+        this.report.addCell( RACE_TimeDiffString( this.finishTime, this.bestFinishTime, false ) );
         this.report.addCell( "Server:" );
-        this.report.addCell( RACE_TimeDiffString( this.finishTime, levelRecords[0].finishTime ) );
+        this.report.addCell( RACE_TimeDiffString( this.finishTime, levelRecords[0].finishTime, false ) );
         uint rows = this.report.numRows();
         for ( uint i = 0; i < rows; i++ )
             G_PrintMsg( ent, this.report.getRow( i ) + "\n" );
@@ -636,44 +629,25 @@ class Player
 
         // print some output and give awards if earned
 
-        str = "";
+        str = "Current: " + RACE_TimeToString( this.sectorTimes[id] );
+
         for ( int i = 0; i < MAX_RECORDS; i++ )
         {
             if ( this.sectorTimes[id] <= levelRecords[i].sectorTimes[id] )
             {
-                str += "-R#" + ( i + 1 ); // extra id when on server record beating time
+                str += " (" + S_COLOR_GREEN + "#" + ( i + 1 ) + S_COLOR_WHITE + ")"; // extra id when on server record beating time
                 break;
             }
         }
-        if ( this.bestSectorTimes[id] == 0 )
-        {
-            str = S_COLOR_GREEN + str;
-        }
-        else
-        {
-            // green if player's best time at this sector, red if not improving previous best time
-            // '-' means improved / equal, '+' means worse
-            if ( this.sectorTimes[id] <= this.bestSectorTimes[id] )
-            {
-                delta = this.bestSectorTimes[id] - this.sectorTimes[id];
-                str = S_COLOR_GREEN + str + "-";
-            }
-            else
-            {
-                delta = this.sectorTimes[id] - this.bestSectorTimes[id];
-                str = S_COLOR_RED + str + "+";
-            }
-            str += RACE_TimeToString( delta );
-        }
 
         Entity @ent = this.client.getEnt();
-        G_CenterPrintMsg( ent, "Current: " + RACE_TimeToString( this.sectorTimes[id] ) + "\n" + str );
+        G_CenterPrintMsg( ent, str + "\n" + RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id], true ) );
         this.report.addCell( "Sector " + this.currentSector + ":" );
         this.report.addCell( RACE_TimeToString( this.sectorTimes[id] ) );
         this.report.addCell( "Personal:" );
-        this.report.addCell( RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id] ) );
+        this.report.addCell( RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id], false ) );
         this.report.addCell( "Server:" );
-        this.report.addCell( RACE_TimeDiffString( this.sectorTimes[id], levelRecords[0].sectorTimes[id] ) );
+        this.report.addCell( RACE_TimeDiffString( this.sectorTimes[id], levelRecords[0].sectorTimes[id], false ) );
 
         // if beating the level record on this sector give an award
         if ( this.sectorTimes[id] < levelRecords[0].sectorTimes[id] )
@@ -940,20 +914,18 @@ String RACE_TimeToString( uint time )
     return minsString + ":" + secsString + "." + millString;
 }
 
-String RACE_TimeDiffString( uint time, uint reference )
+String RACE_TimeDiffString( uint time, uint reference, bool forceDiff )
 {
-    String result;
-
-    if ( reference == 0 )
-        result = S_COLOR_WHITE + "--:--.---";
-    else if ( time == reference )
-        result = S_COLOR_WHITE + RACE_TimeToString( 0 );
-    else if ( time < reference )
-        result = S_COLOR_GREEN + "-" + RACE_TimeToString( reference - time );
+    if ( reference == 0 && !forceDiff )
+        return S_COLOR_WHITE + "--:--.---";
+    else if ( reference == 0 )
+        return "";
+    else if ( time == reference && !forceDiff )
+        return S_COLOR_WHITE + RACE_TimeToString( 0 );
+    else if ( time < reference || ( time == reference && forceDiff ) )
+        return S_COLOR_GREEN + "-" + RACE_TimeToString( reference - time );
     else
-        result = S_COLOR_RED + "+" + RACE_TimeToString( time - reference );
-
-    return result;
+        return S_COLOR_RED + "+" + RACE_TimeToString( time - reference );
 }
 
 void RACE_UpdateHUDTopScores()
