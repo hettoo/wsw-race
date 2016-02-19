@@ -30,6 +30,31 @@ String levelRecordPlayerName;
 const uint RECORD_SEND_INTERVAL = 5 * 60 * 1000; // 5 minutes
 uint lastRecordSent = 0;
 
+enum eMenuItems
+{
+    MI_EMPTY,
+    MI_RESTART_RACE,
+    MI_ENTER_PRACTICE,
+    MI_LEAVE_PRACTICE,
+    MI_NOCLIP_ON,
+    MI_NOCLIP_OFF,
+    MI_SAVE_POSITION,
+    MI_LOAD_POSITION,
+    MI_CLEAR_POSITION
+};
+
+array<const String @> menuItems = { 
+    '"" ""',
+    '"Restart race" "racerestart"', 
+    '"Enter practice mode" "practicemode" ',
+    '"Leave practice mode" "practicemode" ',
+    '"Enable noclip mode" "noclip" ',
+    '"Disable noclip mode" "noclip" ',
+    '"Save position" "position save" ',
+    '"Load position" "position load" ',
+    '"Clear position" "position clear" '
+};
+
 class RecordTime
 {
     bool saved;
@@ -300,34 +325,34 @@ class Player
         String s = '';
         Position @position = this.savedPosition();
 
-        s += '"Restart race" "racerestart" ';
+        s += menuItems[MI_RESTART_RACE];
         if ( this.practicing )
         {
-            s += '"Leave practicemode" "practicemode" ';
+            s += menuItems[MI_LEAVE_PRACTICE];
             if ( this.client.team != TEAM_SPECTATOR )
             {
                 if ( this.client.getEnt().moveType == MOVETYPE_NOCLIP )
-                    s += '"Noclip off" "noclip" ';
+                    s += menuItems[MI_NOCLIP_OFF];
                 else
-                    s += '"Noclip on" "noclip" ';
+                    s += menuItems[MI_NOCLIP_ON];
             }
             else
             {
-                s += '"" "" ';
+                s += menuItems[MI_EMPTY];
             }
-            s += '"Save position" "position save" ';
+            s += menuItems[MI_SAVE_POSITION];
             if ( position.saved )
-                s += '"Load position" "position load" ' +
-                     '"Clear position" "position clear" ';
+                s += menuItems[MI_LOAD_POSITION] +
+                     menuItems[MI_CLEAR_POSITION];
         }
         else
         {
-            s += '"Enter practicemode" "practicemode" ' +
-                 '"" "" ' +
-                 '"Save position" "position save" ';
+            s += menuItems[MI_ENTER_PRACTICE] +
+                 menuItems[MI_EMPTY] +
+                 menuItems[MI_SAVE_POSITION];
             if ( position.saved && ( this.preRace() || this.client.team == TEAM_SPECTATOR ) )
-                s += '"Load position" "position load" ' +
-                     '"Clear position" "position clear" ';
+                s += menuItems[MI_LOAD_POSITION] +
+                     menuItems[MI_CLEAR_POSITION];
         }
 
         GENERIC_SetQuickMenu( this.client, s );
