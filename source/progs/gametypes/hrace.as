@@ -417,7 +417,7 @@ class Player
                 if ( top == 0 )
                 {
                     client.addAward( S_COLOR_GREEN + "Server record!" );
-                    G_PrintMsg( null, client.name + S_COLOR_YELLOW + " made a new server record: "
+                    G_PrintMsg( null, client.name + S_COLOR_YELLOW + " made a new " + S_COLOR_GREEN + "server" + S_COLOR_YELLOW + " record: "
                             + S_COLOR_WHITE + RACE_TimeToString( this.finishTime ) + "\n" );
                 }
 
