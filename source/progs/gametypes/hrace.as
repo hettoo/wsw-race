@@ -324,7 +324,6 @@ class Player
         this.preracePosition = Vec3();
         this.preraceWeapons.resize( WEAP_TOTAL );
         this.preraceAmmos.resize( WEAP_TOTAL );
-        G_PrintMsg( ent, "Shit worx?\n" );
     }
 
     bool startRace( Client @client )
@@ -1243,20 +1242,17 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         if ( @client != null )
         {
             Player @player = RACE_GetPlayer( client );
+            Entity @ent = client.getEnt();
             if ( player.inRace )
                 player.cancelRace( client );
 
             if ( client.team == TEAM_SPECTATOR && !gametype.isTeamBased )
                 client.team = TEAM_PLAYERS;
-            
-            if( ent.moveType != MOVETYPE_NOCLIP )
-            {
-                client.respawn( false );
-            }
-            else if (ent.moveType == MOVETYPE_NOCLIP)
-            {
-              player.loadPosition( ent.client, false );  
-            }
+
+            if ( ent.moveType == MOVETYPE_NOCLIP )
+                player.loadPosition( client, false );  
+            else
+            client.respawn( false );
         }
 
         return true;
