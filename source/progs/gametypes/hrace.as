@@ -48,11 +48,11 @@ array<const String @> menuItems = {
     '"Restart race" "racerestart"', 
     '"Enter practice mode" "practicemode" ',
     '"Leave practice mode" "practicemode" ',
-    '"Enable noclip mode" "noclip" ',
-    '"Disable noclip mode" "noclip" ',
-    '"Save position" "position save" ',
-    '"Load position" "position load" ',
-    '"Clear position" "position clear" '
+    '"Enable flying mode" "noclip" ',
+    '"Disable flying mode" "noclip" ',
+    '"Save current position" "position save" ',
+    '"Load saved position" "position load" ',
+    '"Clear saved position" "position clear" '
 };
 
 class RecordTime
@@ -363,12 +363,12 @@ class Player
         Entity @ent = this.client.getEnt();
         if ( !this.practicing )
         {
-            G_PrintMsg( ent, "Noclip is only available in practicemode.\n" );
+            G_PrintMsg( ent, "Flying is only available in practice mode.\n" );
             return false;
         }
         if ( this.client.team == TEAM_SPECTATOR )
         {
-            G_PrintMsg( ent, "Noclip is not available for spectators.\n" );
+            G_PrintMsg( ent, "Flying is not available for spectators.\n" );
             return false;
         }
 
@@ -377,13 +377,13 @@ class Player
         {
             ent.moveType = MOVETYPE_NOCLIP;
             this.noclipWeapon = ent.weapon;
-            msg = "noclip ON";
+            msg = "Flying enabled.";
         }
         else
         {
             ent.moveType = MOVETYPE_PLAYER;
             this.client.selectWeapon( this.noclipWeapon );
-            msg = "noclip OFF";
+            msg = "Flying disabled.";
         }
 
         G_PrintMsg( ent, msg + "\n" );
@@ -407,7 +407,7 @@ class Player
         if ( !this.practicing && this.client.team != TEAM_SPECTATOR && !this.preRace() )
         {
             if ( verbose )
-                G_PrintMsg( ent, "Position load is not available during a race.\n" );
+                G_PrintMsg( ent, "Position loading is not available during a race.\n" );
             return false;
         }
 
@@ -483,7 +483,7 @@ class Player
     {
         if ( !this.practicing && this.client.team != TEAM_SPECTATOR && !this.preRace() )
         {
-            G_PrintMsg( this.client.getEnt(), "Position clear is not available during a race.\n" );
+            G_PrintMsg( this.client.getEnt(), "Position clearing is not available during a race.\n" );
             return false;
         }
 
@@ -595,7 +595,7 @@ class Player
                 if ( top == 0 )
                 {
                     this.client.addAward( S_COLOR_GREEN + "Server record!" );
-                    G_PrintMsg( null, this.client.name + S_COLOR_YELLOW + " made a new server record: "
+                    G_PrintMsg( null, this.client.name + S_COLOR_YELLOW + " set a new server record: "
                             + S_COLOR_WHITE + RACE_TimeToString( this.finishTime ) + "\n" );
                 }
 
@@ -709,7 +709,7 @@ class Player
             return;
 
         this.practicing = true;
-        G_CenterPrintMsg( this.client.getEnt(), S_COLOR_CYAN + "Entered practicemode" );
+        G_CenterPrintMsg( this.client.getEnt(), S_COLOR_CYAN + "Entered practice mode" );
         this.cancelRace();
         this.setQuickMenu();
     }
@@ -720,7 +720,7 @@ class Player
             return;
 
         this.practicing = false;
-        G_CenterPrintMsg( this.client.getEnt(), S_COLOR_CYAN + "Left practicemode" );
+        G_CenterPrintMsg( this.client.getEnt(), S_COLOR_CYAN + "Left practice mode" );
         if ( this.client.team != TEAM_SPECTATOR )
             this.client.respawn( false );
         this.setQuickMenu();
