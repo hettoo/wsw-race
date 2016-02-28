@@ -48,9 +48,9 @@ array<const String @> menuItems = {
     '"Restart race" "racerestart"', 
     '"Enter practice mode" "practicemode" ',
     '"Leave practice mode" "practicemode" ',
-    '"Enable flying mode" "noclip" ',
-    '"Disable flying mode" "noclip" ',
-    '"Save current position" "position save" ',
+    '"Enable noclip mode" "noclip" ',
+    '"Disable noclip mode" "noclip" ',
+    '"Save position" "position save" ',
     '"Load saved position" "position load" ',
     '"Clear saved position" "position clear" '
 };
@@ -363,12 +363,12 @@ class Player
         Entity @ent = this.client.getEnt();
         if ( !this.practicing )
         {
-            G_PrintMsg( ent, "Flying is only available in practice mode.\n" );
+            G_PrintMsg( ent, "Noclip mode is only available in practice mode.\n" );
             return false;
         }
         if ( this.client.team == TEAM_SPECTATOR )
         {
-            G_PrintMsg( ent, "Flying is not available for spectators.\n" );
+            G_PrintMsg( ent, "Noclip mode is not available for spectators.\n" );
             return false;
         }
 
@@ -377,13 +377,13 @@ class Player
         {
             ent.moveType = MOVETYPE_NOCLIP;
             this.noclipWeapon = ent.weapon;
-            msg = "Flying enabled.";
+            msg = "Noclip mode enabled.";
         }
         else
         {
             ent.moveType = MOVETYPE_PLAYER;
             this.client.selectWeapon( this.noclipWeapon );
-            msg = "Flying disabled.";
+            msg = "Noclip mode disabled.";
         }
 
         G_PrintMsg( ent, msg + "\n" );
