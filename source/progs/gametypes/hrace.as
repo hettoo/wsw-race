@@ -457,8 +457,11 @@ class Player
 
     bool savePosition()
     {
-        Position @position = this.savedPosition();
-        Entity @ent = this.client.getEnt();
+        Client @ref = this.client;
+        if ( this.client.team == TEAM_SPECTATOR && this.client.chaseActive )
+            @ref = G_GetEntity( this.client.chaseTarget ).client;
+
+        Entity @ent = ref.getEnt();
 
         if ( this.preRace() )
         {
@@ -474,8 +477,10 @@ class Player
             }
         }
 
+        Position @position = this.savedPosition();
         position.set( ent.origin, ent.angles );
-        if ( this.client.team == TEAM_SPECTATOR )
+
+        if ( ref.team == TEAM_SPECTATOR )
         {
             position.skipWeapons = true;
         }
@@ -484,11 +489,11 @@ class Player
             position.skipWeapons = false;
             for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
             {
-                position.weapons[i] = this.client.canSelectWeapon( i );
+                position.weapons[i] = ref.canSelectWeapon( i );
                 Item @item = G_GetItem( i );
-                position.ammos[i] = this.client.inventoryCount( item.ammoTag );
+                position.ammos[i] = ref.inventoryCount( item.ammoTag );
             }
-            position.weapon = ent.moveType == MOVETYPE_NOCLIP ? this.noclipWeapon : this.client.weapon;
+            position.weapon = ent.moveType == MOVETYPE_NOCLIP ? this.noclipWeapon : ref.weapon;
         }
         this.setQuickMenu();
 
