@@ -270,6 +270,7 @@ class Player
     bool heardGo;
 
     // hettoo : practicemode
+    bool noclip;
     int noclipWeapon;
     Position practicePosition;
     Position preRacePosition;
@@ -289,6 +290,7 @@ class Player
         this.inRace = false;
         this.postRace = false;
         this.practicing = false;
+        this.noclip = false;
         this.startTime = 0;
         this.finishTime = 0;
         this.hasTime = false;
@@ -375,12 +377,14 @@ class Player
         String msg;
         if ( ent.moveType == MOVETYPE_PLAYER )
         {
+            this.noclip = true;
             ent.moveType = MOVETYPE_NOCLIP;
             this.noclipWeapon = ent.weapon;
             msg = "Noclip mode enabled.";
         }
         else
         {
+            this.noclip = false;
             ent.moveType = MOVETYPE_PLAYER;
             this.client.selectWeapon( this.noclipWeapon );
             msg = "Noclip mode disabled.";
@@ -708,9 +712,15 @@ class Player
         if ( this.practicing )
             return;
 
+        Entity @ent = this.client.getEnt();
         this.practicing = true;
-        G_CenterPrintMsg( this.client.getEnt(), S_COLOR_CYAN + "Entered practice mode" );
+        G_CenterPrintMsg( ent, S_COLOR_CYAN + "Entered practice mode" );
         this.cancelRace();
+        if ( this.noclip && this.client.team != TEAM_SPECTATOR )
+        {
+            ent.moveType = MOVETYPE_NOCLIP;
+            this.noclipWeapon = ent.weapon;
+        }
         this.setQuickMenu();
     }
 
@@ -1488,6 +1498,12 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         ent.client.selectWeapon( -1 ); // auto-select best weapon in the inventory
 
     player.loadPosition( false );
+
+    if ( player.practicing && player.noclip && ent.client.team != TEAM_SPECTATOR )
+    {
+        ent.moveType = MOVETYPE_NOCLIP;
+        player.noclipWeapon = WEAP_GUNBLADE;
+    }
 
     // add a teleportation effect
     ent.respawnEffect();
