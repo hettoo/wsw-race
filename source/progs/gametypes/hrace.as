@@ -455,10 +455,24 @@ class Player
         return true;
     }
 
-    void savePosition()
+    bool savePosition()
     {
         Position @position = this.savedPosition();
         Entity @ent = this.client.getEnt();
+
+        if ( this.preRace() )
+        {
+            Vec3 mins, maxs;
+            ent.getSize( mins, maxs );
+            Vec3 down = ent.origin;
+            down.z -= 1;
+            Trace tr;
+            if ( !tr.doTrace( ent.origin, mins, maxs, down, ent.entNum, MASK_PLAYERSOLID ) )
+            {
+                G_PrintMsg( ent, "You cannot save your position here.\n" );
+                return false;
+            }
+        }
 
         position.set( ent.origin, ent.angles );
         if ( this.client.team == TEAM_SPECTATOR )
@@ -477,6 +491,8 @@ class Player
             position.weapon = ent.moveType == MOVETYPE_NOCLIP ? this.noclipWeapon : this.client.weapon;
         }
         this.setQuickMenu();
+
+        return true;
     }
 
     bool clearPosition()
@@ -1272,7 +1288,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         String action = argsString.getToken( 0 );
         if ( action == "save" )
         {
-            RACE_GetPlayer( client ).savePosition();
+            return RACE_GetPlayer( client ).savePosition();
         }
         else if ( action == "load" )
         {
