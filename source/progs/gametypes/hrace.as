@@ -460,7 +460,6 @@ class Player
         Client @ref = this.client;
         if ( this.client.team == TEAM_SPECTATOR && this.client.chaseActive )
             @ref = G_GetEntity( this.client.chaseTarget ).client;
-
         Entity @ent = ref.getEnt();
 
         if ( this.preRace() )
