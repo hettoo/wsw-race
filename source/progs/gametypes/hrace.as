@@ -99,6 +99,7 @@ class RecordTime
         if ( !this.arraysSetUp )
             return;
 
+        this.saved = other.saved;
         this.finishTime = other.finishTime;
         this.playerName = other.playerName;
         this.login = other.login;
