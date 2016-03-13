@@ -472,7 +472,7 @@ class Player
             Trace tr;
             if ( !tr.doTrace( ent.origin, mins, maxs, down, ent.entNum, MASK_PLAYERSOLID ) )
             {
-                G_PrintMsg( ent, "You cannot save your position here.\n" );
+                G_PrintMsg( this.client.getEnt(), "You can only save your prerace position on solid ground.\n" );
                 return false;
             }
         }
