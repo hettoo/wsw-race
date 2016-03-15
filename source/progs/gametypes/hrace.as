@@ -516,7 +516,7 @@ class Player
 
     uint timeStamp()
     {
-        return levelTime;
+        return this.client.uCmdTimeStamp;
     }
 
     bool startRace()
