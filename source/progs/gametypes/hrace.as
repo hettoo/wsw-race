@@ -514,6 +514,11 @@ class Player
         return true;
     }
 
+    uint timeStamp()
+    {
+        return levelTime;
+    }
+
     bool startRace()
     {
         if ( !this.preRace() )
@@ -521,7 +526,7 @@ class Player
 
         this.currentSector = 0;
         this.inRace = true;
-        this.startTime = RACE_TimeStamp();
+        this.startTime = this.timeStamp();
 
         for ( int i = 0; i < numCheckpoints; i++ )
             this.sectorTimes[i] = 0;
@@ -537,12 +542,12 @@ class Player
 
     bool validTime()
     {
-        return RACE_TimeStamp() > this.startTime;
+        return this.timeStamp() > this.startTime;
     }
 
     uint raceTime()
     {
-        return RACE_TimeStamp() - this.startTime;
+        return this.timeStamp() - this.startTime;
     }
 
     void cancelRace()
@@ -940,11 +945,6 @@ void target_startTimer( Entity @ent )
 ///*****************************************************************
 /// LOCAL FUNCTIONS
 ///*****************************************************************
-
-uint RACE_TimeStamp()
-{
-    return levelTime;
-}
 
 String RACE_TimeToString( uint time )
 {
