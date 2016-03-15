@@ -521,7 +521,7 @@ class Player
 
         this.currentSector = 0;
         this.inRace = true;
-        this.startTime = levelTime;
+        this.startTime = RACE_TimeStamp();
 
         for ( int i = 0; i < numCheckpoints; i++ )
             this.sectorTimes[i] = 0;
@@ -533,6 +533,16 @@ class Player
         this.setQuickMenu();
 
         return true;
+    }
+
+    bool validTime()
+    {
+        return RACE_TimeStamp() > this.startTime;
+    }
+
+    uint raceTime()
+    {
+        return RACE_TimeStamp() - this.startTime;
     }
 
     void cancelRace()
@@ -556,12 +566,12 @@ class Player
         uint delta;
         String str;
 
-        if ( this.startTime > levelTime ) // something is very wrong here
+        if ( !this.validTime() ) // something is very wrong here
             return;
 
         this.client.addAward( S_COLOR_CYAN + "Race Finished!" );
 
-        this.finishTime = levelTime - this.startTime;
+        this.finishTime = this.raceTime();
         this.inRace = false;
         this.postRace = true;
 
@@ -674,10 +684,10 @@ class Player
         if ( this.sectorTimes[id] != 0 ) // already past this checkPoint
             return false;
 
-        if ( this.startTime > levelTime ) // something is very wrong here
+        if ( !this.validTime() ) // something is very wrong here
             return false;
 
-        this.sectorTimes[id] = levelTime - this.startTime;
+        this.sectorTimes[id] = this.raceTime();
 
         // send this checkpoint to MM
         this.client.setRaceTime( id, this.sectorTimes[id] );
@@ -930,6 +940,11 @@ void target_startTimer( Entity @ent )
 ///*****************************************************************
 /// LOCAL FUNCTIONS
 ///*****************************************************************
+
+uint RACE_TimeStamp()
+{
+    return levelTime;
+}
 
 String RACE_TimeToString( uint time )
 {
@@ -1577,7 +1592,7 @@ void GT_ThinkRules()
         // all stats are set to 0 each frame, so it's only needed to set a stat if it's going to get a value
         @player = RACE_GetPlayer( client );
         if ( player.inRace )
-            client.setHUDStat( STAT_TIME_SELF, ( levelTime - player.startTime ) / 100 );
+            client.setHUDStat( STAT_TIME_SELF, player.raceTime() / 100 );
 
         client.setHUDStat( STAT_TIME_BEST, player.bestFinishTime / 100 );
         client.setHUDStat( STAT_TIME_RECORD, levelRecords[0].finishTime / 100 );
