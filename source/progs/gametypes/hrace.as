@@ -542,7 +542,7 @@ class Player
 
     bool validTime()
     {
-        return this.timeStamp() > this.startTime;
+        return this.timeStamp() >= this.startTime;
     }
 
     uint raceTime()
