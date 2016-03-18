@@ -984,15 +984,15 @@ String RACE_TimeToString( uint time )
     return minsString + ":" + secsString + "." + millString;
 }
 
-String RACE_TimeDiffString( uint time, uint reference, bool forceDiff )
+String RACE_TimeDiffString( uint time, uint reference, bool clean )
 {
-    if ( reference == 0 && !forceDiff )
-        return S_COLOR_WHITE + "--:--.---";
-    else if ( reference == 0 )
+    if ( reference == 0 && clean )
         return "";
-    else if ( time == reference && !forceDiff )
-        return S_COLOR_WHITE + RACE_TimeToString( 0 );
-    else if ( time < reference || ( time == reference && forceDiff ) )
+    else if ( reference == 0 )
+        return S_COLOR_WHITE + "--:--.---";
+    else if ( time == reference )
+        return S_COLOR_YELLOW + "+-" + RACE_TimeToString( 0 );
+    else if ( time < reference )
         return S_COLOR_GREEN + "-" + RACE_TimeToString( reference - time );
     else
         return S_COLOR_RED + "+" + RACE_TimeToString( time - reference );
