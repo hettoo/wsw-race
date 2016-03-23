@@ -12,7 +12,7 @@ CONFIG_DIR = configs/server/gametypes
 FILES = $(shell find $(SOURCE_DIR))
 CFG = $(NAME).cfg
 
-PK3 = $(NAME)-009.pk3
+PK3 = $(NAME)-010.pk3
 EVERY_PK3 = $(NAME)-*.pk3
 
 all: dist
