@@ -1251,12 +1251,12 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
 
             if ( levelTime - randmap_time < 80 )
             {
+                randmap = maps[rand() % maps.length()];
                 G_PrintMsg( null, S_COLOR_YELLOW + "Chosen map: " + S_COLOR_WHITE + randmap + S_COLOR_YELLOW + " (out of " + S_COLOR_WHITE + maps.length() + S_COLOR_YELLOW + " matches)\n" );
                 return true;
             }
 
             randmap_time = levelTime;
-            randmap = maps[rand() % maps.length()];
         }
         else
         {
