@@ -1286,8 +1286,11 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
             if ( player.inRace )
                 player.cancelRace();
 
-            if ( client.team == TEAM_SPECTATOR && !gametype.isTeamBased )
+            if ( client.team == TEAM_SPECTATOR )
             {
+                if ( gametype.isTeamBased )
+                    return false;
+
                 client.team = TEAM_PLAYERS;
                 G_PrintMsg( null, client.name + S_COLOR_WHITE + " joined the " + G_GetTeam( client.team ).name + S_COLOR_WHITE + " team.\n" );
             }
