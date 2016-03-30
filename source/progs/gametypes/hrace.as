@@ -1278,7 +1278,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
 
         return true;
     }
-    else if ( ( cmdString == "racerestart" ) || ( cmdString == "kill" ) )
+    else if ( cmdString == "racerestart" || cmdString == "kill" )
     {
         if ( @client != null )
         {
@@ -1287,7 +1287,10 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
                 player.cancelRace();
 
             if ( client.team == TEAM_SPECTATOR && !gametype.isTeamBased )
+            {
                 client.team = TEAM_PLAYERS;
+                G_PrintMsg( null, client.name + S_COLOR_WHITE + " joined the " + G_GetTeam( client.team ).name + S_COLOR_WHITE + " team.\n" );
+            }
             client.respawn( false );
         }
 
