@@ -1391,6 +1391,21 @@ Entity @GT_SelectSpawnPoint( Entity @self )
     return GENERIC_SelectBestRandomSpawnPoint( self, "info_player_deathmatch" );
 }
 
+String @ScoreboardEntry( Player @player )
+{
+    Entity @ent = player.client.getEnt();
+    int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum + 1 ) : ent.playerNum;
+    String racing;
+
+    if ( player.practicing )
+        racing = S_COLOR_CYAN + "No";
+    else if ( player.inRace )
+        racing = S_COLOR_GREEN + "Yes";
+    else
+        racing = S_COLOR_RED + "No";
+    return "&p " + playerID + " " + ent.client.clanName + " " + player.bestFinishTime + " " + ent.client.ping + " " + racing + " ";
+}
+
 String @GT_ScoreboardMessage( uint maxlen )
 {
     String scoreboardMessage = "";
@@ -1398,8 +1413,9 @@ String @GT_ScoreboardMessage( uint maxlen )
     Team @team;
     Entity @ent;
     Player @player;
-    int i, playerID;
-    String racing;
+    int i;
+    uint minTime, currentTime;
+    bool playerFound;
     //int readyIcon;
 
     @team = G_GetTeam( TEAM_PLAYERS );
@@ -1409,26 +1425,56 @@ String @GT_ScoreboardMessage( uint maxlen )
     if ( scoreboardMessage.length() + entry.length() < maxlen )
         scoreboardMessage += entry;
 
-    // "Name Time Ping Racing"
+    minTime = 0;
+
+    do
+    {
+        playerFound = false;
+        currentTime = 0;
+
+        // find the next best time
+        for ( i = 0; @team.ent( i ) != null; i++ )
+        {
+            @ent = team.ent( i );
+            @player = RACE_GetPlayer( ent.client );
+
+            if ( player.hasTime && player.bestFinishTime >= minTime && ( !playerFound || player.bestFinishTime < currentTime ) )
+            {
+                playerFound = true;
+                currentTime = player.bestFinishTime;
+            }
+        }
+        if ( playerFound )
+        {
+            // add all players with this time
+            for ( i = 0; @team.ent( i ) != null; i++ )
+            {
+                @ent = team.ent( i );
+                @player = RACE_GetPlayer( ent.client );
+
+                if ( player.hasTime && player.bestFinishTime == currentTime )
+                {
+                    entry = ScoreboardEntry( player );
+                    if ( scoreboardMessage.length() + entry.length() < maxlen )
+                        scoreboardMessage += entry;
+                }
+            }
+            minTime = currentTime + 1;
+        }
+    } while ( playerFound );
+
+    // add players without time
     for ( i = 0; @team.ent( i ) != null; i++ )
     {
         @ent = team.ent( i );
-
         @player = RACE_GetPlayer( ent.client );
-        if ( player.practicing )
-            racing = S_COLOR_CYAN + "No";
-        else if ( player.inRace )
-            racing = S_COLOR_GREEN + "Yes";
-        else
-            racing = S_COLOR_RED + "No";
 
-        playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum + 1 ) : ent.playerNum;
-        entry = "&p " + playerID + " " + ent.client.clanName + " "
-                + player.bestFinishTime + " "
-                + ent.client.ping + " " + racing + " ";
-
-        if ( scoreboardMessage.length() + entry.length() < maxlen )
-            scoreboardMessage += entry;
+        if ( !player.hasTime )
+        {
+            entry = ScoreboardEntry( player );
+            if ( scoreboardMessage.length() + entry.length() < maxlen )
+                scoreboardMessage += entry;
+        }
     }
 
     return scoreboardMessage;
