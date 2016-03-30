@@ -1461,7 +1461,8 @@ String @GT_ScoreboardMessage( uint maxlen )
             }
             minTime = currentTime + 1;
         }
-    } while ( playerFound );
+    }
+    while ( playerFound );
 
     // add players without time
     for ( i = 0; @team.ent( i ) != null; i++ )
