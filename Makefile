@@ -1,4 +1,4 @@
-WSW_DIR = ~/.warsow-2.0
+WSW_DIR = ~/.local/share/warsow-2.1
 EXECUTE_DIR = .
 EXECUTABLE = wsw-server
 MOD = basewsw
