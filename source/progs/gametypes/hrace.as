@@ -266,6 +266,7 @@ class Player
     bool postRace;
     bool practicing;
     bool arraysSetUp;
+    bool noclipSpawn;
 
     bool heardReady;
     bool heardGo;
@@ -294,6 +295,7 @@ class Player
         this.finishTime = 0;
         this.hasTime = false;
         this.bestFinishTime = 0;
+        this.noclipSpawn = false;
 
         this.heardReady = false;
         this.heardGo = false;
@@ -1286,15 +1288,30 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
             if ( player.inRace )
                 player.cancelRace();
 
-            if ( client.team == TEAM_SPECTATOR )
+            if ( client.team != TEAM_SPECTATOR && player.client.getEnt().moveType == MOVETYPE_NOCLIP )
             {
-                if ( gametype.isTeamBased )
-                    return false;
-
-                client.team = TEAM_PLAYERS;
-                G_PrintMsg( null, client.name + S_COLOR_WHITE + " joined the " + G_GetTeam( client.team ).name + S_COLOR_WHITE + " team.\n" );
+                if ( player.loadPosition( false ) )
+                {
+                    player.noclipWeapon = player.savedPosition().weapon;
+                }
+                else
+                {
+                    player.noclipSpawn = true;
+                    client.respawn( false );
+                }
             }
-            client.respawn( false );
+            else
+            {
+                if ( client.team == TEAM_SPECTATOR )
+                {
+                    if ( gametype.isTeamBased )
+                        return false;
+
+                    client.team = TEAM_PLAYERS;
+                    G_PrintMsg( null, client.name + S_COLOR_WHITE + " joined the " + G_GetTeam( client.team ).name + S_COLOR_WHITE + " team.\n" );
+                }
+                client.respawn( false );
+            }
         }
 
         return true;
@@ -1578,14 +1595,26 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 
     player.loadPosition( false );
 
-    // add a teleportation effect
-    ent.respawnEffect();
-
-    if ( !player.practicing && !player.heardReady )
+    if ( player.noclipSpawn )
     {
-        int soundIndex = G_SoundIndex( "sounds/announcer/countdown/ready0" + (1 + (rand() & 1)) );
-        G_AnnouncerSound( ent.client, soundIndex, GS_MAX_TEAMS, false, null );
-        player.heardReady = true;
+        if ( player.practicing )
+        {
+            ent.moveType = MOVETYPE_NOCLIP;
+            player.noclipWeapon = ent.weapon;
+        }
+        player.noclipSpawn = false;
+    }
+    else
+    {
+        // add a teleportation effect
+        ent.respawnEffect();
+
+        if ( !player.practicing && !player.heardReady )
+        {
+            int soundIndex = G_SoundIndex( "sounds/announcer/countdown/ready0" + (1 + (rand() & 1)) );
+            G_AnnouncerSound( ent.client, soundIndex, GS_MAX_TEAMS, false, null );
+            player.heardReady = true;
+        }
     }
 }
 
