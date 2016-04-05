@@ -1,0 +1,13 @@
+/shared/constants.as;
+/shared/utils.as;
+/shared/files.as;
+
+generic/items.as;
+generic/quickmenu.as;
+generic/matchstates.as;
+
+racemod_test/entities/trigger_push_velocity.as;
+racemod_test/entities/target_delay.as;
+racemod_test/entities/shooters.as;
+
+racemod_test.as;
