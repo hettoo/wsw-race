@@ -652,6 +652,11 @@ class Player
                             remove = i;
                         break;
                     }
+                    if ( login == "" && levelRecords[i].login != "" && levelRecords[i].playerName.removeColorTokens().tolower() == cleanName && i < top )
+                    {
+                        remove = -1; // he already has a better time, don't save it
+                        break;
+                    }
                 }
 
                 if ( remove != -1 )
