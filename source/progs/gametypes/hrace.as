@@ -19,7 +19,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 int numCheckpoints = 0;
 bool demoRecording = false;
-const int MAX_RECORDS = 20;
+const int MAX_RECORDS = 30;
+const int DISPLAY_RECORDS = 20;
 const int HUD_RECORDS = 3;
 
 uint[] levelRecordSectors;
@@ -1434,7 +1435,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         else
         {
             Table table( "r r r l l" );
-            for ( int i = 0; i < MAX_RECORDS; i++ )
+            for ( int i = 0; i < DISPLAY_RECORDS; i++ )
             {
                 RecordTime @record = levelRecords[i];
                 if ( record.saved )
