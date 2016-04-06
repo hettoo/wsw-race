@@ -347,11 +347,21 @@ class Player
             racing = S_COLOR_GREEN + "Yes";
         else
             racing = S_COLOR_RED + "No";
-        uint diff = 0;
-        if ( this.bestFinishTime > levelRecords[0].finishTime )
-            diff = this.bestFinishTime - levelRecords[0].finishTime;
-        return "&p " + playerID + " " + ent.client.clanName + " " + this.bestFinishTime + " "
-            + ( diff == 0 ? "-" : diff >= 1000 ? "+" : "" + diff ) + " " + ent.client.ping + " " + racing + " ";
+        String diff;
+        if ( this.hasTime && levelRecords[0].saved && this.bestFinishTime >= levelRecords[0].finishTime )
+        {
+            if ( this.bestFinishTime == levelRecords[0].finishTime )
+                diff = S_COLOR_GREEN + "0";
+            else if ( this.bestFinishTime >= levelRecords[0].finishTime + 1000 )
+                diff = S_COLOR_RED + "+";
+            else
+                diff = S_COLOR_YELLOW + ( this.bestFinishTime - levelRecords[0].finishTime );
+        }
+        else
+        {
+            diff = "-";
+        }
+        return "&p " + playerID + " " + ent.client.clanName + " " + this.bestFinishTime + " " + diff + " " + ent.client.ping + " " + racing + " ";
     }
 
     bool preRace()
