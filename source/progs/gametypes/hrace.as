@@ -19,7 +19,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 int numCheckpoints = 0;
 bool demoRecording = false;
-const int MAX_RECORDS = 30;
+const int MAX_RECORDS = 20;
 const int HUD_RECORDS = 3;
 
 uint[] levelRecordSectors;
