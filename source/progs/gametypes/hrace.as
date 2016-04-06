@@ -335,6 +335,25 @@ class Player
         this.client.stats.setScore( this.bestFinishTime / 10 );
     }
 
+    String @scoreboardEntry()
+    {
+        Entity @ent = this.client.getEnt();
+        int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum + 1 ) : ent.playerNum;
+        String racing;
+
+        if ( this.practicing )
+            racing = S_COLOR_CYAN + "No";
+        else if ( this.inRace )
+            racing = S_COLOR_GREEN + "Yes";
+        else
+            racing = S_COLOR_RED + "No";
+        uint diff = 0;
+        if ( this.bestFinishTime > levelRecords[0].finishTime )
+            diff = this.bestFinishTime - levelRecords[0].finishTime;
+        return "&p " + playerID + " " + ent.client.clanName + " " + this.bestFinishTime + " "
+            + ( diff == 0 ? "-" : diff >= 1000 ? "+" : "" + diff ) + " " + ent.client.ping + " " + racing + " ";
+    }
+
     bool preRace()
     {
         return !this.inRace && !this.practicing && !this.postRace && this.client.team != TEAM_SPECTATOR;
@@ -1449,21 +1468,6 @@ Entity @GT_SelectSpawnPoint( Entity @self )
     return GENERIC_SelectBestRandomSpawnPoint( self, "info_player_deathmatch" );
 }
 
-String @ScoreboardEntry( Player @player )
-{
-    Entity @ent = player.client.getEnt();
-    int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum + 1 ) : ent.playerNum;
-    String racing;
-
-    if ( player.practicing )
-        racing = S_COLOR_CYAN + "No";
-    else if ( player.inRace )
-        racing = S_COLOR_GREEN + "Yes";
-    else
-        racing = S_COLOR_RED + "No";
-    return "&p " + playerID + " " + ent.client.clanName + " " + player.bestFinishTime + " " + ent.client.ping + " " + racing + " ";
-}
-
 String @GT_ScoreboardMessage( uint maxlen )
 {
     String scoreboardMessage = "";
@@ -1512,7 +1516,7 @@ String @GT_ScoreboardMessage( uint maxlen )
 
                 if ( player.hasTime && player.bestFinishTime == currentTime )
                 {
-                    entry = ScoreboardEntry( player );
+                    entry = player.scoreboardEntry();
                     if ( scoreboardMessage.length() + entry.length() < maxlen )
                         scoreboardMessage += entry;
                 }
@@ -1530,7 +1534,7 @@ String @GT_ScoreboardMessage( uint maxlen )
 
         if ( !player.hasTime )
         {
-            entry = ScoreboardEntry( player );
+            entry = player.scoreboardEntry();
             if ( scoreboardMessage.length() + entry.length() < maxlen )
                 scoreboardMessage += entry;
         }
@@ -1888,8 +1892,8 @@ void GT_InitGametype()
         gametype.setTeamSpawnsystem( team, SPAWNSYSTEM_INSTANT, 0, 0, false );
 
     // define the scoreboard layout
-    G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %t 96 %l 48 %s 52" );
-    G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Time Ping Racing" );
+    G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %t 96 %s 48 %l 48 %s 52" );
+    G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Time Diff Ping Racing" );
 
     // add commands
     G_RegisterCommand( "gametype" );
