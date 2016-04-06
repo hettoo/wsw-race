@@ -647,12 +647,10 @@ class Player
                             || ( login != "" && levelRecords[i].login == login ) )
                     {
                         if ( i < top )
-                        {
                             remove = -1; // he already has a better time, don't save it
-                            break;
-                        }
-
-                        remove = i;
+                        else
+                            remove = i;
+                        break;
                     }
                 }
 
@@ -663,6 +661,23 @@ class Player
                         levelRecords[i].Copy( levelRecords[i - 1] );
 
                     levelRecords[top].Store( this.client );
+
+                    if ( login != "" )
+                    {
+                        // there may be authed and unauthed records for a
+                        // player; remove the unauthed if it is worse than the
+                        // authed one
+                        bool found = false;
+                        for ( int i = top + 1; i < MAX_RECORDS; i++ )
+                        {
+                            if ( levelRecords[i].login == "" && levelRecords[i].playerName.removeColorTokens().tolower() == cleanName )
+                                found = true;
+                            if ( found && i < MAX_RECORDS - 1 )
+                                levelRecords[i].Copy( levelRecords[i + 1] );
+                        }
+                        if ( found )
+                            levelRecords[MAX_RECORDS - 1].clear();
+                    }
 
                     RACE_WriteTopScores();
                     RACE_UpdateHUDTopScores();
