@@ -323,6 +323,18 @@ class Player
             return "";
     }
 
+    void setBestTime( uint time )
+    {
+        this.hasTime = true;
+        this.bestFinishTime = time;
+        this.updateScore();
+    }
+
+    void updateScore()
+    {
+        this.client.stats.setScore( this.bestFinishTime / 10 );
+    }
+
     bool preRace()
     {
         return !this.inRace && !this.practicing && !this.postRace && this.client.team != TEAM_SPECTATOR;
@@ -619,8 +631,7 @@ class Player
         {
             this.client.addAward( S_COLOR_YELLOW + "Personal record!" );
             // copy all the sectors into the new personal record backup
-            this.hasTime = true;
-            this.bestFinishTime = this.finishTime;
+            this.setBestTime( this.finishTime );
             for ( int i = 0; i < numCheckpoints; i++ )
                 this.bestSectorTimes[i] = this.sectorTimes[i];
         }
@@ -1579,8 +1590,7 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
                     if ( levelRecords[i].login == login
                             && ( !player.hasTime || levelRecords[i].finishTime < player.bestFinishTime ) )
                     {
-                        player.hasTime = true;
-                        player.bestFinishTime = levelRecords[i].finishTime;
+                        player.setBestTime( levelRecords[i].finishTime );
                         for ( int j = 0; j < numCheckpoints; j++ )
                             player.bestSectorTimes[j] = levelRecords[i].sectorTimes[j];
                         break;
@@ -1599,6 +1609,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
     player.cancelRace();
 
     player.setQuickMenu();
+    player.updateScore();
 
     if ( ent.isGhosting() )
         return;
