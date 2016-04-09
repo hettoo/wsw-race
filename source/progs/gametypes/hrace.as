@@ -118,7 +118,7 @@ class RecordTime
         this.saved = true;
         this.finishTime = player.finishTime;
         this.playerName = client.name;
-        this.login = player.getLogin();
+        this.login = client.getMMLogin();
         for ( int i = 0; i < numCheckpoints; i++ )
             this.sectorTimes[i] = player.sectorTimes[i];
     }
@@ -315,14 +315,6 @@ class Player
     }
 
     ~Player() {}
-
-    const String @getLogin()
-    {
-        if ( this.client.getUserInfoKey( "cl_mm_session" ).toInt() > 0 )
-            return this.client.getUserInfoKey( "cl_mm_login" );
-        else
-            return "";
-    }
 
     void setBestTime( uint time )
     {
@@ -672,7 +664,7 @@ class Player
             if ( !levelRecords[top].saved || this.finishTime < levelRecords[top].finishTime )
             {
                 String cleanName = this.client.name.removeColorTokens().tolower();
-                String login = getLogin();
+                String login = this.client.getMMLogin();
 
                 if ( top == 0 )
                 {
@@ -1593,10 +1585,10 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
     {
         if ( @client != null )
         {
-            Player @player = RACE_GetPlayer( client );
-            String login = player.getLogin();
+            String login = client.getMMLogin();
             if ( login != "" )
             {
+                Player @player = RACE_GetPlayer( client );
                 // find out if he holds a record better than his current time
                 for ( int i = 0; i < MAX_RECORDS; i++ )
                 {
