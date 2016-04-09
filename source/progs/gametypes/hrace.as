@@ -453,6 +453,9 @@ class Player
             return false;
         }
 
+        if ( this.preRace() )
+            G_RemoveProjectiles( ent );
+
         Position @position = this.savedPosition();
 
         if ( !position.saved )
