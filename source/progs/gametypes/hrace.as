@@ -1223,9 +1223,9 @@ void RACE_SetUpMatch()
 /// MODULE SCRIPT CALLS
 ///*****************************************************************
 
+bool randmap_new = true;
 String randmap;
 String randmap_passed = "";
-uint randmap_time = 0;
 
 bool GT_Command( Client @client, const String &cmdString, const String &argsString, int argc )
 {
@@ -1311,14 +1311,16 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
                 return false;
             }
 
-            if ( levelTime - randmap_time < 80 )
-            {
-                randmap = maps[rand() % maps.length()];
-                G_PrintMsg( null, S_COLOR_YELLOW + "Chosen map: " + S_COLOR_WHITE + randmap + S_COLOR_YELLOW + " (out of " + S_COLOR_WHITE + maps.length() + S_COLOR_YELLOW + " matches)\n" );
+            if ( !randmap_new )
                 return true;
-            }
 
-            randmap_time = levelTime;
+            const String @vote = G_ConfigString( CS_ACTIVE_CALLVOTE );
+            if ( @vote == null || vote == "" )
+                return true;
+
+            randmap = maps[rand() % maps.length()];
+            G_PrintMsg( null, S_COLOR_YELLOW + "Chosen map: " + S_COLOR_WHITE + randmap + S_COLOR_YELLOW + " (out of " + S_COLOR_WHITE + maps.length() + S_COLOR_YELLOW + " matches)\n" );
+            randmap_new = false;
         }
         else
         {
@@ -1666,6 +1668,13 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 // Thinking function. Called each frame
 void GT_ThinkRules()
 {
+    if ( !randmap_new )
+    {
+        const String @vote = G_ConfigString( CS_ACTIVE_CALLVOTE );
+        if ( @vote == null || vote == "" )
+            randmap_new = true;
+    }
+
     if ( match.scoreLimitHit() || match.timeLimitHit() || match.suddenDeathFinished() )
         match.launchState( match.getState() + 1 );
 
