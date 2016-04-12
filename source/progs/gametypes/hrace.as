@@ -258,13 +258,13 @@ class Player
     uint finishTime;
     bool hasTime;
     uint bestFinishTime;
+    bool noclipSpawn;
     Table report( S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "r " + S_COLOR_ORANGE + "/ l r " + S_COLOR_ORANGE + "/ l r" );
     int currentSector;
     bool inRace;
     bool postRace;
     bool practicing;
     bool arraysSetUp;
-    bool noclipSpawn;
 
     bool heardReady;
     bool heardGo;
@@ -297,6 +297,9 @@ class Player
 
         this.heardReady = false;
         this.heardGo = false;
+
+        this.practicePosition.clear();
+        this.preRacePosition.clear();
 
         if ( !this.arraysSetUp )
             return;
