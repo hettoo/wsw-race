@@ -20,6 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 int numCheckpoints = 0;
 bool demoRecording = false;
 const int MAX_RECORDS = 30;
+const int DISPLAY_RECORDS = 20;
 const int HUD_RECORDS = 3;
 
 uint[] levelRecordSectors;
@@ -30,6 +31,7 @@ String levelRecordPlayerName;
 const uint RECORD_SEND_INTERVAL = 5 * 60 * 1000; // 5 minutes
 uint lastRecordSent = 0;
 
+// msc: practicemode message
 uint practiceModeMsg, defaultMsg;
 
 enum eMenuItems
@@ -45,9 +47,9 @@ enum eMenuItems
     MI_CLEAR_POSITION
 };
 
-array<const String @> menuItems = { 
+array<const String @> menuItems = {
     '"" ""',
-    '"Restart race" "racerestart"', 
+    '"Restart race" "racerestart"',
     '"Enter practice mode" "practicemode" ',
     '"Leave practice mode" "practicemode" ',
     '"Enable noclip mode" "noclip" ',
@@ -119,10 +121,7 @@ class RecordTime
         this.saved = true;
         this.finishTime = player.finishTime;
         this.playerName = client.name;
-        if ( client.getUserInfoKey( "cl_mm_session" ).toInt() > 0 )
-            this.login = client.getUserInfoKey( "cl_mm_login" );
-        else
-            this.login = "";
+        this.login = client.getMMLogin();
         for ( int i = 0; i < numCheckpoints; i++ )
             this.sectorTimes[i] = player.sectorTimes[i];
     }
@@ -262,12 +261,12 @@ class Player
     uint finishTime;
     bool hasTime;
     uint bestFinishTime;
+    bool noclipSpawn;
     Table report( S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "r " + S_COLOR_ORANGE + "/ l r " + S_COLOR_ORANGE + "/ l r" );
     int currentSector;
     bool inRace;
     bool postRace;
     bool practicing;
-    uint practicemodeFinishTime;
     bool arraysSetUp;
 
     bool heardReady;
@@ -293,14 +292,17 @@ class Player
         this.inRace = false;
         this.postRace = false;
         this.practicing = false;
-        this.practicemodeFinishTime = 0;
         this.startTime = 0;
         this.finishTime = 0;
         this.hasTime = false;
         this.bestFinishTime = 0;
+        this.noclipSpawn = false;
 
         this.heardReady = false;
         this.heardGo = false;
+
+        this.practicePosition.clear();
+        this.preRacePosition.clear();
 
         if ( !this.arraysSetUp )
             return;
@@ -319,6 +321,47 @@ class Player
     }
 
     ~Player() {}
+
+    void setBestTime( uint time )
+    {
+        this.hasTime = true;
+        this.bestFinishTime = time;
+        this.updateScore();
+    }
+
+    void updateScore()
+    {
+        this.client.stats.setScore( this.bestFinishTime / 10 );
+    }
+
+    String @scoreboardEntry()
+    {
+        Entity @ent = this.client.getEnt();
+        int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum + 1 ) : ent.playerNum;
+        String racing;
+
+        if ( this.practicing )
+            racing = S_COLOR_CYAN + "No";
+        else if ( this.inRace )
+            racing = S_COLOR_GREEN + "Yes";
+        else
+            racing = S_COLOR_RED + "No";
+        String diff;
+        if ( this.hasTime && levelRecords[0].saved && this.bestFinishTime >= levelRecords[0].finishTime )
+        {
+            if ( this.bestFinishTime == levelRecords[0].finishTime )
+                diff = S_COLOR_GREEN + "0";
+            else if ( this.bestFinishTime >= levelRecords[0].finishTime + 1000 )
+                diff = S_COLOR_RED + "+";
+            else
+                diff = S_COLOR_YELLOW + ( this.bestFinishTime - levelRecords[0].finishTime );
+        }
+        else
+        {
+            diff = "-";
+        }
+        return "&p " + playerID + " " + ent.client.clanName + " " + this.bestFinishTime + " " + diff + " " + ent.client.ping + " " + racing + " ";
+    }
 
     bool preRace()
     {
@@ -624,8 +667,7 @@ class Player
         {
             this.client.addAward( S_COLOR_YELLOW + "Personal record!" );
             // copy all the sectors into the new personal record backup
-            this.hasTime = true;
-            this.bestFinishTime = this.finishTime;
+            this.setBestTime( this.finishTime );
             for ( int i = 0; i < numCheckpoints; i++ )
                 this.bestSectorTimes[i] = this.sectorTimes[i];
         }
@@ -636,9 +678,7 @@ class Player
             if ( !levelRecords[top].saved || this.finishTime < levelRecords[top].finishTime )
             {
                 String cleanName = this.client.name.removeColorTokens().tolower();
-                String login = "";
-                if ( this.client.getUserInfoKey( "cl_mm_session" ).toInt() > 0 )
-                    login = this.client.getUserInfoKey( "cl_mm_login" );
+                String login = this.client.getMMLogin();
 
                 if ( top == 0 )
                 {
@@ -650,15 +690,19 @@ class Player
                 int remove = MAX_RECORDS - 1;
                 for ( int i = 0; i < MAX_RECORDS; i++ )
                 {
-                    if ( levelRecords[i].login == "" ? levelRecords[i].playerName.removeColorTokens().tolower() == cleanName : levelRecords[i].login == login )
+                    if ( ( login == "" && levelRecords[i].login == "" && levelRecords[i].playerName.removeColorTokens().tolower() == cleanName )
+                            || ( login != "" && levelRecords[i].login == login ) )
                     {
                         if ( i < top )
-                        {
                             remove = -1; // he already has a better time, don't save it
-                            break;
-                        }
-
-                        remove = i;
+                        else
+                            remove = i;
+                        break;
+                    }
+                    if ( login == "" && levelRecords[i].login != "" && levelRecords[i].playerName.removeColorTokens().tolower() == cleanName && i < top )
+                    {
+                        remove = -1; // he already has a better time, don't save it
+                        break;
                     }
                 }
 
@@ -669,6 +713,23 @@ class Player
                         levelRecords[i].Copy( levelRecords[i - 1] );
 
                     levelRecords[top].Store( this.client );
+
+                    if ( login != "" )
+                    {
+                        // there may be authed and unauthed records for a
+                        // player; remove the unauthed if it is worse than the
+                        // authed one
+                        bool found = false;
+                        for ( int i = top + 1; i < MAX_RECORDS; i++ )
+                        {
+                            if ( levelRecords[i].login == "" && levelRecords[i].playerName.removeColorTokens().tolower() == cleanName )
+                                found = true;
+                            if ( found && i < MAX_RECORDS - 1 )
+                                levelRecords[i].Copy( levelRecords[i + 1] );
+                        }
+                        if ( found )
+                            levelRecords[MAX_RECORDS - 1].clear();
+                    }
 
                     RACE_WriteTopScores();
                     RACE_UpdateHUDTopScores();
@@ -758,6 +819,7 @@ class Player
 
         this.practicing = true;
         G_CenterPrintMsg( this.client.getEnt(), S_COLOR_CYAN + "Entered practice mode" );
+        // msc: practicemode message
         client.setHelpMessage(practiceModeMsg);
         this.cancelRace();
         this.setQuickMenu();
@@ -770,6 +832,7 @@ class Player
 
         this.practicing = false;
         G_CenterPrintMsg( this.client.getEnt(), S_COLOR_CYAN + "Left practice mode" );
+        // msc: practicemode message
         client.setHelpMessage(defaultMsg);
         if ( this.client.team != TEAM_SPECTATOR )
             this.client.respawn( false );
@@ -900,12 +963,6 @@ void target_stoptimer_use( Entity @self, Entity @other, Entity @activator )
         return;
 
     Player @player = RACE_GetPlayer( activator.client );
-
-    if ( player.practicing && player.practicemodeFinishTime < levelTime )
-    {
-      activator.client.addAward( S_COLOR_CYAN + "Finished the map in practicemode!" );
-      player.practicemodeFinishTime = levelTime + 5000;
-    }
 
     if ( !player.inRace )
         return;
@@ -1116,7 +1173,7 @@ void RACE_LoadTopScores()
             for ( int j = 0; j < i; j++ )
             {
                 if ( ( loginToken != "" && levelRecords[j].login == loginToken )
-                        || levelRecords[j].playerName.removeColorTokens().tolower() == cleanName )
+                        || ( loginToken == "" && levelRecords[j].playerName.removeColorTokens().tolower() == cleanName ) )
                 {
                     exists = true;
                     break;
@@ -1303,26 +1360,33 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         if ( @client != null )
         {
             Player @player = RACE_GetPlayer( client );
-            Entity @ent = client.getEnt();
             if ( player.inRace )
                 player.cancelRace();
 
-            if ( client.team == TEAM_SPECTATOR )
+            if ( client.team != TEAM_SPECTATOR && player.client.getEnt().moveType == MOVETYPE_NOCLIP )
             {
-                if ( gametype.isTeamBased )
-                    return false;
-
-                client.team = TEAM_PLAYERS;
-                G_PrintMsg( null, client.name + S_COLOR_WHITE + " joined the " + G_GetTeam( client.team ).name + S_COLOR_WHITE + " team.\n" );
-            }
-
-            if ( ent.moveType == MOVETYPE_NOCLIP )
-            {
-              player.loadPosition( false );
-              ent.velocity = Vec3(0);
+                if ( player.loadPosition( false ) )
+                {
+                    player.noclipWeapon = player.savedPosition().weapon;
+                }
+                else
+                {
+                    player.noclipSpawn = true;
+                    client.respawn( false );
+                }
             }
             else
-              client.respawn( false );
+            {
+                if ( client.team == TEAM_SPECTATOR )
+                {
+                    if ( gametype.isTeamBased )
+                        return false;
+
+                    client.team = TEAM_PLAYERS;
+                    G_PrintMsg( null, client.name + S_COLOR_WHITE + " joined the " + G_GetTeam( client.team ).name + S_COLOR_WHITE + " team.\n" );
+                }
+                client.respawn( false );
+            }
         }
 
         return true;
@@ -1381,7 +1445,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         else
         {
             Table table( "r r r l l" );
-            for ( int i = MAX_RECORDS - 1; i >= 0; i-- )
+            for ( int i = 0; i < DISPLAY_RECORDS; i++ )
             {
                 RecordTime @record = levelRecords[i];
                 if ( record.saved )
@@ -1423,21 +1487,6 @@ bool GT_UpdateBotStatus( Entity @self )
 Entity @GT_SelectSpawnPoint( Entity @self )
 {
     return GENERIC_SelectBestRandomSpawnPoint( self, "info_player_deathmatch" );
-}
-
-String @ScoreboardEntry( Player @player )
-{
-    Entity @ent = player.client.getEnt();
-    int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum + 1 ) : ent.playerNum;
-    String racing;
-
-    if ( player.practicing )
-        racing = S_COLOR_CYAN + "No";
-    else if ( player.inRace )
-        racing = S_COLOR_GREEN + "Yes";
-    else
-        racing = S_COLOR_RED + "No";
-    return "&p " + playerID + " " + ent.client.clanName + " " + player.bestFinishTime + " " + ent.client.ping + " " + racing + " ";
 }
 
 String @GT_ScoreboardMessage( uint maxlen )
@@ -1488,7 +1537,7 @@ String @GT_ScoreboardMessage( uint maxlen )
 
                 if ( player.hasTime && player.bestFinishTime == currentTime )
                 {
-                    entry = ScoreboardEntry( player );
+                    entry = player.scoreboardEntry();
                     if ( scoreboardMessage.length() + entry.length() < maxlen )
                         scoreboardMessage += entry;
                 }
@@ -1506,7 +1555,7 @@ String @GT_ScoreboardMessage( uint maxlen )
 
         if ( !player.hasTime )
         {
-            entry = ScoreboardEntry( player );
+            entry = player.scoreboardEntry();
             if ( scoreboardMessage.length() + entry.length() < maxlen )
                 scoreboardMessage += entry;
         }
@@ -1552,13 +1601,13 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
     }
     else if ( score_event == "userinfochanged" )
     {
-        if ( @client != null && client.getUserInfoKey( "cl_mm_session" ).toInt() > 0 )
+        if ( @client != null )
         {
-            String login = client.getUserInfoKey( "cl_mm_login" );
+            String login = client.getMMLogin();
             if ( login != "" )
             {
-                // find out if he holds a record better than his current time
                 Player @player = RACE_GetPlayer( client );
+                // find out if he holds a record better than his current time
                 for ( int i = 0; i < MAX_RECORDS; i++ )
                 {
                     if ( !levelRecords[i].saved )
@@ -1566,8 +1615,7 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
                     if ( levelRecords[i].login == login
                             && ( !player.hasTime || levelRecords[i].finishTime < player.bestFinishTime ) )
                     {
-                        player.hasTime = true;
-                        player.bestFinishTime = levelRecords[i].finishTime;
+                        player.setBestTime( levelRecords[i].finishTime );
                         for ( int j = 0; j < numCheckpoints; j++ )
                             player.bestSectorTimes[j] = levelRecords[i].sectorTimes[j];
                         break;
@@ -1586,6 +1634,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
     player.cancelRace();
 
     player.setQuickMenu();
+    player.updateScore();
 
     if ( ent.isGhosting() )
         return;
@@ -1604,23 +1653,36 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
     else
         ent.client.selectWeapon( -1 ); // auto-select best weapon in the inventory
 
-    player.loadPosition( false );
-
     G_RemoveProjectiles( ent );
 
-    // add a teleportation effect
-    // ent.respawnEffect();
+    player.loadPosition( false );
 
-    if ( !player.practicing && !player.heardReady )
-    {
-        int soundIndex = G_SoundIndex( "sounds/announcer/countdown/ready0" + (1 + (rand() & 1)) );
-        G_AnnouncerSound( ent.client, soundIndex, GS_MAX_TEAMS, false, null );
-        player.heardReady = true;
-    }
-
+    // msc: permanent practicemode message
     if ( player.practicing )
     {
       ent.client.setHelpMessage(practiceModeMsg);
+    }
+
+    if ( player.noclipSpawn )
+    {
+        if ( player.practicing )
+        {
+            ent.moveType = MOVETYPE_NOCLIP;
+            player.noclipWeapon = ent.weapon;
+        }
+        player.noclipSpawn = false;
+    }
+    else
+    {
+        // add a teleportation effect
+        // ent.respawnEffect();
+
+        if ( !player.practicing && !player.heardReady )
+        {
+            int soundIndex = G_SoundIndex( "sounds/announcer/countdown/ready0" + (1 + (rand() & 1)) );
+            G_AnnouncerSound( ent.client, soundIndex, GS_MAX_TEAMS, false, null );
+            player.heardReady = true;
+        }
     }
 }
 
@@ -1694,6 +1756,19 @@ void GT_ThinkRules()
             client.setHUDStat( STAT_MESSAGE_ALPHA, CS_GENERAL + 1 );
         if ( levelRecords[2].playerName.length() > 0 )
             client.setHUDStat( STAT_MESSAGE_BETA, CS_GENERAL + 2 );
+
+        // msc: temporary MAX_ACCEL replacement
+        if ( frameTime > 0 )
+        {
+          float cgframeTime = float(frameTime)/1000;
+          int base_speed = int(client.pmoveMaxSpeed);
+          float base_accel = base_speed * cgframeTime;
+          Vec3 vel = client.getEnt().velocity;
+          vel.z = 0;
+          float speed = vel.length();
+          int max_accel = int( ( sqrt( speed*speed + base_accel * ( 2 * base_speed - base_accel ) ) - speed ) / cgframeTime );
+          client.setHUDStat( STAT_PROGRESS_SELF, max_accel );
+        }
     }
 
     // ch : send intermediate results
@@ -1816,7 +1891,7 @@ void GT_InitGametype()
         G_CmdExecute( "exec configs/server/gametypes/" + gametype.name + ".cfg silent" );
     }
 
-    gametype.spawnableItemsMask = ( IT_AMMO | IT_WEAPON | IT_POWERUP );
+    gametype.spawnableItemsMask = ( IT_WEAPON | IT_AMMO | IT_ARMOR | IT_POWERUP | IT_HEALTH );
     if ( gametype.isInstagib )
         gametype.spawnableItemsMask &= ~uint( G_INSTAGIB_NEGATE_ITEMMASK );
 
@@ -1859,8 +1934,8 @@ void GT_InitGametype()
         gametype.setTeamSpawnsystem( team, SPAWNSYSTEM_INSTANT, 0, 0, false );
 
     // define the scoreboard layout
-    G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %t 96 %l 48 %s 52" );
-    G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Time Ping Racing" );
+    G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %t 96 %s 48 %l 48 %s 52" );
+    G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Time Diff Ping Racing" );
 
     // add commands
     G_RegisterCommand( "gametype" );
@@ -1874,11 +1949,9 @@ void GT_InitGametype()
     // add votes
     G_RegisterCallvote( "randmap", "<* | pattern>", "string", "Changes to a random map" );
 
+    // msc: practicemode message
     practiceModeMsg = G_RegisterHelpMessage(S_COLOR_CYAN + "Practicing");
     defaultMsg = G_RegisterHelpMessage("");
-
-    // make ale hud pure
-    G_ModelIndex( "gfx/hud/racesow/strafearrow_small.tga", true );
 
     demoRecording = false;
 

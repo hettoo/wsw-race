@@ -4,6 +4,10 @@ Some basic features intended to make vanilla Warsow race playable.
 
 ## New changes
 
+* Sector reports are now buffered until the end of the race.
+* Top command to display records in reverse order.
+* More records are now stored (30).
+* Added quickmenu with basic commands.
 * Associate records with login names when possible.
 * Color- and case-insensitive nickname associations for records.
 * Weapon information is now saved when saving a position.
@@ -12,8 +16,6 @@ Some basic features intended to make vanilla Warsow race playable.
 * Limited annoying announcer sounds to once per player.
 * Simple randmap vote with a pattern to search for.
 * The kill command will now make spectators join.
-* Top command lists saved records
-* Fixes to defrag map triggers and slow weapon pickups
 
 ## Earlier changes
 
