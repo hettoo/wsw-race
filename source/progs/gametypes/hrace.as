@@ -19,7 +19,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 int numCheckpoints = 0;
 bool demoRecording = false;
-const int MAX_RECORDS = 30;
+const int MAX_RECORDS = 50;
 const int DISPLAY_RECORDS = 20;
 const int HUD_RECORDS = 3;
 
@@ -267,6 +267,7 @@ class Player
     bool inRace;
     bool postRace;
     bool practicing;
+    uint practicemodeFinishTime;
     bool arraysSetUp;
 
     bool heardReady;
@@ -292,6 +293,7 @@ class Player
         this.inRace = false;
         this.postRace = false;
         this.practicing = false;
+        this.practicemodeFinishTime = 0;
         this.startTime = 0;
         this.finishTime = 0;
         this.hasTime = false;
@@ -493,6 +495,8 @@ class Player
                 a.normalize();
                 a *= position.speed;
                 ent.set_velocity( a );
+            } else {
+                ent.set_velocity( Vec3() );
             }
         }
         else if ( this.preRace() )
@@ -520,6 +524,11 @@ class Player
             if ( !tr.doTrace( ent.origin, mins, maxs, down, ent.entNum, MASK_PLAYERSOLID ) )
             {
                 G_PrintMsg( this.client.getEnt(), "You can only save your prerace position on solid ground.\n" );
+                return false;
+            }
+            if ( maxs.z < 40 )
+            {
+                G_PrintMsg( this.client.getEnt(), "You can't save your prerace position while crouched.\n" );
                 return false;
             }
         }
@@ -571,13 +580,13 @@ class Player
         if ( !this.preRace() )
             return false;
 
-	if ( RS_QueryPjState( this.client.playerNum )  )
-	{
-	this.client.addAward( S_COLOR_RED + "Prejumped!" );
-	this.client.respawn( false );
-	RS_ResetPjState( this.client.playerNum );
-	return false;
-    	}
+        if ( RS_QueryPjState( this.client.playerNum )  )
+        {
+          this.client.addAward( S_COLOR_RED + "Prejumped!" );
+          this.client.respawn( false );
+          RS_ResetPjState( this.client.playerNum );
+          return false;
+        }
 
         this.currentSector = 0;
         this.inRace = true;
@@ -613,7 +622,7 @@ class Player
             uint rows = this.report.numRows();
             for ( uint i = 0; i < rows; i++ )
                 G_PrintMsg( ent, this.report.getRow( i ) + "\n" );
-            G_PrintMsg( ent, S_COLOR_ORANGE + "Race canceled\n" );
+            G_PrintMsg( ent, S_COLOR_ORANGE + "Race cancelled\n" );
         }
 
         this.inRace = false;
@@ -652,7 +661,45 @@ class Player
         }
 
         Entity @ent = this.client.getEnt();
+
         G_CenterPrintMsg( ent, str + "\n" + RACE_TimeDiffString( this.finishTime, this.bestFinishTime, true ) );
+
+
+        Client@[] specs = RACE_GetSpectators(this.client);
+        for ( uint i = 0; i < specs.length; i++ )
+        {
+          Player@ spec_player = @RACE_GetPlayer(specs[i]);
+          String line1 = "";
+          String line2 = "";
+
+          if ( this.hasTime )
+          {
+            line1 += "    Current: " + RACE_TimeToString( this.finishTime ) + "    ";
+            line2 += "            " + RACE_TimeDiffString(this.finishTime, this.bestFinishTime, true) + "            ";
+          } else {
+            line1 += "    Current: " + RACE_TimeToString( this.finishTime ) + "    ";
+            line2 += "            " + "                    " + "            ";
+          }
+
+          if ( spec_player.hasTime )
+          {
+            line1 = "   Personal:    " + "          " + line1;
+            line2 = RACE_TimeDiffString(this.finishTime, spec_player.bestFinishTime, true) + "          " + line2;
+          } else if ( levelRecords[0].finishTime != 0 ) {
+            line1 = "                                 " + line1;
+            line2 = "                                 " + line2;
+          }
+
+          if ( levelRecords[0].finishTime != 0 )
+          {
+            line1 += "           " + "Server:      ";
+            line2 += "       " + RACE_TimeDiffString(this.finishTime, levelRecords[0].finishTime, true) + " ";
+          }
+
+          G_CenterPrintMsg(specs[i].getEnt(), line1 + "\n" + line2);
+        }
+
+        //G_CenterPrintMsg( ent, str + "\n" + RACE_TimeDiffString( this.finishTime, this.bestFinishTime, true ) );
         this.report.addCell( "Race finished:" );
         this.report.addCell( RACE_TimeToString( this.finishTime ) );
         this.report.addCell( "Personal:" );
@@ -683,8 +730,12 @@ class Player
                 if ( top == 0 )
                 {
                     this.client.addAward( S_COLOR_GREEN + "Server record!" );
-                    G_PrintMsg( null, this.client.name + S_COLOR_YELLOW + " set a new server record: "
-                            + S_COLOR_WHITE + RACE_TimeToString( this.finishTime ) + "\n" );
+                    if ( levelRecords[0].finishTime == 0 )
+                      G_PrintMsg( null, this.client.name + S_COLOR_YELLOW + " set a new ^2livesow.net ^3record: "
+                              + S_COLOR_GREEN + RACE_TimeToString( this.finishTime ) + "\n" );
+                    else
+                      G_PrintMsg( null, this.client.name + S_COLOR_YELLOW + " set a new ^2livesow.net ^3record: "
+                              + S_COLOR_GREEN + RACE_TimeToString( this.finishTime ) + " " + S_COLOR_YELLOW + "[-" + RACE_TimeToString( levelRecords[0].finishTime - this.finishTime ) + "]\n" );
                 }
 
                 int remove = MAX_RECORDS - 1;
@@ -784,7 +835,45 @@ class Player
         }
 
         Entity @ent = this.client.getEnt();
+
         G_CenterPrintMsg( ent, str + "\n" + RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id], true ) );
+
+
+        Client@[] specs = RACE_GetSpectators(this.client);
+        for ( uint i = 0; i < specs.length; i++ )
+        {
+          Player@ spec_player = @RACE_GetPlayer(specs[i]);
+          String line1 = "";
+          String line2 = "";
+
+          if ( this.hasTime && this.sectorTimes[id] != 0 )
+          {
+            line1 += "    Current: " + RACE_TimeToString( this.sectorTimes[id] ) + "    ";
+            line2 += "            " + RACE_TimeDiffString(this.sectorTimes[id], this.bestSectorTimes[id], true) + "            ";
+          } else {
+            line1 += "    Current: " + RACE_TimeToString( this.sectorTimes[id] ) + "    ";
+            line2 += "            " + "                    " + "            ";
+          }
+
+          if ( spec_player.hasTime && spec_player.bestSectorTimes[id] != 0 )
+          {
+            line1 = "   Personal:    " + "          " + line1;
+            line2 = RACE_TimeDiffString(this.sectorTimes[id], spec_player.bestSectorTimes[id], true) + "          " + line2;
+          } else if ( levelRecords[0].finishTime != 0 ) {
+            line1 = "                                 " + line1;
+            line2 = "                                 " + line2;
+          }
+
+          if ( levelRecords[0].finishTime != 0 && levelRecords[0].sectorTimes[id] != 0 )
+          {
+            line1 += "           " + "Server:      ";
+            line2 += "       " + RACE_TimeDiffString(this.sectorTimes[id], levelRecords[0].sectorTimes[id], true) + " ";
+          }
+
+          G_CenterPrintMsg(specs[i].getEnt(), line1 + "\n" + line2);
+        }
+
+        //G_CenterPrintMsg( ent, str + "\n" + RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id], true ) );
         this.report.addCell( "Sector " + this.currentSector + ":" );
         this.report.addCell( RACE_TimeToString( this.sectorTimes[id] ) );
         this.report.addCell( "Personal:" );
@@ -841,7 +930,9 @@ class Player
 
     void togglePracticeMode()
     {
-        if ( this.practicing )
+        if ( pending_endmatch )
+            this.client.printMessage("Can't join practicemode in overtime.\n");
+        else if ( this.practicing )
             this.leavePracticeMode();
         else
             this.enterPracticeMode();
@@ -964,6 +1055,12 @@ void target_stoptimer_use( Entity @self, Entity @other, Entity @activator )
 
     Player @player = RACE_GetPlayer( activator.client );
 
+    if ( player.practicing && player.practicemodeFinishTime < levelTime )
+    {
+      activator.client.addAward( S_COLOR_CYAN + "Finished the map in practicemode!" );
+      player.practicemodeFinishTime = levelTime + 5000;
+    }
+
     if ( !player.inRace )
         return;
 
@@ -1005,6 +1102,15 @@ void target_starttimer_use( Entity @self, Entity @other, Entity @activator )
         }
 
         self.useTargets( activator );
+
+        if ( @activator.client == null )
+          return;
+
+        Vec3 vel = activator.velocity;
+        vel.z = 0;
+        int speed = int(vel.length());
+        activator.client.setHUDStat( STAT_PROGRESS_OTHER, speed );
+        activator.client.printMessage( S_COLOR_ORANGE + "Starting speed: " + S_COLOR_WHITE + speed + "\n" );
     }
 }
 
@@ -1022,6 +1128,22 @@ void target_startTimer( Entity @ent )
 ///*****************************************************************
 /// LOCAL FUNCTIONS
 ///*****************************************************************
+
+Client@[] RACE_GetSpectators( Client@ client )
+{
+  Client@[] speclist;
+
+  for ( int i = 0; i < maxClients; i++ )
+  {
+    Client@ specClient = @G_GetClient(i);
+
+    if ( specClient.chaseActive && specClient.chaseTarget == client.getEnt().entNum )
+    {
+      speclist.push_back(@specClient);
+    }
+  }
+  return speclist;
+}
 
 String RACE_TimeToString( uint time )
 {
@@ -1241,6 +1363,9 @@ void RACE_SetUpMatch()
 String randmap;
 String randmap_passed = "";
 uint randmap_time = 0;
+uint randmap_matches;
+
+uint[] maplist_page( maxClients );
 
 bool GT_Command( Client @client, const String &cmdString, const String &argsString, int argc )
 {
@@ -1280,56 +1405,61 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
             String lmap;
             int i = 0;
 
-            if ( pattern == "*" )
-                pattern = "";
-
-            do
+            if ( levelTime - randmap_time > 1100 )
             {
-                @map = ML_GetMapByNum( i );
-                if ( @map != null)
-                {
-                    lmap = map.tolower();
-                    uint p;
-                    bool match = false;
-                    if ( pattern == "" )
-                    {
-                        match = true;
-                    }
-                    else
-                    {
-                        for ( p = 0; p < map.length(); p++ )
-                        {
-                            uint eq = 0;
-                            while ( eq < pattern.length() && p + eq < lmap.length() )
-                            {
-                                if ( lmap[p + eq] != pattern[eq] )
-                                    break;
-                                eq++;
-                            }
-                            if ( eq == pattern.length() )
-                            {
-                                match = true;
-                                break;
-                            }
-                        }
-                    }
-                    if ( match && map != current )
-                        maps.insertLast( map );
-                }
-                i++;
-            }
-            while ( @map != null );
+              if ( pattern == "*" )
+                  pattern = "";
 
-            if ( maps.length() == 0 )
-            {
-                client.printMessage( "No matching maps\n" );
-                return false;
+              do
+              {
+                  @map = ML_GetMapByNum( i );
+                  if ( @map != null)
+                  {
+                      lmap = map.tolower();
+                      uint p;
+                      bool match = false;
+                      if ( pattern == "" )
+                      {
+                          match = true;
+                      }
+                      else
+                      {
+                          for ( p = 0; p < map.length(); p++ )
+                          {
+                              uint eq = 0;
+                              while ( eq < pattern.length() && p + eq < lmap.length() )
+                              {
+                                  if ( lmap[p + eq] != pattern[eq] )
+                                      break;
+                                  eq++;
+                              }
+                              if ( eq == pattern.length() )
+                              {
+                                  match = true;
+                                  break;
+                              }
+                          }
+                      }
+                      if ( match && map != current )
+                          maps.insertLast( map );
+                  }
+                  i++;
+              }
+              while ( @map != null );
+
+              if ( maps.length() == 0 )
+              {
+                  client.printMessage( "No matching maps\n" );
+                  return false;
+              }
+
+              randmap = maps[rand() % maps.length()];
+              randmap_matches = maps.length();
             }
 
             if ( levelTime - randmap_time < 80 )
             {
-                randmap = maps[rand() % maps.length()];
-                G_PrintMsg( null, S_COLOR_YELLOW + "Chosen map: " + S_COLOR_WHITE + randmap + S_COLOR_YELLOW + " (out of " + S_COLOR_WHITE + maps.length() + S_COLOR_YELLOW + " matches)\n" );
+                G_PrintMsg( null, S_COLOR_YELLOW + "Chosen map: " + S_COLOR_WHITE + randmap + S_COLOR_YELLOW + " (out of " + S_COLOR_WHITE + randmap_matches + S_COLOR_YELLOW + " matches)\n" );
                 return true;
             }
 
@@ -1355,11 +1485,18 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
 
         return true;
     }
-    else if ( cmdString == "racerestart" || cmdString == "kill" )
+    else if ( cmdString == "racerestart" || cmdString == "kill" || cmdString == "join" )
     {
         if ( @client != null )
         {
             Player @player = RACE_GetPlayer( client );
+
+            if ( pending_endmatch || match.getState() >= MATCH_STATE_POSTMATCH )
+            {
+              if ( !(player.inRace || player.postRace) )
+                return true;
+            }
+
             if ( player.inRace )
                 player.cancelRace();
 
@@ -1466,6 +1603,256 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         }
 
         return true;
+    }
+    else if ( cmdString == "maplist" )
+    {
+      String arg1 = argsString.getToken( 0 ).tolower();
+      String arg2 = argsString.getToken( 1 ).tolower();
+      String pattern;
+      uint old_page = maplist_page[client.playerNum];
+      int page;
+      int last_page;
+
+      if ( arg1 == "" )
+      {
+        client.printMessage( "maplist <* | pattern> [<page# | prev | next>]\n" );
+        return false;
+      }
+
+      pattern = arg1;
+
+      if ( arg2 == "next" )
+      {
+        page = old_page + 1;
+      }
+      else if ( arg2 == "prev" )
+      {
+        page = old_page - 1;
+      }
+      else if ( arg2.isNumeric() )
+      {
+        page = arg2.toInt()-1;
+      }
+      else if ( arg2 == "" )
+      {
+        page = 0;
+      }
+      else
+      {
+        client.printMessage( "Page must be a number, \"prev\" or \"next\".\n" );
+        return false;
+      }
+
+      String[] maps;
+      const String @map;
+      String lmap;
+      uint i = 0;
+
+      if ( pattern == "*" )
+          pattern = "";
+
+      uint longest = 0;
+      String longest_name;
+
+      do
+      {
+          @map = ML_GetMapByNum( i );
+          if ( @map != null)
+          {
+              lmap = map.tolower();
+              uint p;
+              bool match = false;
+              if ( pattern == "" )
+              {
+                  match = true;
+              }
+              else
+              {
+                  for ( p = 0; p < map.length(); p++ )
+                  {
+                      uint eq = 0;
+                      while ( eq < pattern.length() && p + eq < lmap.length() )
+                      {
+                          if ( lmap[p + eq] != pattern[eq] )
+                              break;
+                          eq++;
+                      }
+                      if ( eq == pattern.length() )
+                      {
+                          match = true;
+                          break;
+                      }
+                  }
+              }
+              if ( match )
+                  maps.insertLast( map );
+
+              if ( map.length() > longest )
+              {
+                longest = map.length();
+                longest_name = map;
+              }
+          }
+          i++;
+      }
+      while ( @map != null );
+
+      if ( maps.length() == 0 )
+      {
+          client.printMessage( "No matching maps\n" );
+          return false;
+      }
+
+      Table maplist("l l l");
+
+      last_page = maps.length()/30;
+
+      if ( page < 0 || page > last_page )
+      {
+        client.printMessage( "Page doesn't exist.\n" );
+        return false;
+      }
+      maplist_page[client.playerNum] = page;
+
+      uint start = 30*page;
+      uint end = 30*page+30;
+      if ( end > maps.length() )
+        end = maps.length();
+
+      for ( i = start; i < end; i++ )
+      {
+        if ( i >= maps.length() )
+          break;
+        maplist.addCell( S_COLOR_WHITE + maps[i] );
+      }
+
+      client.printMessage( S_COLOR_YELLOW + "Found " + S_COLOR_WHITE + maps.length() + S_COLOR_YELLOW + " maps" +
+        S_COLOR_WHITE + " (" + (start+1) + "-" + end + "), " + S_COLOR_YELLOW + "page " + S_COLOR_WHITE + (page+1) + "/" + (last_page+1) + "\n" );
+
+      for ( i = 0; i < maplist.numRows(); i++ )
+        client.printMessage( maplist.getRow(i) + "\n" );
+
+      return true;
+    }
+    else if ( cmdString == "help" )
+    {
+      String arg1 = argsString.getToken( 0 ).tolower();
+      String arg2 = argsString.getToken( 1 ).tolower();
+
+      if ( arg1 == "" )
+      {
+        Table cmdlist( S_COLOR_YELLOW + "l " + S_COLOR_WHITE + "l" );
+        cmdlist.addCell( "/kill /racerestart" );
+        cmdlist.addCell( "Respawns you." );
+
+        cmdlist.addCell( "/practicemode" );
+        cmdlist.addCell( "Toggles between race and practicemode." );
+
+        cmdlist.addCell( "/noclip" );
+        cmdlist.addCell( "Lets you move freely through the world whilst in practicemode." );
+
+        cmdlist.addCell( "/position save" );
+        cmdlist.addCell( "Saves your position including your weapons as the new spawn position." );
+
+        cmdlist.addCell( "/position load" );
+        cmdlist.addCell( "Teleports you to your saved position." );
+
+        cmdlist.addCell( "/position speed" );
+        cmdlist.addCell( "Sets the speed at which you spawn in practicemode." );
+
+        cmdlist.addCell( "/position clear" );
+        cmdlist.addCell( "Resets your weapons and spawn position to their defaults." );
+
+        cmdlist.addCell( "/top" );
+        cmdlist.addCell( "Shows the top record times for the current map." );
+
+        cmdlist.addCell( "/maplist" );
+        cmdlist.addCell( "Lets you search available maps." );
+
+        cmdlist.addCell( "/callvote map" );
+        cmdlist.addCell( "Calls a vote for the specified map." );
+
+        cmdlist.addCell( "/callvote randmap" );
+        cmdlist.addCell( "Calls a vote for a random map in the current mappool." );
+
+        for ( uint i = 0; i < cmdlist.numRows(); i++ )
+          client.printMessage( cmdlist.getRow(i) + "\n" );
+
+        client.printMessage( S_COLOR_WHITE + "use " + S_COLOR_YELLOW + "/help <cmd> " + S_COLOR_WHITE + "for additional information." + "\n");
+      }
+      else if ( arg1 == "kill" || arg1 == "racerestart" )
+      {
+        client.printMessage( S_COLOR_YELLOW + "/kill /racerestart" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Respawns you. I mean srsly.. that's it." + "\n" );
+      }
+      else if ( arg1 == "practicemode" )
+      {
+        client.printMessage( S_COLOR_YELLOW + "/practicemode" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Toggles between race and practicemode. Race mode is the only mode in which your time will" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "  be recorded. Practicemode is used to practice specific parts of the map. Some commands are" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "  restricted to practicemode." + "\n" );
+      }
+      else if ( arg1 == "noclip" )
+      {
+        client.printMessage( S_COLOR_YELLOW + "/noclip" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Lets you move freely through the world whilst in practicemode. Use this command to get more" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "  control over your position when using /position save. Only works in practicemode." + "\n" );
+      }
+      else if ( arg1 == "position" && arg2 == "save" )
+      {
+        client.printMessage( S_COLOR_YELLOW + "/position save" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Saves your position including your weapons as the new spawn position. You can save a separate" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "  position for prerace and practicemode, depending on which mode you are in when using the command." + "\n" );
+        client.printMessage( S_COLOR_WHITE + "  Note: Using this command during race will save your position for practicemode." + "\n" );
+      }
+      else if ( arg1 == "position" && arg2 == "load" )
+      {
+        client.printMessage( S_COLOR_YELLOW + "/position load" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Teleports you to your saved position depending on which mode you are in." + "\n" );
+        client.printMessage( S_COLOR_WHITE + "  Note: This command does not work during race." + "\n" );
+      }
+      else if ( arg1 == "position" && arg2 == "speed" )
+      {
+        client.printMessage( S_COLOR_YELLOW + "/position speed <value>" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Example: /position speed 1000 - Sets your spawn speed to 1000." + "\n" );
+        client.printMessage( S_COLOR_WHITE + "  Sets the speed at which you spawn in practicemode. This does not affect prerace speed." + "\n" );
+        client.printMessage( S_COLOR_WHITE + "  Use /position speed 0 to reset. Note: You don't get spawn speed while in noclip mode." + "\n" );
+      }
+      else if ( arg1 == "position" && arg2 == "clear" )
+      {
+        client.printMessage( S_COLOR_YELLOW + "/position clear" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Resets your weapons and spawn position to their defaults." + "\n" );
+      }
+      else if ( arg1 == "top" )
+      {
+        client.printMessage( S_COLOR_YELLOW + "/top" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Shows a list of the top record times for the current map along with the names and time" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "  difference compared to the number 1 time. To see all lists visit: http://livesow.net/race." + "\n" );
+      }
+      else if ( arg1 == "maplist" )
+      {
+        client.printMessage( S_COLOR_YELLOW + "/maplist <* | pattern> [<page# | prev | next>]" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Shows a list of available maps. Use wildcard '*' to list all maps. Alternatively, specify a" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "  pattern keyword for a list of maps containing the pattern as a partial match. The second" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "  argument is optional and is used to browse multiple pages of results." + "\n" );
+      }
+      else if ( arg1 == "callvote" && arg2 == "map" )
+      {
+        client.printMessage( S_COLOR_YELLOW + "/callvote map <mapname>" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Calls a vote for the specified map. You can use /maplist to search for a map." + "\n" );
+      }
+      else if ( arg1 == "callvote" && arg2 == "randmap" )
+      {
+        client.printMessage( S_COLOR_YELLOW + "/callvote randmap <* | pattern>" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Calls a vote for a random map in the current mappool. Use wildcard '*' to match any map." + "\n" );
+        client.printMessage( S_COLOR_WHITE + "  Alternatively, specify a pattern keyword for a map containing the pattern as a partial match." + "\n" );
+      }
+      else
+      {
+        client.printMessage( S_COLOR_WHITE + "Command not found.\n");
+      }
+
+      return true;
     }
 
     G_PrintMsg( null, "unknown: " + cmdString + "\n" );
@@ -1624,12 +2011,35 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
             }
         }
     }
+    /* else if ( score_event == "pickup" )
+    {
+      Item@ item = @G_GetItemByClassname(args.getToken(0));
+      if ( client.canSelectWeapon(item.tag) )
+        client.selectWeapon(item.tag);
+    }*/
 }
 
 // a player is being respawned. This can happen from several ways, as dying, changing team,
 // being moved to ghost state, be placed in respawn queue, being spawned from spawn queue, etc
 void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 {
+    if ( pending_endmatch )
+    {
+      if ( ent.client.team != TEAM_SPECTATOR )
+      {
+        ent.client.team = TEAM_SPECTATOR;
+        ent.client.respawn(false);
+      }
+
+      if ( !Pending_AnyRacing() )
+      {
+        pending_endmatch = false;
+        match.launchState(MATCH_STATE_POSTMATCH);
+      }
+
+      return;
+    }
+
     Player @player = RACE_GetPlayer( ent.client );
     player.cancelRace();
 
@@ -1645,15 +2055,25 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
     if ( gametype.isInstagib )
         ent.client.inventoryGiveItem( WEAP_INSTAGUN );
     else
+    {
         ent.client.inventorySetCount( WEAP_GUNBLADE, 1 );
+        /*ent.client.inventorySetCount( WEAP_MACHINEGUN, 1 );
+        ent.client.inventorySetCount( AMMO_BULLETS, 1 );*/
+    }
 
     // select rocket launcher if available
     if ( ent.client.canSelectWeapon( WEAP_ROCKETLAUNCHER ) )
         ent.client.selectWeapon( WEAP_ROCKETLAUNCHER );
+    /*else if ( !( ent.client.canSelectWeapon( WEAP_ROCKETLAUNCHER )
+              && ent.client.canSelectWeapon( WEAP_GRENADELAUNCHER )
+              && ent.client.canSelectWeapon( WEAP_PLASMAGUN ) ) )
+        ent.client.selectWeapon( WEAP_GUNBLADE );*/
     else
         ent.client.selectWeapon( -1 ); // auto-select best weapon in the inventory
 
     G_RemoveProjectiles( ent );
+    // for accuracy.as, fixes issues with position save in prerace (kinda)
+    scoreCounter[ent.client.playerNum] = 0;
 
     player.loadPosition( false );
 
@@ -1661,6 +2081,8 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
     if ( player.practicing )
     {
       ent.client.setHelpMessage(practiceModeMsg);
+    } else {
+      ent.client.setHelpMessage(defaultMsg);
     }
 
     if ( player.noclipSpawn )
@@ -1668,6 +2090,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         if ( player.practicing )
         {
             ent.moveType = MOVETYPE_NOCLIP;
+            ent.velocity = Vec3(0,0,0);
             player.noclipWeapon = ent.weapon;
         }
         player.noclipSpawn = false;
@@ -1727,7 +2150,7 @@ void GT_ThinkRules()
 
         // always clear all before setting
         client.setHUDStat( STAT_PROGRESS_SELF, 0 );
-        client.setHUDStat( STAT_PROGRESS_OTHER, 0 );
+        //client.setHUDStat( STAT_PROGRESS_OTHER, 0 );
         client.setHUDStat( STAT_IMAGE_SELF, 0 );
         client.setHUDStat( STAT_IMAGE_OTHER, 0 );
         client.setHUDStat( STAT_PROGRESS_ALPHA, 0 );
@@ -1769,6 +2192,18 @@ void GT_ThinkRules()
           int max_accel = int( ( sqrt( speed*speed + base_accel * ( 2 * base_speed - base_accel ) ) - speed ) / cgframeTime );
           client.setHUDStat( STAT_PROGRESS_SELF, max_accel );
         }
+
+    Entity @ent = @client.getEnt();
+        if ( ent.client.state() >= CS_SPAWNED && ent.team != TEAM_SPECTATOR )
+        {
+            if ( ent.health > ent.maxHealth ) {
+                ent.health -= ( frameTime * 0.001f );
+                // fix possible rounding errors
+                if( ent.health < ent.maxHealth ) {
+                    ent.health = ent.maxHealth;
+                }
+            }
+        }
     }
 
     // ch : send intermediate results
@@ -1778,13 +2213,15 @@ void GT_ThinkRules()
     }
 }
 
+bool pending_endmatch = false;
+
 // The game has detected the end of the match state, but it
 // doesn't advance it before calling this function.
 // This function must give permission to move into the next
 // state by returning true.
 bool GT_MatchStateFinished( int incomingMatchState )
 {
-    if ( match.getState() == MATCH_STATE_POSTMATCH )
+    if ( incomingMatchState == MATCH_STATE_WAITEXIT )
     {
         match.stopAutorecord();
         demoRecording = false;
@@ -1792,11 +2229,49 @@ bool GT_MatchStateFinished( int incomingMatchState )
         // ch : also send rest of results
         RACE_WriteTopScores();
 
+        G_CmdExecute("set g_inactivity_maxtime 90\n");
+
         if ( randmap_passed != "" )
             G_CmdExecute( "map " + randmap_passed );
     }
 
+    if ( incomingMatchState == MATCH_STATE_POSTMATCH )
+    { // msc: check for overtime
+      G_CmdExecute("set g_inactivity_maxtime 5\n");
+      if ( Pending_AnyRacing(true) )
+      {
+        G_AnnouncerSound( null, G_SoundIndex( "sounds/announcer/overtime/overtime" ), GS_MAX_TEAMS, false, null );
+        pending_endmatch = true;
+        return false;
+      }
+    }
+
     return true;
+}
+
+bool Pending_AnyRacing(bool respawn = false)
+{
+  bool any_racing = false;
+  for ( int i = 0; i < maxClients; i++ )
+  {
+    Client @client = G_GetClient( i );
+    if ( client.state() < CS_SPAWNED )
+        continue;
+
+    Player@ player = RACE_GetPlayer( client );
+    if ( player.inRace && !player.postRace && client.team != TEAM_SPECTATOR )
+    {
+      any_racing = true;
+    } else {
+      if ( client.team != TEAM_SPECTATOR )
+      {
+        client.team = TEAM_SPECTATOR;
+        if ( respawn )
+          client.respawn( false );
+      }
+    }
+  }
+  return any_racing;
 }
 
 // the match state has just moved into a new state. Here is the
@@ -1837,6 +2312,25 @@ void GT_Shutdown()
 void GT_SpawnGametype()
 {
     //G_Print( "numCheckPoints: " + numCheckpoints + "\n" );
+
+    //TODO: fix in source, /kill should reset touch timeouts.
+    for ( int i = 0; i < numEntities; i++ )
+    {
+        Entity@ ent = G_GetEntity(i);
+        if ( ent.classname == "trigger_multiple" )
+        {
+            Entity@[] targets = ent.findTargets();
+            for ( uint j = 0; j < targets.length; j++ )
+            {
+                Entity@ target = targets[j];
+                if ( target.classname == "target_starttimer" )
+                {
+                    ent.wait = 0;
+                    break;
+                }
+            }
+        }
+    }
 
     // setup the checkpoints arrays sizes adjusted to numCheckPoints
     for ( int i = 0; i < maxClients; i++ )
@@ -1941,17 +2435,20 @@ void GT_InitGametype()
     G_RegisterCommand( "gametype" );
     G_RegisterCommand( "racerestart" );
     G_RegisterCommand( "kill" );
+    G_RegisterCommand( "join" );
     G_RegisterCommand( "practicemode" );
     G_RegisterCommand( "noclip" );
     G_RegisterCommand( "position" );
     G_RegisterCommand( "top" );
+    G_RegisterCommand( "maplist" );
+    G_RegisterCommand( "help" );
 
     // add votes
     G_RegisterCallvote( "randmap", "<* | pattern>", "string", "Changes to a random map" );
 
     // msc: practicemode message
     practiceModeMsg = G_RegisterHelpMessage(S_COLOR_CYAN + "Practicing");
-    defaultMsg = G_RegisterHelpMessage("");
+    defaultMsg = G_RegisterHelpMessage(" ");
 
     demoRecording = false;
 

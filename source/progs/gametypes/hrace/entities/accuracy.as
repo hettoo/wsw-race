@@ -185,7 +185,10 @@ void fragsFilter_addScore( Entity @ent, Vec3 origin, int score ) {
     level.teamScores[ ent->client->ps.persistant[PERS_TEAM] ] += score;*/
 
   //Debug print
-  //ent.client.printMessage( "Your score is: " + scoreCounter[ent.client.playerNum] + "\n" );
+  /*if ( score != 0 )
+  {
+    ent.client.printMessage( "Your score is: " + scoreCounter[ent.client.playerNum] + "\n" );
+  }*/
 
   //CalculateRanks();
 }
