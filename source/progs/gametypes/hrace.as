@@ -674,26 +674,26 @@ class Player
 
           if ( this.hasTime )
           {
-            line1 += "    Current: " + RACE_TimeToString( this.finishTime ) + "    ";
-            line2 += "            " + RACE_TimeDiffString(this.finishTime, this.bestFinishTime, true) + "            ";
+            line1 += "\u00A0   Current: " + RACE_TimeToString( this.finishTime ) + "   \u00A0";
+            line2 += "\u00A0           " + RACE_TimeDiffString(this.finishTime, this.bestFinishTime, true) + "           \u00A0";
           } else {
-            line1 += "    Current: " + RACE_TimeToString( this.finishTime ) + "    ";
-            line2 += "            " + "                    " + "            ";
+            line1 += "\u00A0   Current: " + RACE_TimeToString( this.finishTime ) + "   \u00A0";
+            line2 += "\u00A0           " + "                    " + "           \u00A0";
           }
 
           if ( spec_player.hasTime )
           {
-            line1 = "   Personal:    " + "          " + line1;
+            line1 = "\u00A0  Personal:    " + "          " + line1;
             line2 = RACE_TimeDiffString(this.finishTime, spec_player.bestFinishTime, true) + "          " + line2;
           } else if ( levelRecords[0].finishTime != 0 ) {
-            line1 = "                                 " + line1;
-            line2 = "                                 " + line2;
+            line1 = "\u00A0                                " + line1;
+            line2 = "\u00A0                                " + line2;
           }
 
           if ( levelRecords[0].finishTime != 0 )
           {
-            line1 += "           " + "Server:      ";
-            line2 += "       " + RACE_TimeDiffString(this.finishTime, levelRecords[0].finishTime, true) + " ";
+            line1 += "\u00A0          " + "Server:     \u00A0";
+            line2 += "\u00A0      " + RACE_TimeDiffString(this.finishTime, levelRecords[0].finishTime, true) + "\u00A0";
           }
 
           G_CenterPrintMsg(specs[i].getEnt(), line1 + "\n" + line2);
@@ -848,26 +848,26 @@ class Player
 
           if ( this.hasTime && this.sectorTimes[id] != 0 )
           {
-            line1 += "    Current: " + RACE_TimeToString( this.sectorTimes[id] ) + "    ";
-            line2 += "            " + RACE_TimeDiffString(this.sectorTimes[id], this.bestSectorTimes[id], true) + "            ";
+            line1 += "\u00A0   Current: " + RACE_TimeToString( this.sectorTimes[id] ) + "   \u00A0";
+            line2 += "\u00A0           " + RACE_TimeDiffString(this.sectorTimes[id], this.bestSectorTimes[id], true) + "           \u00A0";
           } else {
-            line1 += "    Current: " + RACE_TimeToString( this.sectorTimes[id] ) + "    ";
-            line2 += "            " + "                    " + "            ";
+            line1 += "\u00A0   Current: " + RACE_TimeToString( this.sectorTimes[id] ) + "   \u00A0";
+            line2 += "\u00A0           " + "                    " + "           \u00A0";
           }
 
           if ( spec_player.hasTime && spec_player.bestSectorTimes[id] != 0 )
           {
-            line1 = "   Personal:    " + "          " + line1;
+            line1 = "\u00A0  Personal:    " + "          " + line1;
             line2 = RACE_TimeDiffString(this.sectorTimes[id], spec_player.bestSectorTimes[id], true) + "          " + line2;
           } else if ( levelRecords[0].finishTime != 0 ) {
-            line1 = "                                 " + line1;
-            line2 = "                                 " + line2;
+            line1 = "\u00A0                                " + line1;
+            line2 = "\u00A0                                " + line2;
           }
 
           if ( levelRecords[0].finishTime != 0 && levelRecords[0].sectorTimes[id] != 0 )
           {
-            line1 += "           " + "Server:      ";
-            line2 += "       " + RACE_TimeDiffString(this.sectorTimes[id], levelRecords[0].sectorTimes[id], true) + " ";
+            line1 += "\u00A0          " + "Server:     \u00A0";
+            line2 += "\u00A0      " + RACE_TimeDiffString(this.sectorTimes[id], levelRecords[0].sectorTimes[id], true) + "\u00A0";
           }
 
           G_CenterPrintMsg(specs[i].getEnt(), line1 + "\n" + line2);
