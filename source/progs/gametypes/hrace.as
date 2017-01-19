@@ -891,7 +891,7 @@ class Player
         {
             // ch : does racesow apply sector records only if race is completed?
             this.client.addAward( "Personal record on sector " + this.currentSector + "!" );
-            this.bestSectorTimes[id] = this.sectorTimes[id];
+            //this.bestSectorTimes[id] = this.sectorTimes[id];
         }
 
         this.currentSector++;
