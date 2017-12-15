@@ -1497,6 +1497,8 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
                 return true;
             }
 
+            RS_ResetPjState( client.playerNum );
+
             if ( player.inRace )
                 player.cancelRace();
 
