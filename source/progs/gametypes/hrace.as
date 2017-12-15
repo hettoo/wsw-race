@@ -1497,8 +1497,6 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
                 return true;
             }
 
-            RS_ResetPjState( client.playerNum );
-
             if ( player.inRace )
                 player.cancelRace();
 
@@ -2074,6 +2072,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
         ent.client.selectWeapon( -1 ); // auto-select best weapon in the inventory
 
     G_RemoveProjectiles( ent );
+    RS_ResetPjState( ent.client.playerNum );
     // for accuracy.as, fixes issues with position save in prerace (kinda)
     scoreCounter[ent.client.playerNum] = 0;
 
