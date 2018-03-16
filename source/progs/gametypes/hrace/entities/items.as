@@ -26,6 +26,8 @@ void GENERIC_SpawnItem( Entity @ent, int tag )
     ent.type = ET_ITEM;
     @ent.item = @item;
     ent.effects = 0;
+    if ( ent.count < 1 ) // fix for negative ammo counts in defrag (infinite ammo?)
+        ent.count = 1;
 }
 
 bool GENERIC_ClientCanDropItem( Client @client )
