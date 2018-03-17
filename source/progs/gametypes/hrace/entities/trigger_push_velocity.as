@@ -47,7 +47,8 @@ void trigger_push_velocity( Entity @ent )
     ent.svflags |= SVF_TRANSMITORIGIN2;
     ent.wait = 1;
 
-    if ( ent.spawnFlags == 0 ) // defaults for compatibility
+    Cvar cm_mapHeader("cm_mapHeader", "", 0);
+    if ( cm_mapHeader.string == "FBSP" && ent.spawnFlags == 0 ) // defaults for compatibility
         ent.spawnFlags = PLAYERDIR_XY | ADD_XY | PLAYERDIR_Z | ADD_Z;
 
     ent.linkEntity();
