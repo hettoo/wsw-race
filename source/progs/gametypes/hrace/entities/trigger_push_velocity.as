@@ -21,6 +21,7 @@ To make a jump pad or launch ramp, place the target_position/info_notnull entity
 
 Dictionary ent_pushvelocity_values;
 uint[] ent_pushvelocity_times( maxClients );
+Entity@[] ent_pushvelocity_lastent( maxClients );
 const uint ENT_PUSHVELOCITY_TIMEOUT = 1000;
 
 const int PLAYERDIR_XY = 1;
@@ -86,10 +87,11 @@ void trigger_push_velocity_think( Entity @ent )
 void trigger_push_velocity_touch( Entity @ent, Entity @other, const Vec3 planeNormal, int surfFlags )
 {
     if ( @other.client == null || other.moveType != MOVETYPE_PLAYER ||
-        ent_pushvelocity_times[other.playerNum] > levelTime )
+        ( @ent_pushvelocity_lastent[other.playerNum] == @ent && ent_pushvelocity_times[other.playerNum] > levelTime) )
         return;
 
     ent_pushvelocity_times[other.playerNum] = levelTime + ENT_PUSHVELOCITY_TIMEOUT + uint( ent.wait );
+    @ent_pushvelocity_lastent[other.playerNum] = @ent;
 
     bool is_playerdir_xy =        (ent.spawnFlags & PLAYERDIR_XY) != 0;
     bool is_add_xy =              (ent.spawnFlags & ADD_XY) != 0;
