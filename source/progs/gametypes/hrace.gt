@@ -11,6 +11,7 @@ legacy/quake2_items.as;
 legacy/quake3_items.as;
 
 hrace/entities/trigger_push_velocity.as;
+hrace/entities/target_speed.as;
 hrace/entities/target_delay.as;
 hrace/entities/shooters.as;
 hrace/entities/gates.as;
