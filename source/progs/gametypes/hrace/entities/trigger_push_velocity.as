@@ -22,7 +22,9 @@ To make a jump pad or launch ramp, place the target_position/info_notnull entity
 Dictionary ent_pushvelocity_values;
 uint[] ent_pushvelocity_times( maxClients );
 Entity@[] ent_pushvelocity_lastent( maxClients );
+
 const uint ENT_PUSHVELOCITY_TIMEOUT = 1000;
+const int ENT_PUSHVELOCITY_SOUND = G_SoundIndex("sounds/world/launchpad");
 
 const int PLAYERDIR_XY = 1;
 const int ADD_XY = 2;
@@ -204,4 +206,5 @@ void trigger_push_velocity_touch( Entity @ent, Entity @other, const Vec3 planeNo
     velocity = hor_base_vel*hor_base_speed + vert_base_vel*vert_base_speed;
 
     other.velocity = velocity;
+    G_Sound( other, CHAN_AUTO, ENT_PUSHVELOCITY_SOUND, ATTN_NORM );
 }
