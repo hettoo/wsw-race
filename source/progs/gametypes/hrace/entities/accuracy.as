@@ -1,124 +1,88 @@
-/*
-There is still some work needed to be done,
-but the basic functions of the Accuracy entities work properly.
+const int TARGET_FRAGSFILTER_PRINTDELAY = 1000;
 
-Mostly printing the frags/fraglimit isn't done yet.
+int[] target_score_scores(maxClients);
+uint[] target_fragsFilter_printdelay(maxClients);
+
+/*QUAKED target_score (0 .5 0) (-8 -8 -8) (8 8 8)
+This is used to automatically give frag points to the player who activates this. A spawn location entity like info_player_* or CTF respawn points can target this entity to give points to the player when he spawns in the game. Or a trigger can also be used to activate this. The activator of the trigger will get the points.
+--------  Q3  --------
+-------- KEYS --------
+targetname : ativating entity points to this.
+count: number of frag points to give to player (default 1).
+notfree : when set to 1, entity will not spawn in "Free for all" and "Tournament" modes.
+notteam : when set to 1, entity will not spawn in "Teamplay" and "CTF" modes.
+notsingle : when set to 1, entity will not spawn in Single Player mode (bot play mode).
 */
 
-String[] entStorage(maxEntities);
+TargetScore@[] target_score_ents;
 
-void addToEntStorage( int id, String string)
+class TargetScore
 {
-  int i = entStorage.length();
-  if( i < id )
-    entStorage.resize(id);
-  entStorage[id] = string;
-}
+  Entity@ ent;
+  int score = 1;
+  bool[] touched(maxClients);
 
-int[] scoreCounter(maxClients);
-bool isAccuracyMap=false;
-
-//Hardcoded spawnFlags for target_fragsFilter
-int REMOVER = 1;
-int RUNONCE = 2;
-int SILENT = 4;
-int RESET = 8;
-
-void checkForAccuracyMap()
-{
-  int position;
-  isAccuracyMap = false;
-
-  Cvar mapNameVar( "mapname", "", 0 );
-  String mapname = mapNameVar.string.tolower();
-
-  if( G_FileLength( "scripts/" + mapname + ".defi" ) > 0 )
+  TargetScore( Entity@ ent )
   {
-    String defifile;
-        String style;
-    defifile = G_LoadFile( "scripts/" + mapname + ".defi" );
-
-        //Debug Print
-    //G_Print(defifile + "\n");
-
-        if( ( position = defifile.locate("style",0) ) > -1 )
-        {
-            style = defifile.substr( position, defifile.len() );
-            if( ( position = style.locate("\n", 0 ) ) > -1 )
-            {
-                style = style.substr( 0, position );
-                //Debug Print
-                //G_Print(style + "\n");
-                if( style.locate("accuracy", 0) < style.len() )
-                {
-                  isAccuracyMap = true;
-                }
-            }
-        }
-  }
-}
-
-void target_fragsFilter_think( Entity @ent )
-{
-    int i;
-
-    for( i = 0; i < maxClients; i++ )
-    {
-        if( @G_GetClient(i) != null )
-            ent.use( ent, null, G_GetClient(i).getEnt() );
+    @this.ent = @ent;
+    this.score = ent.count;
+    if ( ent.count <= 0 ) {
+      this.score = 1;
     }
-    ent.nextThink = levelTime + 1;
-}
 
-void target_fragsFilter_use( Entity @ent, Entity @other, Entity @activator )
-{
-  int frags = entStorage[ent.entNum].getToken(0).toInt();
+    @ent.use = target_score_use;
+  }
 
-  if(@activator == null || (activator.svflags & SVF_NOCLIENT) == 1 || @activator.client == null )
+  void Use( Entity@ activator )
+  {
+    if( @activator == null || (activator.svflags & SVF_NOCLIENT) == 1 || @activator.client == null )
+    {
       return;
-
-  if( frags <= 0 )
-  {
-      frags = 1;
-  }
-
-  if( scoreCounter[activator.client.playerNum] > frags )
-    scoreCounter[activator.client.playerNum] = frags;
-
-  if(  scoreCounter[activator.client.playerNum] == frags)
-  {
-  //Debug print
-      //G_Print( "Fraglimit reached\n" );
-      ent.useTargets( activator );
-  }
-  if( ( ent.spawnFlags & REMOVER ) > 0 )
-  {
-      scoreCounter[activator.client.playerNum] -= frags;
-  }
-  if( ( ent.spawnFlags & RUNONCE ) > 0 )
-  {
-      if(  scoreCounter[activator.client.playerNum] == frags)
-          scoreCounter[activator.client.playerNum] = 0;
-  }
-  if( ( ent.spawnFlags & SILENT ) > 0 )
-  {
-    //FIXME: This needs to be printed somewhere else. Maybe add it to the hud. (This function is called every millisecond keep that in mind!)
-    if( isAccuracyMap )
-    {
-      activator.client.printMessage( "You have " + scoreCounter[activator.client.playerNum] + "/" + frags + "\n" );
     }
-  }
-  else
-  {
-      //Maybe add centerprint here
-  }
-  if( ( ent.spawnFlags & RESET ) > 0 )
-  {
-      scoreCounter[activator.client.playerNum] = 0;
+
+    Client@ client = @activator.client;
+
+    if ( this.touched[client.playerNum] ) {
+      return;
+    }
+
+    target_score_scores[client.playerNum] += score;
+    this.touched[client.playerNum] = true;
+    
+    if ( score != 0 )
+    {
+      client.printMessage( "Your score is: " + target_score_scores[client.playerNum] + "\n" );
+    }
   }
 }
 
-/*QUAKED target_fragsFilter (1 0 0) (-8 -8 -8) (8 8 8) REMOVER RUNONCE SILENT RESET
+void target_score( Entity @ent )
+{
+  TargetScore@ target_score_ent = TargetScore(ent);
+  target_score_ents.push_back(target_score_ent);
+}
+
+void target_score_use( Entity @ent, Entity @other, Entity @activator )
+{
+  for ( uint i = 0; i < target_score_ents.length; i++ )
+  {
+    if ( @target_score_ents[i].ent == @ent )
+    {
+      target_score_ents[i].Use(activator);
+    }
+  }
+}
+
+void target_score_init( Client@ client )
+{
+  target_score_scores[client.playerNum] = 0;
+  for ( uint i = 0; i < target_score_ents.length; i++ )
+  {
+    target_score_ents[i].touched[client.playerNum] = false;
+  }
+}
+
+/*QUAKED target_fragsFilter (1 0 0) (-8 -8 -8) (8 8 8) REMOVER RUNONCE SILENT RESET MATCH
 Frags Filter
 -------- KEYS --------
 frags: (default is 1) number of frags required to trigger the targeted entity.
@@ -128,88 +92,183 @@ REMOVER: removes from player's score the number of frags that was required to tr
 RUNONCE: no longer used, kept for compatibility.
 SILENT: disables player warnings. ("x more frags needed" messages)
 RESET: resets player's score to 0 after the targeted entity is triggered.
+MATCH: the player's score must be exactly equal to the frags value.
 -------- NOTES --------
 If the Frags Filter is not bound from a trigger, it becomes independant and is so always active.
 Defrag is limited to 10 independant target_fragsFilter.
 */
 
-void target_fragsFilter( Entity @ent )
+const int TARGET_FRAGSFILTER_REMOVER = 1;
+const int TARGET_FRAGSFILTER_RUNONCE = 2;
+const int TARGET_FRAGSFILTER_SILENT  = 4;
+const int TARGET_FRAGSFILTER_RESET   = 8;
+const int TARGET_FRAGSFILTER_MATCH   = 16;
+
+TargetFragsFilter@[] target_fragsFilter_ents;
+
+class TargetFragsFilter
 {
-    String frags = G_SpawnTempValue("frags");
+  Entity@ ent;
+  int frags = 1;
 
-    addToEntStorage( ent.entNum, frags );
+  bool remover = false;
+  bool runonce = false;
+  bool silent  = false;
+  bool reset   = false;
+  bool match   = false;
 
-    Entity@[] targeting = ent.findTargeting();
-    if( targeting.isEmpty() )
-    {
-        ent.spawnFlags |= SILENT;
-        ent.nextThink = levelTime + 1;
+  TargetFragsFilter( Entity@ ent )
+  {
+    @this.ent = @ent;
+    String fragsStr = G_SpawnTempValue("frags");
+    this.frags = fragsStr.toInt();
+    if ( this.frags <= 0 ) {
+      this.frags = 1;
     }
 
-    @ent.think = target_fragsFilter_think;
+    this.remover = ( ent.spawnFlags & TARGET_FRAGSFILTER_REMOVER ) != 0;
+    this.runonce = ( ent.spawnFlags & TARGET_FRAGSFILTER_RUNONCE ) != 0;
+    this.silent  = ( ent.spawnFlags & TARGET_FRAGSFILTER_SILENT  ) != 0;
+    this.reset   = ( ent.spawnFlags & TARGET_FRAGSFILTER_RESET   ) != 0;
+    this.match   = ( ent.spawnFlags & TARGET_FRAGSFILTER_MATCH   ) != 0;
+
     @ent.use = target_fragsFilter_use;
 
-    //Debug prints
-    /*G_Print( "REMOVER: " + ( ent.spawnFlags & REMOVER ) + "\n" );
-    G_Print( "RUNONCE: " + ( ent.spawnFlags & RUNONCE ) + "\n" );
-    G_Print( "SILENT: " + ( ent.spawnFlags & SILENT ) + "\n" );
-    G_Print( "RESET: " + ( ent.spawnFlags & RESET ) + "\n" );*/
-}
-
-/*
-============
-fragsFilter_addScore
-
-Adds score to both the client and his team in the fragfilter
-============
-*/
-void fragsFilter_addScore( Entity @ent, Vec3 origin, int score ) {
-  if(@ent == null || (ent.svflags & SVF_NOCLIENT) == 1 || @ent.client == null )
-    return;
-
-  // I'm not sure what this did in Defrag
-  // show score plum
-  //ScorePlum(ent, origin, score);
-
-  //Just setting it to an reasonable limit for now. Maybe i'll make use of the full int later ;)
-  if( ( scoreCounter[ent.client.playerNum] + score ) > 500 )
-  {
-    scoreCounter[ent.client.playerNum] = 500;
-    return;
+    // Gotta wait until all entities are loaded.
+    @ent.think = target_fragsFilter_setup;
+    ent.nextThink = levelTime + 1;
   }
 
-  scoreCounter[ent.client.playerNum] += score;
-
-  // Team behaviour not yet ported to AS
-  /*if ( g_gametype.integer == GT_TEAM )
-    level.teamScores[ ent->client->ps.persistant[PERS_TEAM] ] += score;*/
-
-  //Debug print
-  /*if ( score != 0 )
+  void Setup( Entity@ ent )
   {
-    ent.client.printMessage( "Your score is: " + scoreCounter[ent.client.playerNum] + "\n" );
-  }*/
-
-  //CalculateRanks();
-}
-
-void target_score( Entity @ent )
-{
-    if ( ent.count <= 0 )
+    // If the Frags Filter is not bound from a trigger, it becomes independant and is so always active.
+    if ( !this.findTargetingTrigger( ent ) )
     {
-      ent.count = 1;
+      @ent.think = target_fragsFilter_think;
+      ent.nextThink = levelTime + 1;
+    } else {
+      @ent.think = null;
     }
-    @ent.use = target_score_use;
+  }
+
+  bool findTargetingTrigger(Entity@ ent)
+  {
+    Entity@[] targeting = ent.findTargeting();
+    for ( uint i = 0; i < targeting.length; i++ )
+    {
+      if ( targeting[i].solid == SOLID_TRIGGER )
+      {
+        return true;
+      }
+      if ( this.findTargetingTrigger( targeting[i] ) )
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void Use(Entity@ activator)
+  {
+    if( @activator == null || (activator.svflags & SVF_NOCLIENT) == 1 || @activator.client == null )
+    {
+      return;
+    }
+
+    Client@ client = @activator.client;
+    int score = target_score_scores[client.playerNum];
+    bool valid = score >= this.frags;
+
+    if ( this.match )
+    {
+      // the player's score must be exactly equal to the frags value.
+      valid = score == this.frags;
+    }
+
+    if ( valid && this.remover )
+    {
+      // removes from player's score the number of frags that was required to trigger the targeted entity.
+      score -= this.frags;
+    }
+    if ( this.runonce )
+    {
+      // no longer used, kept for compatibility.
+
+    }
+    if ( !this.silent )
+    {
+      // disables player warnings. ("x more frags needed" messages)
+
+      // only print once every x seconds
+      if ( target_fragsFilter_printdelay[client.playerNum] >= levelTime )
+      {
+        client.printMessage( "" + (this.frags - score) + " more points needed\n" );
+        target_fragsFilter_printdelay[client.playerNum] = levelTime + TARGET_FRAGSFILTER_PRINTDELAY;
+      }
+    }
+    if ( this.reset )
+    {
+      // resets player's score to 0 after the targeted entity is triggered.
+      score = 0;
+    }
+
+    if ( valid )
+    {
+      this.ent.useTargets(activator);
+    }
+
+    target_score_scores[client.playerNum] = score;
+  }
+
+  void Think()
+  {
+    for ( int i = 0; i < maxClients; i++ )
+    {
+      Client@ client = @G_GetClient(i);
+      if ( @client != null && client.team != TEAM_SPECTATOR )
+      {
+        this.Use( client.getEnt() );
+      }
+    }
+    ent.nextThink = levelTime + 1;
+  }
 }
 
-void target_score_use( Entity @ent, Entity @other, Entity @activator )
+void target_fragsFilter( Entity @ent )
 {
-    if(@activator == null || (activator.svflags & SVF_NOCLIENT) == 1 || @activator.client == null )
-        return;
+  TargetFragsFilter@ target_fragsFilter_ent = TargetFragsFilter(ent);
+  target_fragsFilter_ents.push_back(target_fragsFilter_ent);
+}
 
-    fragsFilter_addScore( activator, ent.origin, ent.count);
-    //Debug print
-    /*if( isAccuracyMap )
-        activator.client.printMessage( "You have " + scoreCounter[activator.client.playerNum] + " frags\n" );*/
-    ent.useTargets( activator );
+void target_fragsFilter_use( Entity @ent, Entity @other, Entity @activator )
+{
+  for ( uint i = 0; i < target_fragsFilter_ents.length; i++ )
+  {
+    if ( @target_fragsFilter_ents[i].ent == @ent )
+    {
+      target_fragsFilter_ents[i].Use(activator);
+    }
+  };
+}
+
+void target_fragsFilter_setup( Entity @ent )
+{
+  for ( uint i = 0; i < target_fragsFilter_ents.length; i++ )
+  {
+    if ( @target_fragsFilter_ents[i].ent == @ent )
+    {
+      target_fragsFilter_ents[i].Setup(ent);
+    }
+  };
+}
+
+void target_fragsFilter_think( Entity @ent )
+{
+  for ( uint i = 0; i < target_fragsFilter_ents.length; i++ )
+  {
+    if ( @target_fragsFilter_ents[i].ent == @ent )
+    {
+      target_fragsFilter_ents[i].Think();
+    }
+  };
 }

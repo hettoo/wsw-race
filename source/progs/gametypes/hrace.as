@@ -2074,7 +2074,7 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
     G_RemoveProjectiles( ent );
     RS_ResetPjState( ent.client.playerNum );
     // for accuracy.as, fixes issues with position save in prerace (kinda)
-    scoreCounter[ent.client.playerNum] = 0;
+    target_score_init(ent.client);
 
     player.loadPosition( false );
 
