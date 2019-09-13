@@ -2299,6 +2299,7 @@ bool GT_MatchStateFinished( int incomingMatchState )
         RACE_WriteTopScores();
 
         G_CmdExecute("set g_inactivity_maxtime 90\n");
+        G_CmdExecute("set g_disable_vote_remove 1\n");
 
         if ( randmap_passed != "" )
             G_CmdExecute( "map " + randmap_passed );
@@ -2307,6 +2308,7 @@ bool GT_MatchStateFinished( int incomingMatchState )
     if ( incomingMatchState == MATCH_STATE_POSTMATCH )
     { // msc: check for overtime
       G_CmdExecute("set g_inactivity_maxtime 5\n");
+      G_CmdExecute("set g_disable_vote_remove 0\n");
       if ( Pending_AnyRacing(true) )
       {
         G_AnnouncerSound( null, G_SoundIndex( "sounds/announcer/overtime/overtime" ), GS_MAX_TEAMS, false, null );
