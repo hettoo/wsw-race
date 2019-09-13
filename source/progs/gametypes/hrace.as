@@ -2405,6 +2405,17 @@ void GT_SpawnGametype()
     RACE_LoadTopScores();
 }
 
+float GT_VotePower( Client@ client, String& votename, bool voted, bool yes )
+{
+    Player@ player = @RACE_GetPlayer(client);
+    if ( player.hasTime && voted && !yes )
+    {
+        return 2.0;
+    }
+
+    return 1.0;
+}
+
 // Important: This function is called before any entity is spawned, and
 // spawning entities from it is forbidden. If you want to make any entity
 // spawning at initialization do it in GT_SpawnGametype, which is called
