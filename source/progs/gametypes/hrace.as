@@ -1417,7 +1417,12 @@ uint[] maplist_page( maxClients );
 
 bool GT_Command( Client @client, const String &cmdString, const String &argsString, int argc )
 {
-    if ( cmdString == "gametype" )
+    if ( cmdString == "gametypemenu" )
+    {
+        client.execGameCommand("meop racemod_main");
+        return true;
+    }
+    else if ( cmdString == "gametype" )
     {
         String response = "";
         Cvar fs_game( "fs_game", "", 0 );
@@ -2508,6 +2513,7 @@ void GT_InitGametype()
 
     // add commands
     G_RegisterCommand( "gametype" );
+    G_RegisterCommand( "gametypemenu" );
     G_RegisterCommand( "racerestart" );
     G_RegisterCommand( "kill" );
     G_RegisterCommand( "join" );
