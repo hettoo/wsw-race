@@ -583,6 +583,10 @@ class Player
         if ( RS_QueryPjState( this.client.playerNum )  )
         {
           this.client.addAward( S_COLOR_RED + "Prejumped!" );
+          
+            // for accuracy, reset scores.
+            target_score_init( this.client );
+            
           this.client.respawn( false );
           RS_ResetPjState( this.client.playerNum );
           return false;
@@ -919,6 +923,9 @@ class Player
         if ( !this.practicing )
             return;
 
+        // for accuracy, reset scores.
+        target_score_init( this.client );
+
         this.practicing = false;
         G_CenterPrintMsg( this.client.getEnt(), S_COLOR_CYAN + "Left practice mode" );
         // msc: practicemode message
@@ -956,6 +963,9 @@ Player @RACE_GetPlayer( Client @client )
 void race_respawner_think( Entity @respawner )
 {
     Client @client = G_GetClient( respawner.count );
+    
+    // for accuracy, reset scores.
+    target_score_init( client );
 
     // the client may have respawned on their own, so check if they are in postRace
     if ( RACE_GetPlayer( client ).postRace && client.team != TEAM_SPECTATOR )
@@ -1490,6 +1500,9 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         if ( @client != null )
         {
             Player @player = RACE_GetPlayer( client );
+
+            // for accuracy, reset scores.
+            target_score_init( client );
 
             if ( pending_endmatch || match.getState() >= MATCH_STATE_POSTMATCH )
             {
@@ -2073,8 +2086,6 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
 
     G_RemoveProjectiles( ent );
     RS_ResetPjState( ent.client.playerNum );
-    // for accuracy.as, fixes issues with position save in prerace (kinda)
-    target_score_init(ent.client);
 
     player.loadPosition( false );
 
