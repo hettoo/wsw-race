@@ -1128,6 +1128,7 @@ void target_starttimer_use( Entity @self, Entity @other, Entity @activator )
 void target_starttimer( Entity @ent )
 {
     @ent.use = target_starttimer_use;
+    ent.wait = 0;
 }
 
 void target_startTimer( Entity @ent )
