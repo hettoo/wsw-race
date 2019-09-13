@@ -1366,6 +1366,43 @@ void RACE_SetUpMatch()
     lastRecordSent = levelTime;
 }
 
+uint[] rules_timestamp( maxClients );
+void RACE_ShowRules(Client@ client, int delay)
+{
+    if ( delay > 0 )
+    {
+        rules_timestamp[client.playerNum] = levelTime + delay;
+        return;
+    }
+    rules_timestamp[client.playerNum] = 0;
+
+    //client.printMessage( S_COLOR_WHITE + "Due to recent events, this server will enforce the following rules:\n" );
+    //client.printMessage( S_COLOR_WHITE + "\n" );
+    client.printMessage( S_COLOR_WHITE + "\u2022 Be respectful towards other players\n" );
+    client.printMessage( S_COLOR_WHITE + "\u2022 No bigotry or hate speech\n" );
+    client.printMessage( S_COLOR_WHITE + "\u2022 No threats or provocative behaviour towards players or admins\n" );
+    client.printMessage( S_COLOR_WHITE + "\u2022 No attempts to cause lag on the server by any means\n" );
+    client.printMessage( S_COLOR_WHITE + "\u2022 No forced attacks against livesow or warsow affiliated services\n" );
+    client.printMessage( S_COLOR_WHITE + "\u2022 No spreading of harmful software\n" );
+    client.printMessage( S_COLOR_WHITE + "\u2022 No promoting of illegal activities\n" );
+    client.printMessage( S_COLOR_WHITE + "\u2022 No evading of bans or mutes\n" );
+    client.printMessage( S_COLOR_WHITE + "\u2022 All hail our duck overlords\n" );
+    client.printMessage( S_COLOR_WHITE + "\n" );
+    client.printMessage( S_COLOR_WHITE + "Breaking any of these rules can result in a ban.\n" );
+    client.printMessage( S_COLOR_WHITE + "If you are banned or have any objection towards these rules,\n" );
+    client.printMessage( S_COLOR_WHITE + "feel free to contact an admin on #livesow @ irc.quakenet.org\n" );
+
+    G_Print("Showing rules to: "+client.name+"\n");
+}
+
+void RACE_ShowIntro(Client@ client)
+{
+    if ( client.getUserInfoKey("racemod_seenintro").toInt() == 0 )
+    {
+        client.execGameCommand("meop racemod_main");
+    }
+}
+
 ///*****************************************************************
 /// MODULE SCRIPT CALLS
 ///*****************************************************************
@@ -1867,6 +1904,11 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
 
       return true;
     }
+    else if ( cmdString == "rules")
+    {
+        RACE_ShowRules(client, 0);
+        return true;
+    }
 
     G_PrintMsg( null, "unknown: " + cmdString + "\n" );
 
@@ -1995,6 +2037,8 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
             RACE_GetPlayer( client ).clear();
             RACE_UpdateHUDTopScores();
         }
+
+        RACE_ShowRules(client, 2000);
 
         // ch : begin fetching records over interweb
         // MM_FetchRaceRecords( client.getEnt() );
@@ -2156,6 +2200,13 @@ void GT_ThinkRules()
         @client = G_GetClient( i );
         if ( client.state() < CS_SPAWNED )
             continue;
+
+        //delayed rules
+        if ( rules_timestamp[i] < levelTime && rules_timestamp[i] != 0 )
+        {
+            RACE_ShowRules(client, 0);
+            RACE_ShowIntro(client);
+        }
 
         // disable gunblade autoattack
         client.pmoveFeatures = client.pmoveFeatures & ~PMFEAT_GUNBLADEAUTOATTACK;
@@ -2465,6 +2516,7 @@ void GT_InitGametype()
     G_RegisterCommand( "top" );
     G_RegisterCommand( "maplist" );
     G_RegisterCommand( "help" );
+    G_RegisterCommand( "rules" );
 
     // add votes
     G_RegisterCallvote( "randmap", "<* | pattern>", "string", "Changes to a random map" );
@@ -2472,6 +2524,10 @@ void GT_InitGametype()
     // msc: practicemode message
     practiceModeMsg = G_RegisterHelpMessage(S_COLOR_CYAN + "Practicing");
     defaultMsg = G_RegisterHelpMessage(" ");
+
+    // msc: force pk3 download
+    G_SoundIndex( "racemod_ui_v2.txt", true );
+    G_SoundIndex( "missing_tex.txt", true );
 
     demoRecording = false;
 
