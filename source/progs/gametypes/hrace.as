@@ -2274,17 +2274,6 @@ void GT_ThinkRules()
     {
 
     }
-
-    // temporary fix for items only triggering targets once
-    // TODO: change this in source
-    for ( int i = 0; i < maxEntities; i++ ) {
-        Entity@ ent = @G_GetEntity(i);
-        if ( @ent == null )
-            continue;
-        if ( ent.type == ET_ITEM ) {
-            ent.spawnFlags &= ~0x00040000; // #define ITEM_TARGETS_USED	0x00040000 @ g_local.h
-        }
-    }
 }
 
 bool pending_endmatch = false;
