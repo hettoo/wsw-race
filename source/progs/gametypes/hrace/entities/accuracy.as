@@ -21,6 +21,7 @@ class TargetScore
   Entity@ ent;
   int score = 1;
   bool[] touched(maxClients);
+  bool print = true
 
   TargetScore( Entity@ ent )
   {
@@ -31,6 +32,10 @@ class TargetScore
     }
 
     @ent.use = target_score_use;
+
+    // Gotta wait until all entities are loaded.
+    @ent.think = target_score_setup;
+    ent.nextThink = levelTime + 1;
   }
 
   void Use( Entity@ activator )
@@ -54,6 +59,29 @@ class TargetScore
       client.addAward( "Your score is: " + target_score_scores[client.playerNum] );
     }
   }
+
+  void Setup( Entity@ ent )
+  {
+    // Don't print if this is triggered by a spawnpoint.
+    this.print = !this.findTargetingSpawnpoint( ent );
+  }
+
+  bool findTargetingSpawnpoint(Entity@ ent)
+  {
+    Entity@[] targeting = ent.findTargeting();
+    for ( uint i = 0; i < targeting.length; i++ )
+    {
+      if ( targeting[i].classname.tolower().substr(0,12) == "info_player_" )
+      {
+        return true;
+      }
+      if ( this.findTargetingSpawnpoint( targeting[i] ) )
+      {
+        return true;
+      }
+    }
+    return false;
+  }
 }
 
 void target_score( Entity @ent )
@@ -71,6 +99,17 @@ void target_score_use( Entity @ent, Entity @other, Entity @activator )
       target_score_ents[i].Use(activator);
     }
   }
+}
+
+void target_score_setup( Entity @ent )
+{
+  for ( uint i = 0; i < target_score_ents.length; i++ )
+  {
+    if ( @target_score_ents[i].ent == @ent )
+    {
+      target_score_ents[i].Setup(ent);
+    }
+  };
 }
 
 void target_score_init( Client@ client )
