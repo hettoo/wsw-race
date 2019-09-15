@@ -54,7 +54,7 @@ class TargetScore
     target_score_scores[client.playerNum] += score;
     this.touched[client.playerNum] = true;
     
-    if ( print && score != 0 )
+    if ( this.print && score != 0 )
     {
       client.addAward( "Your score is: " + target_score_scores[client.playerNum] );
     }
