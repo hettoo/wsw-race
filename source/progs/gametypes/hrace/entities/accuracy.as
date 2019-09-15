@@ -184,12 +184,6 @@ class TargetFragsFilter
       // the player's score must be exactly equal to the frags value.
       valid = score == this.frags;
     }
-
-    if ( valid && this.remover )
-    {
-      // removes from player's score the number of frags that was required to trigger the targeted entity.
-      score -= this.frags;
-    }
     if ( this.runonce )
     {
       // no longer used, kept for compatibility.
@@ -206,15 +200,21 @@ class TargetFragsFilter
         target_fragsFilter_printdelay[client.playerNum] = levelTime + TARGET_FRAGSFILTER_PRINTDELAY;
       }
     }
-    if ( this.reset )
-    {
-      // resets player's score to 0 after the targeted entity is triggered.
-      score = 0;
-    }
 
     if ( valid )
     {
       this.ent.useTargets(activator);
+    
+      if ( this.remover )
+      {
+        // removes from player's score the number of frags that was required to trigger the targeted entity.
+        score -= this.frags;
+      }
+      if ( this.reset )
+      {
+        // resets player's score to 0 after the targeted entity is triggered.
+        score = 0;
+      }
     }
 
     target_score_scores[client.playerNum] = score;
