@@ -51,7 +51,7 @@ class TargetScore
     
     if ( score != 0 )
     {
-      client.printMessage( "Your score is: " + target_score_scores[client.playerNum] + "\n" );
+      client.addAward( "Your score is: " + target_score_scores[client.playerNum] );
     }
   }
 }
@@ -202,7 +202,7 @@ class TargetFragsFilter
       // only print once every x seconds
       if ( target_fragsFilter_printdelay[client.playerNum] >= levelTime )
       {
-        client.printMessage( "" + (this.frags - score) + " more points needed\n" );
+        client.addAward( "" + (this.frags - score) + " more points needed" );
         target_fragsFilter_printdelay[client.playerNum] = levelTime + TARGET_FRAGSFILTER_PRINTDELAY;
       }
     }
