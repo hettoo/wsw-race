@@ -1336,6 +1336,9 @@ void RACE_playerKilled( Entity @target, Entity @attacker, Entity @inflicter )
     if ( @target == null || @target.client == null )
         return;
 
+    // for accuracy, reset scores.
+    target_score_init( target.client );
+
     RACE_GetPlayer( target.client ).cancelRace();
 }
 
