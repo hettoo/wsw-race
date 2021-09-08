@@ -2001,6 +2001,11 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         client.printMessage( S_COLOR_YELLOW + "/position clear" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Resets your weapons and spawn position to their defaults." + "\n" );
       }
+      else if ( arg1 == "position" && arg2 == "recall" )
+      {
+        client.printMessage( S_COLOR_YELLOW + "/position recall [offset]" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Moves you to the position from your previous run closest to your current one and saves it, adjusted by offset in the position list." + "\n" );
+      }
       else if ( arg1 == "top" )
       {
         client.printMessage( S_COLOR_YELLOW + "/top" + "\n" );
