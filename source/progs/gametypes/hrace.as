@@ -19,7 +19,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 int numCheckpoints = 0;
 bool demoRecording = false;
-const int MAX_RECORDS = 30;
+const int MAX_RECORDS = 100;
 const int DISPLAY_RECORDS = 20;
 const int HUD_RECORDS = 3;
 
@@ -266,9 +266,6 @@ class Player
     bool practicing;
     bool arraysSetUp;
 
-    bool heardReady;
-    bool heardGo;
-
     // hettoo : practicemode
     int noclipWeapon;
     Position practicePosition;
@@ -294,9 +291,6 @@ class Player
         this.hasTime = false;
         this.bestFinishTime = 0;
         this.noclipSpawn = false;
-
-        this.heardReady = false;
-        this.heardGo = false;
 
         this.practicePosition.clear();
         this.preRacePosition.clear();
@@ -733,8 +727,6 @@ class Player
         respawner.nextThink = levelTime + 5000;
         @respawner.think = race_respawner_think;
         respawner.count = this.client.playerNum;
-
-        G_AnnouncerSound( this.client, G_SoundIndex( "sounds/misc/timer_ploink" ), GS_MAX_TEAMS, false, null );
     }
 
     bool touchCheckPoint( int id )
@@ -795,8 +787,6 @@ class Player
         }
 
         this.currentSector++;
-
-        G_AnnouncerSound( this.client, G_SoundIndex( "sounds/misc/timer_bip_bip" ), GS_MAX_TEAMS, false, null );
 
         return true;
     }
@@ -981,16 +971,7 @@ void target_starttimer_use( Entity @self, Entity @other, Entity @activator )
         return;
 
     if ( player.startRace() )
-    {
-        if ( !player.heardGo )
-        {
-            int soundIndex = G_SoundIndex( "sounds/announcer/countdown/go0" + (1 + (rand() & 1)) );
-            G_AnnouncerSound( activator.client, soundIndex, GS_MAX_TEAMS, false, null );
-            player.heardGo = true;
-        }
-
         self.useTargets( activator );
-    }
 }
 
 // doesn't need to do anything at all, just sit there, waiting
@@ -1653,13 +1634,6 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
     {
         // add a teleportation effect
         ent.respawnEffect();
-
-        if ( !player.practicing && !player.heardReady )
-        {
-            int soundIndex = G_SoundIndex( "sounds/announcer/countdown/ready0" + (1 + (rand() & 1)) );
-            G_AnnouncerSound( ent.client, soundIndex, GS_MAX_TEAMS, false, null );
-            player.heardReady = true;
-        }
     }
 }
 
