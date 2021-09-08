@@ -22,6 +22,7 @@ bool demoRecording = false;
 const int MAX_RECORDS = 50;
 const int DISPLAY_RECORDS = 20;
 const int HUD_RECORDS = 3;
+
 const int MAX_POSITIONS = 200;
 const int POSITION_INTERVAL = 500;
 const float POSITION_HEIGHT = 24;
@@ -668,10 +669,10 @@ class Player
         if ( RS_QueryPjState( this.client.playerNum )  )
         {
           this.client.addAward( S_COLOR_RED + "Prejumped!" );
-          
+
             // for accuracy, reset scores.
             target_score_init( this.client );
-            
+
           this.client.respawn( false );
           RS_ResetPjState( this.client.playerNum );
           return false;
@@ -780,35 +781,39 @@ class Player
         Client@[] specs = RACE_GetSpectators(this.client);
         for ( uint i = 0; i < specs.length; i++ )
         {
-          Player@ spec_player = @RACE_GetPlayer(specs[i]);
-          String line1 = "";
-          String line2 = "";
+            Player@ spec_player = @RACE_GetPlayer(specs[i]);
+            String line1 = "";
+            String line2 = "";
 
-          if ( this.hasTime )
-          {
-            line1 += "\u00A0   Current: " + RACE_TimeToString( this.finishTime ) + "   \u00A0";
-            line2 += "\u00A0           " + RACE_TimeDiffString(this.finishTime, this.bestFinishTime, true) + "           \u00A0";
-          } else {
-            line1 += "\u00A0   Current: " + RACE_TimeToString( this.finishTime ) + "   \u00A0";
-            line2 += "\u00A0           " + "                    " + "           \u00A0";
-          }
+            if ( this.hasTime )
+            {
+                line1 += "\u00A0   Current: " + RACE_TimeToString( this.finishTime ) + "   \u00A0";
+                line2 += "\u00A0           " + RACE_TimeDiffString(this.finishTime, this.bestFinishTime, true) + "           \u00A0";
+            }
+            else
+            {
+                line1 += "\u00A0   Current: " + RACE_TimeToString( this.finishTime ) + "   \u00A0";
+                line2 += "\u00A0           " + "                    " + "           \u00A0";
+            }
 
-          if ( spec_player.hasTime )
-          {
-            line1 = "\u00A0  Personal:    " + "          " + line1;
-            line2 = RACE_TimeDiffString(this.finishTime, spec_player.bestFinishTime, true) + "          " + line2;
-          } else if ( levelRecords[0].finishTime != 0 ) {
-            line1 = "\u00A0                                " + line1;
-            line2 = "\u00A0                                " + line2;
-          }
+            if ( spec_player.hasTime )
+            {
+                line1 = "\u00A0  Personal:    " + "          " + line1;
+                line2 = RACE_TimeDiffString(this.finishTime, spec_player.bestFinishTime, true) + "          " + line2;
+            }
+            else if ( levelRecords[0].finishTime != 0 )
+            {
+                line1 = "\u00A0                                " + line1;
+                line2 = "\u00A0                                " + line2;
+            }
 
-          if ( levelRecords[0].finishTime != 0 )
-          {
-            line1 += "\u00A0          " + "Server:     \u00A0";
-            line2 += "\u00A0      " + RACE_TimeDiffString(this.finishTime, levelRecords[0].finishTime, true) + "\u00A0";
-          }
+            if ( levelRecords[0].finishTime != 0 )
+            {
+                line1 += "\u00A0          " + "Server:     \u00A0";
+                line2 += "\u00A0      " + RACE_TimeDiffString(this.finishTime, levelRecords[0].finishTime, true) + "\u00A0";
+            }
 
-          G_CenterPrintMsg(specs[i].getEnt(), line1 + "\n" + line2);
+            G_CenterPrintMsg(specs[i].getEnt(), line1 + "\n" + line2);
         }
 
         this.report.addCell( "Finish:" );
@@ -961,35 +966,39 @@ class Player
         Client@[] specs = RACE_GetSpectators(this.client);
         for ( uint i = 0; i < specs.length; i++ )
         {
-          Player@ spec_player = @RACE_GetPlayer(specs[i]);
-          String line1 = "";
-          String line2 = "";
+            Player@ spec_player = @RACE_GetPlayer(specs[i]);
+            String line1 = "";
+            String line2 = "";
 
-          if ( this.hasTime && this.sectorTimes[id] != 0 )
-          {
-            line1 += "\u00A0   Current: " + RACE_TimeToString( this.sectorTimes[id] ) + "   \u00A0";
-            line2 += "\u00A0           " + RACE_TimeDiffString(this.sectorTimes[id], this.bestSectorTimes[id], true) + "           \u00A0";
-          } else {
-            line1 += "\u00A0   Current: " + RACE_TimeToString( this.sectorTimes[id] ) + "   \u00A0";
-            line2 += "\u00A0           " + "                    " + "           \u00A0";
-          }
+            if ( this.hasTime && this.sectorTimes[id] != 0 )
+            {
+                line1 += "\u00A0   Current: " + RACE_TimeToString( this.sectorTimes[id] ) + "   \u00A0";
+                line2 += "\u00A0           " + RACE_TimeDiffString(this.sectorTimes[id], this.bestSectorTimes[id], true) + "           \u00A0";
+            }
+            else
+            {
+                line1 += "\u00A0   Current: " + RACE_TimeToString( this.sectorTimes[id] ) + "   \u00A0";
+                line2 += "\u00A0           " + "                    " + "           \u00A0";
+            }
 
-          if ( spec_player.hasTime && spec_player.bestSectorTimes[id] != 0 )
-          {
-            line1 = "\u00A0  Personal:    " + "          " + line1;
-            line2 = RACE_TimeDiffString(this.sectorTimes[id], spec_player.bestSectorTimes[id], true) + "          " + line2;
-          } else if ( levelRecords[0].finishTime != 0 ) {
-            line1 = "\u00A0                                " + line1;
-            line2 = "\u00A0                                " + line2;
-          }
+            if ( spec_player.hasTime && spec_player.bestSectorTimes[id] != 0 )
+            {
+                line1 = "\u00A0  Personal:    " + "          " + line1;
+                line2 = RACE_TimeDiffString(this.sectorTimes[id], spec_player.bestSectorTimes[id], true) + "          " + line2;
+            }
+            else if ( levelRecords[0].finishTime != 0 )
+            {
+                line1 = "\u00A0                                " + line1;
+                line2 = "\u00A0                                " + line2;
+            }
 
-          if ( levelRecords[0].finishTime != 0 && levelRecords[0].sectorTimes[id] != 0 )
-          {
-            line1 += "\u00A0          " + "Server:     \u00A0";
-            line2 += "\u00A0      " + RACE_TimeDiffString(this.sectorTimes[id], levelRecords[0].sectorTimes[id], true) + "\u00A0";
-          }
+            if ( levelRecords[0].finishTime != 0 && levelRecords[0].sectorTimes[id] != 0 )
+            {
+                line1 += "\u00A0          " + "Server:     \u00A0";
+                line2 += "\u00A0      " + RACE_TimeDiffString(this.sectorTimes[id], levelRecords[0].sectorTimes[id], true) + "\u00A0";
+            }
 
-          G_CenterPrintMsg(specs[i].getEnt(), line1 + "\n" + line2);
+            G_CenterPrintMsg(specs[i].getEnt(), line1 + "\n" + line2);
         }
 
         //G_CenterPrintMsg( ent, str + "\n" + RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id], true ) );
@@ -1075,7 +1084,7 @@ Player @RACE_GetPlayer( Client @client )
 void race_respawner_think( Entity @respawner )
 {
     Client @client = G_GetClient( respawner.count );
-    
+
     // for accuracy, reset scores.
     target_score_init( client );
 
@@ -1241,18 +1250,18 @@ void target_startTimer( Entity @ent )
 
 Client@[] RACE_GetSpectators( Client@ client )
 {
-  Client@[] speclist;
+    Client@[] speclist;
 
-  for ( int i = 0; i < maxClients; i++ )
-  {
-    Client@ specClient = @G_GetClient(i);
-
-    if ( specClient.chaseActive && specClient.chaseTarget == client.getEnt().entNum )
+    for ( int i = 0; i < maxClients; i++ )
     {
-      speclist.push_back(@specClient);
+        Client@ specClient = @G_GetClient(i);
+
+        if ( specClient.chaseActive && specClient.chaseTarget == client.getEnt().entNum )
+        {
+          speclist.push_back(@specClient);
+        }
     }
-  }
-  return speclist;
+    return speclist;
 }
 
 String RACE_TimeToString( uint time )
@@ -2333,7 +2342,7 @@ void GT_ThinkRules()
             client.setHUDStat( STAT_MESSAGE_ALPHA, CS_GENERAL + 1 );
         if ( levelRecords[2].playerName.length() > 0 )
             client.setHUDStat( STAT_MESSAGE_BETA, CS_GENERAL + 2 );
-        
+
         player.saveRunPosition();
 
         // msc: temporary MAX_ACCEL replacement
@@ -2409,27 +2418,29 @@ bool GT_MatchStateFinished( int incomingMatchState )
 
 bool Pending_AnyRacing(bool respawn = false)
 {
-  bool any_racing = false;
-  for ( int i = 0; i < maxClients; i++ )
-  {
-    Client @client = G_GetClient( i );
-    if ( client.state() < CS_SPAWNED )
-        continue;
-
-    Player@ player = RACE_GetPlayer( client );
-    if ( player.inRace && !player.postRace && client.team != TEAM_SPECTATOR )
+    bool any_racing = false;
+    for ( int i = 0; i < maxClients; i++ )
     {
-      any_racing = true;
-    } else {
-      if ( client.team != TEAM_SPECTATOR )
-      {
-        client.team = TEAM_SPECTATOR;
-        if ( respawn )
-          client.respawn( false );
-      }
+        Client @client = G_GetClient( i );
+        if ( client.state() < CS_SPAWNED )
+            continue;
+
+        Player@ player = RACE_GetPlayer( client );
+        if ( player.inRace && !player.postRace && client.team != TEAM_SPECTATOR )
+        {
+            any_racing = true;
+        }
+        else
+        {
+            if ( client.team != TEAM_SPECTATOR )
+            {
+                client.team = TEAM_SPECTATOR;
+                if ( respawn )
+                    client.respawn( false );
+            }
+        }
     }
-  }
-  return any_racing;
+    return any_racing;
 }
 
 // the match state has just moved into a new state. Here is the
@@ -2445,18 +2456,18 @@ void GT_MatchStateStarted()
 
     switch ( match.getState() )
     {
-    case MATCH_STATE_PLAYTIME:
-        RACE_SetUpMatch();
-        break;
+        case MATCH_STATE_PLAYTIME:
+            RACE_SetUpMatch();
+            break;
 
-    case MATCH_STATE_POSTMATCH:
-        gametype.pickableItemsMask = 0;
-        gametype.dropableItemsMask = 0;
-        GENERIC_SetUpEndMatch();
-        break;
+        case MATCH_STATE_POSTMATCH:
+            gametype.pickableItemsMask = 0;
+            gametype.dropableItemsMask = 0;
+            GENERIC_SetUpEndMatch();
+            break;
 
-    default:
-        break;
+        default:
+            break;
     }
 }
 
