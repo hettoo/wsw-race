@@ -136,9 +136,12 @@ RecordTime[] levelRecords( MAX_RECORDS );
 class Position
 {
     bool saved;
+    bool recalled;
     Vec3 location;
     Vec3 angles;
     Vec3 velocity;
+    int currentSector;
+    uint currentTime;
     bool skipWeapons;
     int weapon;
     bool[] weapons;
@@ -156,9 +159,12 @@ class Position
     void copy( Position @other )
     {
         this.saved = other.saved;
+        this.recalled = other.recalled;
         this.location = other.location;
         this.angles = other.angles;
         this.velocity = other.velocity;
+        this.currentSector = other.currentSector;
+        this.currentTime = other.currentTime;
         this.skipWeapons = other.skipWeapons;
         this.weapon = other.weapon;
         for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
@@ -171,6 +177,7 @@ class Position
     void clear()
     {
         this.saved = false;
+        this.recalled = false;
         this.velocity = Vec3();
     }
 }
@@ -275,6 +282,7 @@ class Player
     uint bestFinishTime;
     bool noclipSpawn;
     Table report( S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "r " + S_COLOR_ORANGE + "/ l r " + S_COLOR_ORANGE + "/ l r" );
+    Table practiceReport( S_COLOR_CYAN + "l " + S_COLOR_WHITE + "r " + S_COLOR_CYAN + "/ l r " + S_COLOR_CYAN + "/ l r" );
     int currentSector;
     bool inRace;
     bool postRace;
@@ -472,6 +480,7 @@ class Player
         ent.angles = position.angles;
         if ( ent.moveType != MOVETYPE_NOCLIP )
             ent.set_velocity( position.velocity );
+        this.currentSector = position.currentSector;
 
         if ( !position.skipWeapons )
         {
@@ -510,6 +519,20 @@ class Player
         if ( this.preRace() )
         {
             ent.set_velocity( Vec3() );
+        }
+        else if ( this.practicing && position.recalled )
+        {
+            if ( !this.postRace && this.currentSector > position.currentSector )
+            {
+                uint rows = this.practiceReport.numRows();
+                for ( uint i = 0; i < rows; i++ )
+                    G_PrintMsg( ent, this.practiceReport.getRow( i ) + "\n" );
+                G_PrintMsg( ent, S_COLOR_CYAN + "Race cancelled\n" );
+            }
+            this.practiceReport.reset();
+            for ( int i = 0; i < numCheckpoints; i++ )
+                this.sectorTimes[i] = 0;
+            this.startTime = this.timeStamp() - position.currentTime;
         }
 
         return true;
@@ -562,7 +585,13 @@ class Player
         Position @saved = this.savedPosition();
         saved.copy( position );
         saved.saved = true;
+        saved.recalled = true;
         saved.skipWeapons = ref.team == TEAM_SPECTATOR;
+
+        this.practiceReport.reset();
+        for ( int i = 0; i < numCheckpoints; i++ )
+            this.sectorTimes[i] = 0;
+        this.startTime = this.timeStamp() - position.currentTime;
 
         this.setQuickMenu();
 
@@ -572,6 +601,8 @@ class Player
     Position @currentPosition()
     {
         Position @result = Position();
+        result.saved = false;
+        result.recalled = false;
         Client @ref = this.client;
         if ( this.client.team == TEAM_SPECTATOR && this.client.chaseActive )
             @ref = G_GetEntity( this.client.chaseTarget ).client;
@@ -580,6 +611,8 @@ class Player
         result.angles = ent.angles;
         result.velocity = ent.get_velocity();
         result.skipWeapons = false;
+        result.currentSector = this.currentSector;
+        result.currentTime = this.raceTime();
         for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
         {
             result.weapons[i] = ref.canSelectWeapon( i );
@@ -620,6 +653,7 @@ class Player
         Position @position = this.savedPosition();
         position.copy( this.currentPosition() );
         position.saved = true;
+        position.recalled = false;
 
         position.velocity.z = 0;
         Vec3 a, b, c;
@@ -729,6 +763,16 @@ class Player
             G_PrintMsg( ent, S_COLOR_ORANGE + "Race cancelled\n" );
         }
 
+        Position @position = this.currentPosition();
+        if ( this.practicing && position.recalled && this.currentSector > position.currentSector )
+        {
+            Entity @ent = this.client.getEnt();
+            uint rows = this.practiceReport.numRows();
+            for ( uint i = 0; i < rows; i++ )
+                G_PrintMsg( ent, this.practiceReport.getRow( i ) + "\n" );
+            G_PrintMsg( ent, S_COLOR_CYAN + "Race cancelled\n" );
+        }
+
         this.inRace = false;
         this.postRace = false;
         this.finishTime = 0;
@@ -739,7 +783,7 @@ class Player
         uint delta;
         String str;
 
-        if ( this.practicing )
+        if ( this.practicing && !this.savedPosition().recalled )
         {
             if ( this.practiceFinish == 0 || this.timeStamp() - this.practiceFinish > 5000 )
             {
@@ -752,14 +796,20 @@ class Player
         if ( !this.validTime() ) // something is very wrong here
             return;
 
-        this.client.addAward( S_COLOR_CYAN + "Race Finished!" );
+        if ( this.practicing )
+            this.client.addAward( S_COLOR_CYAN + "Finished in practicemode!" );
+        else
+            this.client.addAward( S_COLOR_CYAN + "Race Finished!" );
+
+        this.practiceFinish = this.timeStamp();
 
         this.finishTime = this.raceTime();
         this.inRace = false;
         this.postRace = true;
 
         // send the final time to MM
-        this.client.setRaceTime( -1, this.finishTime );
+        if ( !this.practicing )
+            this.client.setRaceTime( -1, this.finishTime );
 
         str = "Current: " + RACE_TimeToString( this.finishTime );
 
@@ -816,111 +866,120 @@ class Player
             G_CenterPrintMsg(specs[i].getEnt(), line1 + "\n" + line2);
         }
 
-        this.report.addCell( "Finish:" );
-        this.report.addCell( RACE_TimeToString( this.finishTime ) );
-        this.report.addCell( "Personal:" );
-        this.report.addCell( RACE_TimeDiffString( this.finishTime, this.bestFinishTime, false ) );
-        this.report.addCell( "Server:" );
-        this.report.addCell( RACE_TimeDiffString( this.finishTime, levelRecords[0].finishTime, false ) );
-        uint rows = this.report.numRows();
+        Table @report;
+        if ( this.practicing )
+            @report = @this.practiceReport;
+        else
+            @report = @this.report;
+
+        report.addCell( "Finish:" );
+        report.addCell( RACE_TimeToString( this.finishTime ) );
+        report.addCell( "Personal:" );
+        report.addCell( RACE_TimeDiffString( this.finishTime, this.bestFinishTime, false ) );
+        report.addCell( "Server:" );
+        report.addCell( RACE_TimeDiffString( this.finishTime, levelRecords[0].finishTime, false ) );
+        uint rows = report.numRows();
         for ( uint i = 0; i < rows; i++ )
-            G_PrintMsg( ent, this.report.getRow( i ) + "\n" );
+            G_PrintMsg( ent, report.getRow( i ) + "\n" );
 
-        if ( !this.hasTime || this.finishTime < this.bestFinishTime )
+        if ( !this.practicing )
         {
-            this.client.addAward( S_COLOR_YELLOW + "Personal record!" );
-            // copy all the sectors into the new personal record backup
-            this.setBestTime( this.finishTime );
-            for ( int i = 0; i < numCheckpoints; i++ )
-                this.bestSectorTimes[i] = this.sectorTimes[i];
-        }
-
-        // see if the player improved one of the top scores
-        for ( int top = 0; top < MAX_RECORDS; top++ )
-        {
-            if ( !levelRecords[top].saved || this.finishTime < levelRecords[top].finishTime )
+            if ( !this.hasTime || this.finishTime < this.bestFinishTime )
             {
-                String cleanName = this.client.name.removeColorTokens().tolower();
-                String login = this.client.getMMLogin();
-
-                if ( top == 0 )
-                {
-                    this.client.addAward( S_COLOR_GREEN + "Server record!" );
-
-                    uint prevTime = 0;
-
-                    if ( levelRecords[0].finishTime != 0 )
-                        prevTime = levelRecords[0].finishTime;
-
-                    if ( levelRecords[0].finishTime == 0 )
-                    {
-                      G_PrintMsg( null, this.client.name + S_COLOR_YELLOW + " set a new ^2livesow.net ^3record: "
-                              + S_COLOR_GREEN + RACE_TimeToString( this.finishTime ) + "\n" );
-                    }
-                    else
-                    {
-                      G_PrintMsg( null, this.client.name + S_COLOR_YELLOW + " set a new ^2livesow.net ^3record: "
-                              + S_COLOR_GREEN + RACE_TimeToString( this.finishTime ) + " " + S_COLOR_YELLOW + "[-" + RACE_TimeToString( levelRecords[0].finishTime - this.finishTime ) + "]\n" );
-                    }
-                }
-
-                int remove = MAX_RECORDS - 1;
-                for ( int i = 0; i < MAX_RECORDS; i++ )
-                {
-                    if ( ( login == "" && levelRecords[i].login == "" && levelRecords[i].playerName.removeColorTokens().tolower() == cleanName )
-                            || ( login != "" && levelRecords[i].login == login ) )
-                    {
-                        if ( i < top )
-                            remove = -1; // he already has a better time, don't save it
-                        else
-                            remove = i;
-                        break;
-                    }
-                    if ( login == "" && levelRecords[i].login != "" && levelRecords[i].playerName.removeColorTokens().tolower() == cleanName && i < top )
-                    {
-                        remove = -1; // he already has a better time, don't save it
-                        break;
-                    }
-                }
-
-                if ( remove != -1 )
-                {
-                    // move the other records down
-                    for ( int i = remove; i > top; i-- )
-                        levelRecords[i].Copy( levelRecords[i - 1] );
-
-                    levelRecords[top].Store( this.client );
-
-                    if ( login != "" )
-                    {
-                        // there may be authed and unauthed records for a
-                        // player; remove the unauthed if it is worse than the
-                        // authed one
-                        bool found = false;
-                        for ( int i = top + 1; i < MAX_RECORDS; i++ )
-                        {
-                            if ( levelRecords[i].login == "" && levelRecords[i].playerName.removeColorTokens().tolower() == cleanName )
-                                found = true;
-                            if ( found && i < MAX_RECORDS - 1 )
-                                levelRecords[i].Copy( levelRecords[i + 1] );
-                        }
-                        if ( found )
-                            levelRecords[MAX_RECORDS - 1].clear();
-                    }
-
-                    RACE_WriteTopScores();
-                    RACE_UpdateHUDTopScores();
-                }
-
-                break;
+                this.client.addAward( S_COLOR_YELLOW + "Personal record!" );
+                // copy all the sectors into the new personal record backup
+                this.setBestTime( this.finishTime );
+                for ( int i = 0; i < numCheckpoints; i++ )
+                    this.bestSectorTimes[i] = this.sectorTimes[i];
             }
-        }
 
-        // set up for respawning the player with a delay
-        Entity @respawner = G_SpawnEntity( "race_respawner" );
-        respawner.nextThink = levelTime + 5000;
-        @respawner.think = race_respawner_think;
-        respawner.count = this.client.playerNum;
+            // see if the player improved one of the top scores
+            for ( int top = 0; top < MAX_RECORDS; top++ )
+            {
+                if ( !levelRecords[top].saved || this.finishTime < levelRecords[top].finishTime )
+                {
+                    String cleanName = this.client.name.removeColorTokens().tolower();
+                    String login = this.client.getMMLogin();
+
+                    if ( top == 0 )
+                    {
+                        this.client.addAward( S_COLOR_GREEN + "Server record!" );
+
+                        uint prevTime = 0;
+
+                        if ( levelRecords[0].finishTime != 0 )
+                            prevTime = levelRecords[0].finishTime;
+
+                        if ( levelRecords[0].finishTime == 0 )
+                        {
+                          G_PrintMsg( null, this.client.name + S_COLOR_YELLOW + " set a new ^2livesow.net ^3record: "
+                                  + S_COLOR_GREEN + RACE_TimeToString( this.finishTime ) + "\n" );
+                        }
+                        else
+                        {
+                          G_PrintMsg( null, this.client.name + S_COLOR_YELLOW + " set a new ^2livesow.net ^3record: "
+                                  + S_COLOR_GREEN + RACE_TimeToString( this.finishTime ) + " " + S_COLOR_YELLOW + "[-" + RACE_TimeToString( levelRecords[0].finishTime - this.finishTime ) + "]\n" );
+                        }
+                    }
+
+                    int remove = MAX_RECORDS - 1;
+                    for ( int i = 0; i < MAX_RECORDS; i++ )
+                    {
+                        if ( ( login == "" && levelRecords[i].login == "" && levelRecords[i].playerName.removeColorTokens().tolower() == cleanName )
+                                || ( login != "" && levelRecords[i].login == login ) )
+                        {
+                            if ( i < top )
+                                remove = -1; // he already has a better time, don't save it
+                            else
+                                remove = i;
+                            break;
+                        }
+                        if ( login == "" && levelRecords[i].login != "" && levelRecords[i].playerName.removeColorTokens().tolower() == cleanName && i < top )
+                        {
+                            remove = -1; // he already has a better time, don't save it
+                            break;
+                        }
+                    }
+
+                    if ( remove != -1 )
+                    {
+                        // move the other records down
+                        for ( int i = remove; i > top; i-- )
+                            levelRecords[i].Copy( levelRecords[i - 1] );
+
+                        levelRecords[top].Store( this.client );
+
+                        if ( login != "" )
+                        {
+                            // there may be authed and unauthed records for a
+                            // player; remove the unauthed if it is worse than the
+                            // authed one
+                            bool found = false;
+                            for ( int i = top + 1; i < MAX_RECORDS; i++ )
+                            {
+                                if ( levelRecords[i].login == "" && levelRecords[i].playerName.removeColorTokens().tolower() == cleanName )
+                                    found = true;
+                                if ( found && i < MAX_RECORDS - 1 )
+                                    levelRecords[i].Copy( levelRecords[i + 1] );
+                            }
+                            if ( found )
+                                levelRecords[MAX_RECORDS - 1].clear();
+                        }
+
+                        RACE_WriteTopScores();
+                        RACE_UpdateHUDTopScores();
+                    }
+
+                    break;
+                }
+            }
+
+            // set up for respawning the player with a delay
+            Entity @respawner = G_SpawnEntity( "race_respawner" );
+            respawner.nextThink = levelTime + 5000;
+            @respawner.think = race_respawner_think;
+            respawner.count = this.client.playerNum;
+        }
     }
 
     bool touchCheckPoint( int id )
@@ -931,7 +990,7 @@ class Player
         if ( id < 0 || id >= numCheckpoints )
             return false;
 
-        if ( !this.inRace )
+        if ( !this.inRace && ( !this.practicing || !this.savedPosition().recalled ) )
             return false;
 
         if ( this.sectorTimes[id] != 0 ) // already past this checkPoint
@@ -943,7 +1002,8 @@ class Player
         this.sectorTimes[id] = this.raceTime();
 
         // send this checkpoint to MM
-        this.client.setRaceTime( id, this.sectorTimes[id] );
+        if ( !this.practicing )
+            this.client.setRaceTime( id, this.sectorTimes[id] );
 
         // print some output and give awards if earned
 
@@ -961,7 +1021,6 @@ class Player
         Entity @ent = this.client.getEnt();
 
         G_CenterPrintMsg( ent, str + "\n" + RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id], true ) );
-
 
         Client@[] specs = RACE_GetSpectators(this.client);
         for ( uint i = 0; i < specs.length; i++ )
@@ -1001,24 +1060,32 @@ class Player
             G_CenterPrintMsg(specs[i].getEnt(), line1 + "\n" + line2);
         }
 
-        //G_CenterPrintMsg( ent, str + "\n" + RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id], true ) );
-        this.report.addCell( "CP" + (this.currentSector + 1) + ":" );
-        this.report.addCell( RACE_TimeToString( this.sectorTimes[id] ) );
-        this.report.addCell( "Personal:" );
-        this.report.addCell( RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id], false ) );
-        this.report.addCell( "Server:" );
-        this.report.addCell( RACE_TimeDiffString( this.sectorTimes[id], levelRecords[0].sectorTimes[id], false ) );
+        Table @report;
+        if ( this.practicing )
+            @report = @this.practiceReport;
+        else
+            @report = @this.report;
 
-        // if beating the level record on this sector give an award
-        if ( this.sectorTimes[id] < levelRecords[0].sectorTimes[id] )
+        report.addCell( "CP" + (this.currentSector + 1) + ":" );
+        report.addCell( RACE_TimeToString( this.sectorTimes[id] ) );
+        report.addCell( "Personal:" );
+        report.addCell( RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id], false ) );
+        report.addCell( "Server:" );
+        report.addCell( RACE_TimeDiffString( this.sectorTimes[id], levelRecords[0].sectorTimes[id], false ) );
+
+        if ( !this.practicing )
         {
-            this.client.addAward( "Server record on CP" + (this.currentSector + 1) + "!" );
-        }
-        // if beating his own record on this sector give an award
-        else if ( this.sectorTimes[id] < this.bestSectorTimes[id] )
-        {
-            // ch : does racesow apply sector records only if race is completed?
-            this.client.addAward( "Personal record on CP" + (this.currentSector + 1) + "!" );
+            // if beating the level record on this sector give an award
+            if ( this.sectorTimes[id] < levelRecords[0].sectorTimes[id] )
+            {
+                this.client.addAward( "Server record on CP" + (this.currentSector + 1) + "!" );
+            }
+            // if beating his own record on this sector give an award
+            else if ( this.sectorTimes[id] < this.bestSectorTimes[id] )
+            {
+                // ch : does racesow apply sector records only if race is completed?
+                this.client.addAward( "Personal record on CP" + (this.currentSector + 1) + "!" );
+            }
         }
 
         this.currentSector++;
@@ -1165,9 +1232,6 @@ void target_checkpoint_use( Entity @self, Entity @other, Entity @activator )
 
     Player @player = RACE_GetPlayer( activator.client );
 
-    if ( !player.inRace )
-        return;
-
     if ( player.touchCheckPoint( self.count ) )
         self.useTargets( activator );
 }
@@ -1186,7 +1250,7 @@ void target_stoptimer_use( Entity @self, Entity @other, Entity @activator )
 
     Player @player = RACE_GetPlayer( activator.client );
 
-    if ( !player.inRace && !player.practicing )
+    if ( !player.inRace && ( !player.practicing || player.postRace ) )
         return;
 
     player.completeRace();
@@ -2332,7 +2396,7 @@ void GT_ThinkRules()
 
         // all stats are set to 0 each frame, so it's only needed to set a stat if it's going to get a value
         @player = RACE_GetPlayer( client );
-        if ( player.inRace )
+        if ( player.inRace || player.practicing && player.savedPosition().recalled )
             client.setHUDStat( STAT_TIME_SELF, player.raceTime() / 100 );
 
         client.setHUDStat( STAT_TIME_BEST, player.bestFinishTime / 100 );
