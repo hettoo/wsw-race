@@ -530,6 +530,10 @@ class Player
             this.recalled = true;
             this.startTime = this.timeStamp() - position.currentTime;
         }
+        else if ( this.practicing )
+        {
+            this.recalled = false;
+        }
 
         return true;
     }
@@ -1790,6 +1794,7 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
             a.normalize();
             a *= speed;
             position.velocity = a;
+            position.recalled = false;
         }
         else if ( action == "clear" )
         {
