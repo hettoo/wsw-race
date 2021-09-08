@@ -642,7 +642,7 @@ class Player
 
         Entity @ent = this.client.getEnt();
         G_CenterPrintMsg( ent, str + "\n" + RACE_TimeDiffString( this.finishTime, this.bestFinishTime, true ) );
-        this.report.addCell( "Race finished:" );
+        this.report.addCell( "Finish:" );
         this.report.addCell( RACE_TimeToString( this.finishTime ) );
         this.report.addCell( "Personal:" );
         this.report.addCell( RACE_TimeDiffString( this.finishTime, this.bestFinishTime, false ) );
@@ -774,7 +774,7 @@ class Player
 
         Entity @ent = this.client.getEnt();
         G_CenterPrintMsg( ent, str + "\n" + RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id], true ) );
-        this.report.addCell( "Sector " + this.currentSector + ":" );
+        this.report.addCell( "CP" + (this.currentSector + 1) + ":" );
         this.report.addCell( RACE_TimeToString( this.sectorTimes[id] ) );
         this.report.addCell( "Personal:" );
         this.report.addCell( RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id], false ) );
@@ -784,13 +784,13 @@ class Player
         // if beating the level record on this sector give an award
         if ( this.sectorTimes[id] < levelRecords[0].sectorTimes[id] )
         {
-            this.client.addAward( "Sector record on sector " + this.currentSector + "!" );
+            this.client.addAward( "Server record on CP" + (this.currentSector + 1) + "!" );
         }
         // if beating his own record on this sector give an award
         else if ( this.sectorTimes[id] < this.bestSectorTimes[id] )
         {
             // ch : does racesow apply sector records only if race is completed?
-            this.client.addAward( "Personal record on sector " + this.currentSector + "!" );
+            this.client.addAward( "Personal record on CP" + (this.currentSector + 1) + "!" );
             this.bestSectorTimes[id] = this.sectorTimes[id];
         }
 
