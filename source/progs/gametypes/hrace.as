@@ -734,12 +734,22 @@ class Player
                 if ( top == 0 )
                 {
                     this.client.addAward( S_COLOR_GREEN + "Server record!" );
+
+                    uint prevTime = 0;
+
+                    if ( levelRecords[0].finishTime != 0 )
+                        prevTime = levelRecords[0].finishTime;
+
                     if ( levelRecords[0].finishTime == 0 )
+                    {
                       G_PrintMsg( null, this.client.name + S_COLOR_YELLOW + " set a new ^2livesow.net ^3record: "
                               + S_COLOR_GREEN + RACE_TimeToString( this.finishTime ) + "\n" );
+                    }
                     else
+                    {
                       G_PrintMsg( null, this.client.name + S_COLOR_YELLOW + " set a new ^2livesow.net ^3record: "
                               + S_COLOR_GREEN + RACE_TimeToString( this.finishTime ) + " " + S_COLOR_YELLOW + "[-" + RACE_TimeToString( levelRecords[0].finishTime - this.finishTime ) + "]\n" );
+                    }
                 }
 
                 int remove = MAX_RECORDS - 1;
