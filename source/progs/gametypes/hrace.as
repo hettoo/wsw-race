@@ -22,6 +22,9 @@ bool demoRecording = false;
 const int MAX_RECORDS = 100;
 const int DISPLAY_RECORDS = 20;
 const int HUD_RECORDS = 3;
+const int MAX_POSITIONS = 200;
+const int POSITION_INTERVAL = 300;
+const float POSITION_HEIGHT = 24;
 
 uint[] levelRecordSectors;
 uint levelRecordFinishTime;
@@ -131,11 +134,11 @@ class Position
     bool saved;
     Vec3 location;
     Vec3 angles;
+    Vec3 velocity;
     bool skipWeapons;
     int weapon;
     bool[] weapons;
     int[] ammos;
-    float speed;
 
     Position()
     {
@@ -146,17 +149,25 @@ class Position
 
     ~Position() {}
 
+    void copy( Position @other )
+    {
+        this.saved = other.saved;
+        this.location = other.location;
+        this.angles = other.angles;
+        this.velocity = other.velocity;
+        this.skipWeapons = other.skipWeapons;
+        this.weapon = other.weapon;
+        for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
+        {
+            this.weapons[i] = other.weapons[i];
+            this.ammos[i] = other.ammos[i];
+        }
+    }
+
     void clear()
     {
         this.saved = false;
-        this.speed = 0;
-    }
-
-    void set( Vec3 location, Vec3 angles )
-    {
-        this.saved = true;
-        this.location = location;
-        this.angles = angles;
+        this.velocity = Vec3();
     }
 }
 
@@ -271,10 +282,15 @@ class Player
     Position practicePosition;
     Position preRacePosition;
 
+    Position[] runPositions;
+    int runPositionCount;
+    uint nextRunPositionTime;
+
     void setupArrays( int size )
     {
         this.sectorTimes.resize( size );
         this.bestSectorTimes.resize( size );
+        this.runPositions.resize( MAX_POSITIONS );
         this.arraysSetUp = true;
         this.clear();
     }
@@ -288,6 +304,8 @@ class Player
         this.practicing = false;
         this.startTime = 0;
         this.finishTime = 0;
+        this.runPositionCount = 0;
+        this.nextRunPositionTime = 0;
         this.hasTime = false;
         this.bestFinishTime = 0;
         this.noclipSpawn = false;
@@ -440,6 +458,28 @@ class Player
             return practicePosition;
     }
 
+    void applyPosition( Position @position )
+    {
+        Entity @ent = this.client.getEnt();
+
+        ent.origin = position.location;
+        ent.angles = position.angles;
+        if ( ent.moveType != MOVETYPE_NOCLIP )
+            ent.set_velocity( position.velocity );
+
+        if ( !position.skipWeapons )
+        {
+            for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
+            {
+                if ( position.weapons[i] )
+                    this.client.inventoryGiveItem( i );
+                Item @item = G_GetItem( i );
+                this.client.inventorySetCount( item.ammoTag, position.ammos[i] );
+            }
+            this.client.selectWeapon( position.weapon );
+        }
+    }
+
     bool loadPosition( bool verbose )
     {
         Entity @ent = this.client.getEnt();
@@ -459,39 +499,89 @@ class Player
             return false;
         }
 
-        ent.origin = position.location;
-        ent.angles = position.angles;
+        this.applyPosition( position );
 
-        if ( !position.skipWeapons )
-        {
-            for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
-            {
-                if ( position.weapons[i] )
-                    this.client.inventoryGiveItem( i );
-                Item @item = G_GetItem( i );
-                this.client.inventorySetCount( item.ammoTag, position.ammos[i] );
-            }
-            this.client.selectWeapon( position.weapon );
-        }
-
-        if ( this.practicing )
-        {
-            if ( ent.moveType != MOVETYPE_NOCLIP )
-            {
-                Vec3 a, b, c;
-                position.angles.angleVectors( a, b, c );
-                a.z = 0;
-                a.normalize();
-                a *= position.speed;
-                ent.set_velocity( a );
-            }
-        }
-        else if ( this.preRace() )
+        if ( this.preRace() )
         {
             ent.set_velocity( Vec3() );
         }
 
         return true;
+    }
+
+    Position @closestPosition( Vec3 origin, int offset )
+    {
+        Entity @ent = this.client.getEnt();
+        Position @result = null;
+        float diff = 0;
+        for ( int i = 0; i < this.runPositionCount; i++ )
+        {
+            float currentDiff = ent.origin.distance( this.runPositions[i].location );
+            if ( @result == null || diff > currentDiff )
+            {
+                int index = i + offset;
+                if ( index < 0 )
+                    index = 0;
+                if ( index >= this.runPositionCount )
+                    index = this.runPositionCount - 1;
+                @result = @this.runPositions[index];
+                diff = currentDiff;
+            }
+        }
+        return result;
+    }
+
+    bool recallPosition( int offset )
+    {
+        Entity @ent = this.client.getEnt();
+        if ( !this.practicing || this.client.team == TEAM_SPECTATOR )
+        {
+            G_PrintMsg( ent, "Position recall is only available in practice mode.\n" );
+            return false;
+        }
+
+        Position @position = this.closestPosition( ent.origin, offset );
+
+        if ( @position == null )
+        {
+            G_PrintMsg( ent, "No position found.\n" );
+            return false;
+        }
+
+        Client @ref = this.client;
+        if ( this.client.team == TEAM_SPECTATOR && this.client.chaseActive )
+            @ref = G_GetEntity( this.client.chaseTarget ).client;
+
+        this.applyPosition( position );
+        Position @saved = this.savedPosition();
+        saved.copy( position );
+        saved.saved = true;
+        saved.skipWeapons = ref.team == TEAM_SPECTATOR;
+
+        this.setQuickMenu();
+
+        return true;
+    }
+
+    Position @currentPosition()
+    {
+        Position @result = Position();
+        Client @ref = this.client;
+        if ( this.client.team == TEAM_SPECTATOR && this.client.chaseActive )
+            @ref = G_GetEntity( this.client.chaseTarget ).client;
+        Entity @ent = ref.getEnt();
+        result.location = ent.origin;
+        result.angles = ent.angles;
+        result.velocity = ent.get_velocity();
+        result.skipWeapons = false;
+        for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
+        {
+            result.weapons[i] = ref.canSelectWeapon( i );
+            Item @item = G_GetItem( i );
+            result.ammos[i] = ref.inventoryCount( item.ammoTag );
+        }
+        result.weapon = ent.moveType == MOVETYPE_NOCLIP ? this.noclipWeapon : ref.weapon;
+        return result;
     }
 
     bool savePosition()
@@ -516,23 +606,19 @@ class Player
         }
 
         Position @position = this.savedPosition();
-        position.set( ent.origin, ent.angles );
+        position.copy( this.currentPosition() );
+        position.saved = true;
 
-        if ( ref.team == TEAM_SPECTATOR )
-        {
-            position.skipWeapons = true;
-        }
-        else
-        {
-            position.skipWeapons = false;
-            for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
-            {
-                position.weapons[i] = ref.canSelectWeapon( i );
-                Item @item = G_GetItem( i );
-                position.ammos[i] = ref.inventoryCount( item.ammoTag );
-            }
-            position.weapon = ent.moveType == MOVETYPE_NOCLIP ? this.noclipWeapon : ref.weapon;
-        }
+        position.velocity.z = 0;
+        Vec3 a, b, c;
+        position.angles.angleVectors( a, b, c );
+        a.z = 0;
+        a.normalize();
+        a *= position.velocity.length();
+        position.velocity = a;
+
+        position.skipWeapons = ref.team == TEAM_SPECTATOR;
+
         this.setQuickMenu();
 
         return true;
@@ -565,6 +651,8 @@ class Player
         this.currentSector = 0;
         this.inRace = true;
         this.startTime = this.timeStamp();
+        this.runPositionCount = 0;
+        this.nextRunPositionTime = this.timeStamp() + POSITION_INTERVAL;
 
         for ( int i = 0; i < numCheckpoints; i++ )
             this.sectorTimes[i] = 0;
@@ -576,6 +664,24 @@ class Player
         this.setQuickMenu();
 
         return true;
+    }
+
+    void saveRunPosition()
+    {
+        if ( !this.inRace || this.timeStamp() < this.nextRunPositionTime || this.runPositionCount == MAX_POSITIONS )
+            return;
+
+        Entity @ent = this.client.getEnt();
+        Vec3 mins, maxs;
+        ent.getSize( mins, maxs );
+        Vec3 down = ent.origin;
+        down.z -= POSITION_HEIGHT;
+        Trace tr;
+        if ( tr.doTrace( ent.origin, mins, maxs, down, ent.entNum, MASK_PLAYERSOLID ) && tr.surfFlags & SURF_SLICK == 0 )
+            return;
+
+        this.runPositions[this.runPositionCount++] = this.currentPosition();
+        this.nextRunPositionTime = this.timeStamp() + POSITION_INTERVAL;
     }
 
     bool validTime()
@@ -1378,16 +1484,27 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         {
             return RACE_GetPlayer( client ).loadPosition( true );
         }
+        else if ( action == "recall" )
+        {
+            return RACE_GetPlayer( client ).recallPosition( argsString.getToken( 1 ).toInt() );
+        }
         else if ( action == "speed" && argsString.getToken( 1 ) != "" )
         {
             Position @position = RACE_GetPlayer( client ).savedPosition();
-            String speed = argsString.getToken( 1 );
-            if ( speed.locate( "+", 0 ) == 0 )
-                position.speed += speed.substr( 1 ).toFloat();
-            else if ( speed.locate( "-", 0 ) == 0 )
-                position.speed -= speed.substr( 1 ).toFloat();
+            String speedStr = argsString.getToken( 1 );
+            float speed = 0;
+            if ( speedStr.locate( "+", 0 ) == 0 )
+                speed += speedStr.substr( 1 ).toFloat();
+            else if ( speedStr.locate( "-", 0 ) == 0 )
+                speed -= speedStr.substr( 1 ).toFloat();
             else
-                position.speed = speed.toFloat();
+                speed = speedStr.toFloat();
+            Vec3 a, b, c;
+            position.angles.angleVectors( a, b, c );
+            a.z = 0;
+            a.normalize();
+            a *= speed;
+            position.velocity = a;
         }
         else if ( action == "clear" )
         {
@@ -1395,7 +1512,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         }
         else
         {
-            G_PrintMsg( client.getEnt(), "position <save | load | speed <value> | clear>\n" );
+            G_PrintMsg( client.getEnt(), "position <save | load | speed <value> | recall [offset] | clear>\n" );
             return false;
         }
 
@@ -1707,6 +1824,8 @@ void GT_ThinkRules()
             client.setHUDStat( STAT_MESSAGE_ALPHA, CS_GENERAL + 1 );
         if ( levelRecords[2].playerName.length() > 0 )
             client.setHUDStat( STAT_MESSAGE_BETA, CS_GENERAL + 2 );
+        
+        player.saveRunPosition();
     }
 
     // ch : send intermediate results
