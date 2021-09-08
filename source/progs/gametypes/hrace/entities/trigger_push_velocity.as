@@ -24,7 +24,7 @@ uint[] ent_pushvelocity_times( maxClients );
 Entity@[] ent_pushvelocity_lastent( maxClients );
 
 const uint ENT_PUSHVELOCITY_TIMEOUT = 1000;
-const int ENT_PUSHVELOCITY_SOUND = G_SoundIndex("sounds/world/jumppad");
+const int ENT_PUSHVELOCITY_SOUND = G_SoundIndex("sounds/world/launchpad");
 
 const int PLAYERDIR_XY = 1;
 const int ADD_XY = 2;
