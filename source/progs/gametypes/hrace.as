@@ -23,7 +23,7 @@ const int MAX_RECORDS = 50;
 const int DISPLAY_RECORDS = 20;
 const int HUD_RECORDS = 3;
 
-const int MAX_POSITIONS = 200;
+const int MAX_POSITIONS = 400;
 const int POSITION_INTERVAL = 500;
 const float POSITION_HEIGHT = 24;
 
@@ -287,6 +287,7 @@ class Player
     bool inRace;
     bool postRace;
     bool practicing;
+    bool recalled;
     bool arraysSetUp;
 
     // hettoo : practicemode
@@ -298,6 +299,7 @@ class Player
     Position[] runPositions;
     int runPositionCount;
     uint nextRunPositionTime;
+    int positionCycle;
 
     void setupArrays( int size )
     {
@@ -315,11 +317,13 @@ class Player
         this.inRace = false;
         this.postRace = false;
         this.practicing = false;
+        this.recalled = false;
         this.practiceFinish = 0;
         this.startTime = 0;
         this.finishTime = 0;
         this.runPositionCount = 0;
         this.nextRunPositionTime = 0;
+        this.positionCycle = 0;
         this.hasTime = false;
         this.bestFinishTime = 0;
         this.noclipSpawn = false;
@@ -522,7 +526,8 @@ class Player
         }
         else if ( this.practicing && position.recalled )
         {
-            if ( !this.postRace && this.currentSector > position.currentSector )
+            this.recalled = true;
+            if ( this.currentSector > position.currentSector )
             {
                 uint rows = this.practiceReport.numRows();
                 for ( uint i = 0; i < rows; i++ )
@@ -538,28 +543,6 @@ class Player
         return true;
     }
 
-    Position @closestPosition( Vec3 origin, int offset )
-    {
-        Entity @ent = this.client.getEnt();
-        Position @result = null;
-        float diff = 0;
-        for ( int i = 0; i < this.runPositionCount; i++ )
-        {
-            float currentDiff = ent.origin.distance( this.runPositions[i].location );
-            if ( @result == null || diff > currentDiff )
-            {
-                int index = i + offset;
-                if ( index < 0 )
-                    index = 0;
-                if ( index >= this.runPositionCount )
-                    index = this.runPositionCount - 1;
-                @result = @this.runPositions[index];
-                diff = currentDiff;
-            }
-        }
-        return result;
-    }
-
     bool recallPosition( int offset )
     {
         Entity @ent = this.client.getEnt();
@@ -569,13 +552,18 @@ class Player
             return false;
         }
 
-        Position @position = this.closestPosition( ent.origin, offset );
-
-        if ( @position == null )
+        if ( this.runPositionCount == 0 )
         {
             G_PrintMsg( ent, "No position found.\n" );
             return false;
         }
+
+        this.positionCycle += offset;
+        if ( this.positionCycle < 0 )
+            this.positionCycle = this.runPositionCount - ( -this.positionCycle % this.runPositionCount );
+        else
+            this.positionCycle %= this.runPositionCount;
+        Position @position = this.runPositions[this.positionCycle];
 
         Client @ref = this.client;
         if ( this.client.team == TEAM_SPECTATOR && this.client.chaseActive )
@@ -586,6 +574,7 @@ class Player
         saved.copy( position );
         saved.saved = true;
         saved.recalled = true;
+        this.recalled = true;
         saved.skipWeapons = ref.team == TEAM_SPECTATOR;
 
         this.practiceReport.reset();
@@ -698,6 +687,7 @@ class Player
         this.inRace = true;
         this.startTime = this.timeStamp();
         this.runPositionCount = 0;
+        this.positionCycle = 0;
         this.nextRunPositionTime = this.timeStamp() + POSITION_INTERVAL;
 
         if ( RS_QueryPjState( this.client.playerNum )  )
@@ -764,7 +754,7 @@ class Player
         }
 
         Position @position = this.currentPosition();
-        if ( this.practicing && position.recalled && this.currentSector > position.currentSector )
+        if ( this.practicing && this.recalled && this.currentSector > position.currentSector )
         {
             Entity @ent = this.client.getEnt();
             uint rows = this.practiceReport.numRows();
@@ -783,9 +773,9 @@ class Player
         uint delta;
         String str;
 
-        if ( this.practicing && !this.savedPosition().recalled )
+        if ( this.practicing && !this.recalled )
         {
-            if ( this.practiceFinish == 0 || this.timeStamp() - this.practiceFinish > 5000 )
+            if ( this.practiceFinish == 0 || this.timeStamp() > this.practiceFinish + 5000 )
             {
                 this.client.addAward( S_COLOR_CYAN + "Finished in practicemode!" );
                 this.practiceFinish = this.timeStamp();
@@ -803,9 +793,12 @@ class Player
 
         this.practiceFinish = this.timeStamp();
 
+        this.recalled = false;
+
         this.finishTime = this.raceTime();
         this.inRace = false;
-        this.postRace = true;
+        if ( !this.practicing )
+            this.postRace = true;
 
         // send the final time to MM
         if ( !this.practicing )
@@ -990,7 +983,7 @@ class Player
         if ( id < 0 || id >= numCheckpoints )
             return false;
 
-        if ( !this.inRace && ( !this.practicing || !this.savedPosition().recalled ) )
+        if ( !this.inRace && ( !this.practicing || !this.recalled ) )
             return false;
 
         if ( this.sectorTimes[id] != 0 ) // already past this checkPoint
@@ -1099,6 +1092,7 @@ class Player
             return;
 
         this.practicing = true;
+        this.recalled = false;
         G_CenterPrintMsg( this.client.getEnt(), S_COLOR_CYAN + "Entered practice mode" );
         // msc: practicemode message
         client.setHelpMessage(practiceModeMsg);
@@ -1250,7 +1244,7 @@ void target_stoptimer_use( Entity @self, Entity @other, Entity @activator )
 
     Player @player = RACE_GetPlayer( activator.client );
 
-    if ( !player.inRace && ( !player.practicing || player.postRace ) )
+    if ( !player.inRace && !player.practicing )
         return;
 
     player.completeRace();
@@ -1724,8 +1718,8 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
 
             if ( pending_endmatch || match.getState() >= MATCH_STATE_POSTMATCH )
             {
-              if ( !(player.inRace || player.postRace) )
-                return true;
+                if ( !(player.inRace || player.postRace) )
+                    return true;
             }
 
             if ( player.inRace )
@@ -1808,7 +1802,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         }
         else
         {
-            G_PrintMsg( client.getEnt(), "position <save | load | speed <value> | recall [offset] | clear>\n" );
+            G_PrintMsg( client.getEnt(), "position <save | load | speed <value> | recall <offset> | clear>\n" );
             return false;
         }
 
@@ -2067,8 +2061,8 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
       }
       else if ( arg1 == "position" && arg2 == "recall" )
       {
-        client.printMessage( S_COLOR_YELLOW + "/position recall [offset]" + "\n" );
-        client.printMessage( S_COLOR_WHITE + "- Moves you to the position from your previous run closest to your current one and saves it, adjusted by offset in the position list." + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/position recall <offset>" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Cycles through automatically saved positions from your previous run." + "\n" );
       }
       else if ( arg1 == "top" )
       {
@@ -2396,7 +2390,7 @@ void GT_ThinkRules()
 
         // all stats are set to 0 each frame, so it's only needed to set a stat if it's going to get a value
         @player = RACE_GetPlayer( client );
-        if ( player.inRace || player.practicing && player.savedPosition().recalled )
+        if ( player.inRace || ( player.practicing && player.recalled ) )
             client.setHUDStat( STAT_TIME_SELF, player.raceTime() / 100 );
 
         client.setHUDStat( STAT_TIME_BEST, player.bestFinishTime / 100 );
