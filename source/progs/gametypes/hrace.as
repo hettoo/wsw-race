@@ -23,7 +23,7 @@ const int MAX_RECORDS = 50;
 const int DISPLAY_RECORDS = 20;
 const int HUD_RECORDS = 3;
 const int MAX_POSITIONS = 200;
-const int POSITION_INTERVAL = 300;
+const int POSITION_INTERVAL = 500;
 const float POSITION_HEIGHT = 24;
 
 uint[] levelRecordSectors;
