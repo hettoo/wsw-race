@@ -281,6 +281,7 @@ class Player
     int noclipWeapon;
     Position practicePosition;
     Position preRacePosition;
+    uint practiceFinish;
 
     Position[] runPositions;
     int runPositionCount;
@@ -302,6 +303,7 @@ class Player
         this.inRace = false;
         this.postRace = false;
         this.practicing = false;
+        this.practiceFinish = 0;
         this.startTime = 0;
         this.finishTime = 0;
         this.runPositionCount = 0;
@@ -715,6 +717,16 @@ class Player
         uint delta;
         String str;
 
+        if ( this.practicing )
+        {
+            if ( this.practiceFinish == 0 || this.timeStamp() - this.practiceFinish > 5000 )
+            {
+                this.client.addAward( S_COLOR_CYAN + "Finished in practicemode!" );
+                this.practiceFinish = this.timeStamp();
+            }
+            return;
+        }
+
         if ( !this.validTime() ) // something is very wrong here
             return;
 
@@ -1045,7 +1057,7 @@ void target_stoptimer_use( Entity @self, Entity @other, Entity @activator )
 
     Player @player = RACE_GetPlayer( activator.client );
 
-    if ( !player.inRace )
+    if ( !player.inRace && !player.practicing )
         return;
 
     player.completeRace();
