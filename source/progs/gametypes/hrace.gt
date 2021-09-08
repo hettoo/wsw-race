@@ -4,14 +4,17 @@
 
 generic/quickmenu.as;
 generic/matchstates.as;
-generic/items.as;
-
-hrace.as;
-
-legacy/quake1.as;
 
 legacy/quake1_items.as;
 legacy/quake2_items.as;
 legacy/quake3_items.as;
 
-legacy_items.as;
+hrace/entities/items.as;
+hrace/entities/trigger_push_velocity.as;
+hrace/entities/target_speed.as;
+hrace/entities/target_delay.as;
+hrace/entities/shooters.as;
+hrace/entities/gates.as;
+hrace/entities/accuracy.as;
+
+hrace.as;
