@@ -2548,7 +2548,7 @@ void GT_InitGametype()
     defaultMsg = G_RegisterHelpMessage(" ");
 
     // msc: force pk3 download
-    G_SoundIndex( "racemod_ui_v2.txt", true );
+    G_SoundIndex( "racemod_ui_v3.txt", true );
     G_SoundIndex( "missing_tex.txt", true );
 
     demoRecording = false;
