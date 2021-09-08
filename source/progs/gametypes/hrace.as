@@ -51,7 +51,7 @@ enum eMenuItems
     MI_CLEAR_POSITION
 };
 
-array<const String @> menuItems = {
+array<const String@> menuItems = {
     '"" ""',
     '"Restart race" "racerestart"',
     '"Enter practice mode" "practicemode" ',
@@ -115,12 +115,12 @@ class RecordTime
             this.sectorTimes[i] = other.sectorTimes[i];
     }
 
-    void Store( Client @client )
+    void Store( Client@ client )
     {
         if ( !this.arraysSetUp )
             return;
 
-        Player @player = RACE_GetPlayer( client );
+        Player@ player = RACE_GetPlayer( client );
 
         this.saved = true;
         this.finishTime = player.finishTime;
@@ -156,7 +156,7 @@ class Position
 
     ~Position() {}
 
-    void copy( Position @other )
+    void copy( Position@ other )
     {
         this.saved = other.saved;
         this.recalled = other.recalled;
@@ -273,7 +273,7 @@ class Table
 
 class Player
 {
-    Client @client;
+    Client@ client;
     uint[] sectorTimes;
     uint[] bestSectorTimes;
     uint startTime;
@@ -361,9 +361,9 @@ class Player
         this.client.stats.setScore( this.bestFinishTime / 10 );
     }
 
-    String @scoreboardEntry()
+    String@ scoreboardEntry()
     {
-        Entity @ent = this.client.getEnt();
+        Entity@ ent = this.client.getEnt();
         int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum + 1 ) : ent.playerNum;
         String racing;
 
@@ -398,7 +398,7 @@ class Player
     void setQuickMenu()
     {
         String s = '';
-        Position @position = this.savedPosition();
+        Position@ position = this.savedPosition();
 
         s += menuItems[MI_RESTART_RACE];
         if ( this.practicing )
@@ -435,7 +435,7 @@ class Player
 
     bool toggleNoclip()
     {
-        Entity @ent = this.client.getEnt();
+        Entity@ ent = this.client.getEnt();
         if ( !this.practicing )
         {
             G_PrintMsg( ent, "Noclip mode is only available in practice mode.\n" );
@@ -468,7 +468,7 @@ class Player
         return true;
     }
 
-    Position @savedPosition()
+    Position@ savedPosition()
     {
         if ( this.preRace() )
             return preRacePosition;
@@ -476,9 +476,9 @@ class Player
             return practicePosition;
     }
 
-    void applyPosition( Position @position )
+    void applyPosition( Position@ position )
     {
-        Entity @ent = this.client.getEnt();
+        Entity@ ent = this.client.getEnt();
 
         ent.origin = position.location;
         ent.angles = position.angles;
@@ -492,7 +492,7 @@ class Player
             {
                 if ( position.weapons[i] )
                     this.client.inventoryGiveItem( i );
-                Item @item = G_GetItem( i );
+                Item@ item = G_GetItem( i );
                 this.client.inventorySetCount( item.ammoTag, position.ammos[i] );
             }
             this.client.selectWeapon( position.weapon );
@@ -501,7 +501,7 @@ class Player
 
     bool loadPosition( bool verbose )
     {
-        Entity @ent = this.client.getEnt();
+        Entity@ ent = this.client.getEnt();
         if ( !this.practicing && this.client.team != TEAM_SPECTATOR && !this.preRace() )
         {
             if ( verbose )
@@ -509,7 +509,7 @@ class Player
             return false;
         }
 
-        Position @position = this.savedPosition();
+        Position@ position = this.savedPosition();
 
         if ( !position.saved )
         {
@@ -526,17 +526,8 @@ class Player
         }
         else if ( this.practicing && position.recalled )
         {
+            this.cancelRace();
             this.recalled = true;
-            if ( this.currentSector > position.currentSector )
-            {
-                uint rows = this.practiceReport.numRows();
-                for ( uint i = 0; i < rows; i++ )
-                    G_PrintMsg( ent, this.practiceReport.getRow( i ) + "\n" );
-                G_PrintMsg( ent, S_COLOR_CYAN + "Race cancelled\n" );
-            }
-            this.practiceReport.reset();
-            for ( int i = 0; i < numCheckpoints; i++ )
-                this.sectorTimes[i] = 0;
             this.startTime = this.timeStamp() - position.currentTime;
         }
 
@@ -545,7 +536,7 @@ class Player
 
     bool recallPosition( int offset )
     {
-        Entity @ent = this.client.getEnt();
+        Entity@ ent = this.client.getEnt();
         if ( !this.practicing || this.client.team == TEAM_SPECTATOR )
         {
             G_PrintMsg( ent, "Position recall is only available in practice mode.\n" );
@@ -563,23 +554,20 @@ class Player
             this.positionCycle = this.runPositionCount - ( -this.positionCycle % this.runPositionCount );
         else
             this.positionCycle %= this.runPositionCount;
-        Position @position = this.runPositions[this.positionCycle];
+        Position@ position = this.runPositions[this.positionCycle];
 
-        Client @ref = this.client;
+        Client@ ref = this.client;
         if ( this.client.team == TEAM_SPECTATOR && this.client.chaseActive )
             @ref = G_GetEntity( this.client.chaseTarget ).client;
 
         this.applyPosition( position );
-        Position @saved = this.savedPosition();
+        Position@ saved = this.savedPosition();
         saved.copy( position );
         saved.saved = true;
         saved.recalled = true;
         this.recalled = true;
         saved.skipWeapons = ref.team == TEAM_SPECTATOR;
 
-        this.practiceReport.reset();
-        for ( int i = 0; i < numCheckpoints; i++ )
-            this.sectorTimes[i] = 0;
         this.startTime = this.timeStamp() - position.currentTime;
 
         this.setQuickMenu();
@@ -587,15 +575,15 @@ class Player
         return true;
     }
 
-    Position @currentPosition()
+    Position@ currentPosition()
     {
-        Position @result = Position();
+        Position@ result = Position();
         result.saved = false;
         result.recalled = false;
-        Client @ref = this.client;
+        Client@ ref = this.client;
         if ( this.client.team == TEAM_SPECTATOR && this.client.chaseActive )
             @ref = G_GetEntity( this.client.chaseTarget ).client;
-        Entity @ent = ref.getEnt();
+        Entity@ ent = ref.getEnt();
         result.location = ent.origin;
         result.angles = ent.angles;
         result.velocity = ent.get_velocity();
@@ -605,7 +593,7 @@ class Player
         for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
         {
             result.weapons[i] = ref.canSelectWeapon( i );
-            Item @item = G_GetItem( i );
+            Item@ item = G_GetItem( i );
             result.ammos[i] = ref.inventoryCount( item.ammoTag );
         }
         result.weapon = ent.moveType == MOVETYPE_NOCLIP ? this.noclipWeapon : ref.weapon;
@@ -614,10 +602,10 @@ class Player
 
     bool savePosition()
     {
-        Client @ref = this.client;
+        Client@ ref = this.client;
         if ( this.client.team == TEAM_SPECTATOR && this.client.chaseActive )
             @ref = G_GetEntity( this.client.chaseTarget ).client;
-        Entity @ent = ref.getEnt();
+        Entity@ ent = ref.getEnt();
 
         if ( this.preRace() )
         {
@@ -639,7 +627,7 @@ class Player
             }
         }
 
-        Position @position = this.savedPosition();
+        Position@ position = this.savedPosition();
         position.copy( this.currentPosition() );
         position.saved = true;
         position.recalled = false;
@@ -719,7 +707,7 @@ class Player
         if ( !this.inRace || this.timeStamp() < this.nextRunPositionTime || this.runPositionCount == MAX_POSITIONS )
             return;
 
-        Entity @ent = this.client.getEnt();
+        Entity@ ent = this.client.getEnt();
         Vec3 mins, maxs;
         ent.getSize( mins, maxs );
         Vec3 down = ent.origin;
@@ -746,22 +734,29 @@ class Player
     {
         if ( this.inRace && this.currentSector > 0 )
         {
-            Entity @ent = this.client.getEnt();
+            Entity@ ent = this.client.getEnt();
             uint rows = this.report.numRows();
             for ( uint i = 0; i < rows; i++ )
                 G_PrintMsg( ent, this.report.getRow( i ) + "\n" );
             G_PrintMsg( ent, S_COLOR_ORANGE + "Race cancelled\n" );
         }
 
-        Position @position = this.currentPosition();
+        Position@ position = this.savedPosition();
         if ( this.practicing && this.recalled && this.currentSector > position.currentSector )
         {
-            Entity @ent = this.client.getEnt();
+            Entity@ ent = this.client.getEnt();
             uint rows = this.practiceReport.numRows();
-            for ( uint i = 0; i < rows; i++ )
-                G_PrintMsg( ent, this.practiceReport.getRow( i ) + "\n" );
-            G_PrintMsg( ent, S_COLOR_CYAN + "Race cancelled\n" );
+            if ( rows > 0 )
+            {
+                for ( uint i = 0; i < rows; i++ )
+                    G_PrintMsg( ent, this.practiceReport.getRow( i ) + "\n" );
+                G_PrintMsg( ent, S_COLOR_CYAN + "Race cancelled\n" );
+            }
         }
+
+        this.practiceReport.reset();
+        for ( int i = 0; i < numCheckpoints; i++ )
+            this.sectorTimes[i] = 0;
 
         this.inRace = false;
         this.postRace = false;
@@ -817,7 +812,7 @@ class Player
             }
         }
 
-        Entity @ent = this.client.getEnt();
+        Entity@ ent = this.client.getEnt();
 
         G_CenterPrintMsg( ent, str + "\n" + RACE_TimeDiffString( this.finishTime, this.bestFinishTime, true ) );
 
@@ -859,7 +854,7 @@ class Player
             G_CenterPrintMsg(specs[i].getEnt(), line1 + "\n" + line2);
         }
 
-        Table @report;
+        Table@ report;
         if ( this.practicing )
             @report = @this.practiceReport;
         else
@@ -968,7 +963,7 @@ class Player
             }
 
             // set up for respawning the player with a delay
-            Entity @respawner = G_SpawnEntity( "race_respawner" );
+            Entity@ respawner = G_SpawnEntity( "race_respawner" );
             respawner.nextThink = levelTime + 5000;
             @respawner.think = race_respawner_think;
             respawner.count = this.client.playerNum;
@@ -1011,7 +1006,7 @@ class Player
             }
         }
 
-        Entity @ent = this.client.getEnt();
+        Entity@ ent = this.client.getEnt();
 
         G_CenterPrintMsg( ent, str + "\n" + RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id], true ) );
 
@@ -1053,7 +1048,7 @@ class Player
             G_CenterPrintMsg(specs[i].getEnt(), line1 + "\n" + line2);
         }
 
-        Table @report;
+        Table@ report;
         if ( this.practicing )
             @report = @this.practiceReport;
         else
@@ -1130,21 +1125,21 @@ class Player
 
 Player[] players( maxClients );
 
-Player @RACE_GetPlayer( Client @client )
+Player@ RACE_GetPlayer( Client@ client )
 {
     if ( @client == null || client.playerNum < 0 )
         return null;
 
-    Player @player = players[client.playerNum];
+    Player@ player = players[client.playerNum];
     @player.client = client;
 
     return player;
 }
 
 // the player has finished the race. This entity times his automatic respawning
-void race_respawner_think( Entity @respawner )
+void race_respawner_think( Entity@ respawner )
 {
-    Client @client = G_GetClient( respawner.count );
+    Client@ client = G_GetClient( respawner.count );
 
     // for accuracy, reset scores.
     target_score_init( client );
@@ -1171,7 +1166,7 @@ void race_respawner_think( Entity @respawner )
  *   - spawnflag 16 used to prevent the removal of the holdable items (namely the
  *     medkit and teleport) from the player inventory.
  */
-void target_init_use( Entity @self, Entity @other, Entity @activator )
+void target_init_use( Entity@ self, Entity@ other, Entity@ activator )
 {
     int i;
 
@@ -1214,35 +1209,35 @@ void target_init_use( Entity @self, Entity @other, Entity @activator )
 }
 
 // doesn't need to do anything at all, just sit there, waiting
-void target_init( Entity @self )
+void target_init( Entity@ self )
 {
     @self.use = target_init_use;
 }
 
-void target_checkpoint_use( Entity @self, Entity @other, Entity @activator )
+void target_checkpoint_use( Entity@ self, Entity@ other, Entity@ activator )
 {
     if ( @activator.client == null )
         return;
 
-    Player @player = RACE_GetPlayer( activator.client );
+    Player@ player = RACE_GetPlayer( activator.client );
 
     if ( player.touchCheckPoint( self.count ) )
         self.useTargets( activator );
 }
 
-void target_checkpoint( Entity @self )
+void target_checkpoint( Entity@ self )
 {
     self.count = numCheckpoints;
     @self.use = target_checkpoint_use;
     numCheckpoints++;
 }
 
-void target_stoptimer_use( Entity @self, Entity @other, Entity @activator )
+void target_stoptimer_use( Entity@ self, Entity@ other, Entity@ activator )
 {
     if ( @activator.client == null )
         return;
 
-    Player @player = RACE_GetPlayer( activator.client );
+    Player@ player = RACE_GetPlayer( activator.client );
 
     if ( !player.inRace && !player.practicing )
         return;
@@ -1255,22 +1250,22 @@ void target_stoptimer_use( Entity @self, Entity @other, Entity @activator )
 // This sucks: some defrag maps have the entity classname with pseudo camel notation
 // and classname->function is case sensitive
 
-void target_stoptimer( Entity @self )
+void target_stoptimer( Entity@ self )
 {
     @self.use = target_stoptimer_use;
 }
 
-void target_stopTimer( Entity @self )
+void target_stopTimer( Entity@ self )
 {
     target_stoptimer( self );
 }
 
-void target_starttimer_use( Entity @self, Entity @other, Entity @activator )
+void target_starttimer_use( Entity@ self, Entity@ other, Entity@ activator )
 {
     if ( @activator.client == null )
         return;
 
-    Player @player = RACE_GetPlayer( activator.client );
+    Player@ player = RACE_GetPlayer( activator.client );
 
     if ( player.inRace )
         return;
@@ -1291,13 +1286,13 @@ void target_starttimer_use( Entity @self, Entity @other, Entity @activator )
 }
 
 // doesn't need to do anything at all, just sit there, waiting
-void target_starttimer( Entity @ent )
+void target_starttimer( Entity@ ent )
 {
     @ent.use = target_starttimer_use;
     ent.wait = 0;
 }
 
-void target_startTimer( Entity @ent )
+void target_startTimer( Entity@ ent )
 {
     target_starttimer( ent );
 }
@@ -1497,7 +1492,7 @@ void RACE_LoadTopScores()
 }
 
 // a player has just died. The script is warned about it so it can account scores
-void RACE_playerKilled( Entity @target, Entity @attacker, Entity @inflicter )
+void RACE_playerKilled( Entity@ target, Entity@ attacker, Entity@ inflicter )
 {
     if ( @target == null || @target.client == null )
         return;
@@ -1511,8 +1506,8 @@ void RACE_playerKilled( Entity @target, Entity @attacker, Entity @inflicter )
 void RACE_SetUpMatch()
 {
     int i, j;
-    Entity @ent;
-    Team @team;
+    Entity@ ent;
+    Team@ team;
 
     gametype.shootingDisabled = false;
     gametype.readyAnnouncementEnabled = false;
@@ -1584,7 +1579,7 @@ uint randmap_matches;
 
 uint[] maplist_page( maxClients );
 
-bool GT_Command( Client @client, const String &cmdString, const String &argsString, int argc )
+bool GT_Command( Client@ client, const String &cmdString, const String &argsString, int argc )
 {
     if ( cmdString == "gametypemenu" )
     {
@@ -1623,7 +1618,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
             String current = mapname.string.tolower();
             String pattern = argsString.getToken( 1 ).tolower();
             String[] maps;
-            const String @map;
+            const String@ map;
             String lmap;
             int i = 0;
 
@@ -1711,7 +1706,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
     {
         if ( @client != null )
         {
-            Player @player = RACE_GetPlayer( client );
+            Player@ player = RACE_GetPlayer( client );
 
             // for accuracy, reset scores.
             target_score_init( client );
@@ -1760,7 +1755,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
     }
     else if ( cmdString == "noclip" )
     {
-        Player @player = RACE_GetPlayer( client );
+        Player@ player = RACE_GetPlayer( client );
         return player.toggleNoclip();
     }
     else if ( cmdString == "position" )
@@ -1780,7 +1775,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
         }
         else if ( action == "speed" && argsString.getToken( 1 ) != "" )
         {
-            Position @position = RACE_GetPlayer( client ).savedPosition();
+            Position@ position = RACE_GetPlayer( client ).savedPosition();
             String speedStr = argsString.getToken( 1 );
             float speed = 0;
             if ( speedStr.locate( "+", 0 ) == 0 )
@@ -1810,7 +1805,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
     }
     else if ( cmdString == "top" )
     {
-        RecordTime @top = levelRecords[0];
+        RecordTime@ top = levelRecords[0];
         if ( !top.saved )
         {
             client.printMessage( S_COLOR_RED + "No records yet.\n" );
@@ -1820,7 +1815,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
             Table table( "r r r l l" );
             for ( int i = 0; i < DISPLAY_RECORDS; i++ )
             {
-                RecordTime @record = levelRecords[i];
+                RecordTime@ record = levelRecords[i];
                 if ( record.saved )
                 {
                     table.addCell( ( i + 1 ) + "." );
@@ -1880,7 +1875,7 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
       }
 
       String[] maps;
-      const String @map;
+      const String@ map;
       String lmap;
       uint i = 0;
 
@@ -2111,24 +2106,24 @@ bool GT_Command( Client @client, const String &cmdString, const String &argsStri
 // on the current bot status.
 // Player, and non-item entities don't have any weight set. So they will be ignored by the bot
 // unless a weight is assigned here.
-bool GT_UpdateBotStatus( Entity @self )
+bool GT_UpdateBotStatus( Entity@ self )
 {
     return false; // let the default code handle it itself
 }
 
 // select a spawning point for a player
-Entity @GT_SelectSpawnPoint( Entity @self )
+Entity@ GT_SelectSpawnPoint( Entity@ self )
 {
     return GENERIC_SelectBestRandomSpawnPoint( self, "info_player_deathmatch" );
 }
 
-String @GT_ScoreboardMessage( uint maxlen )
+String@ GT_ScoreboardMessage( uint maxlen )
 {
     String scoreboardMessage = "";
     String entry;
-    Team @team;
-    Entity @ent;
-    Player @player;
+    Team@ team;
+    Entity@ ent;
+    Player@ player;
     int i;
     uint minTime, currentTime;
     bool playerFound;
@@ -2200,14 +2195,14 @@ String @GT_ScoreboardMessage( uint maxlen )
 // Some game actions trigger score events. These are events not related to killing
 // oponents, like capturing a flag
 // Warning: client can be null
-void GT_ScoreEvent( Client @client, const String &score_event, const String &args )
+void GT_ScoreEvent( Client@ client, const String &score_event, const String &args )
 {
     if ( score_event == "dmg" )
     {
     }
     else if ( score_event == "kill" )
     {
-        Entity @attacker = null;
+        Entity@ attacker = null;
 
         if ( @client != null )
             @attacker = client.getEnt();
@@ -2241,7 +2236,7 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
             String login = client.getMMLogin();
             if ( login != "" )
             {
-                Player @player = RACE_GetPlayer( client );
+                Player@ player = RACE_GetPlayer( client );
                 // find out if he holds a record better than his current time
                 for ( int i = 0; i < MAX_RECORDS; i++ )
                 {
@@ -2263,7 +2258,7 @@ void GT_ScoreEvent( Client @client, const String &score_event, const String &arg
 
 // a player is being respawned. This can happen from several ways, as dying, changing team,
 // being moved to ghost state, be placed in respawn queue, being spawned from spawn queue, etc
-void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
+void GT_PlayerRespawn( Entity@ ent, int old_team, int new_team )
 {
     if ( pending_endmatch )
     {
@@ -2282,8 +2277,11 @@ void GT_PlayerRespawn( Entity @ent, int old_team, int new_team )
       return;
     }
 
-    Player @player = RACE_GetPlayer( ent.client );
+    Player@ player = RACE_GetPlayer( ent.client );
     player.cancelRace();
+
+    if ( new_team == TEAM_SPECTATOR )
+        player.recalled = false;
 
     player.setQuickMenu();
     player.updateScore();
@@ -2355,8 +2353,8 @@ void GT_ThinkRules()
     }
 
     // set all clients race stats
-    Client @client;
-    Player @player;
+    Client@ client;
+    Player@ player;
 
     for ( int i = 0; i < maxClients; i++ )
     {
@@ -2390,7 +2388,7 @@ void GT_ThinkRules()
 
         // all stats are set to 0 each frame, so it's only needed to set a stat if it's going to get a value
         @player = RACE_GetPlayer( client );
-        if ( player.inRace || ( player.practicing && player.recalled ) )
+        if ( player.inRace || ( player.practicing && player.recalled && client.getEnt().health > 0 ) )
             client.setHUDStat( STAT_TIME_SELF, player.raceTime() / 100 );
 
         client.setHUDStat( STAT_TIME_BEST, player.bestFinishTime / 100 );
@@ -2421,7 +2419,7 @@ void GT_ThinkRules()
           client.setHUDStat( STAT_PROGRESS_SELF, max_accel );
         }
 
-        Entity @ent = @client.getEnt();
+        Entity@ ent = @client.getEnt();
         if ( ent.client.state() >= CS_SPAWNED && ent.team != TEAM_SPECTATOR )
         {
             if ( ent.health > ent.maxHealth ) {
@@ -2484,7 +2482,7 @@ bool Pending_AnyRacing(bool respawn = false)
     bool any_racing = false;
     for ( int i = 0; i < maxClients; i++ )
     {
-        Client @client = G_GetClient( i );
+        Client@ client = G_GetClient( i );
         if ( client.state() < CS_SPAWNED )
             continue;
 
