@@ -1833,7 +1833,7 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
         else
         {
             Table table( "r r r l l" );
-            for ( int i = 0; i < DISPLAY_RECORDS; i++ )
+            for ( int i = DISPLAY_RECORDS - 1; i >= 0; i-- )
             {
                 RecordTime@ record = levelRecords[i];
                 if ( record.saved )
