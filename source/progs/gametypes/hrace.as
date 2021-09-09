@@ -851,7 +851,7 @@ class Player
                 G_CenterPrintMsg( ent, S_COLOR_CYAN + "Entered position recall mode" );
             }
         }
-        else if ( keys & 6 != 0 && this.noclipBackup.saved )
+        else if ( keys & 2 != 0 && this.noclipBackup.saved )
         {
             if ( this.positionCycle == 0 )
             {
@@ -865,13 +865,42 @@ class Player
                 this.applyPosition( lerpFrom );
             }
         }
-        else if ( keys & 9 != 0 && this.noclipBackup.saved )
+        else if ( keys & 4 != 0 && this.noclipBackup.saved )
+        {
+            if ( this.positionCycle < 5 )
+            {
+                this.recallPosition( -this.positionCycle - 1 );
+            }
+            else
+            {
+                this.lerpFrom.copy( this.savedPosition() );
+                this.recallPosition( -5 );
+                this.lerpTo.copy( this.savedPosition() );
+                this.applyPosition( lerpFrom );
+            }
+        }
+        else if ( keys & 1 != 0 && this.noclipBackup.saved )
         {
             this.lerpFrom.copy( this.savedPosition() );
             this.recallPosition( 1 );
             if ( this.positionCycle == 0 )
             {
                 this.lerpFrom.saved = false;
+            }
+            else
+            {
+                this.lerpTo.copy( this.savedPosition() );
+                this.applyPosition( this.lerpFrom );
+            }
+        }
+        else if ( keys & 8 != 0 && this.noclipBackup.saved )
+        {
+            this.lerpFrom.copy( this.savedPosition() );
+            this.recallPosition( 5 );
+            if ( this.positionCycle < 5 )
+            {
+                this.lerpFrom.saved = false;
+                this.recallPosition( -this.positionCycle );
             }
             else
             {
