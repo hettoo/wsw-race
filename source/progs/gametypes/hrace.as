@@ -514,7 +514,10 @@ class Player
         }
         else
         {
-            if ( this.recalled && ent.moveType == MOVETYPE_NONE )
+            uint moveType = ent.moveType;
+            ent.moveType = MOVETYPE_PLAYER;
+            this.client.selectWeapon( this.noclipWeapon );
+            if ( this.recalled && moveType == MOVETYPE_NONE )
             {
                 this.startTime = this.timeStamp() - this.savedPosition().currentTime;
                 if ( this.lerpTo.saved )
@@ -523,11 +526,13 @@ class Player
                     this.lerpFrom.saved = false;
                     this.lerpTo.saved = false;
                 }
+                else
+                {
+                    this.applyPosition( this.savedPosition() );
+                }
             }
-            ent.moveType = MOVETYPE_PLAYER;
-            this.client.selectWeapon( this.noclipWeapon );
-            msg = "Noclip mode disabled.";
             this.noclipBackup.saved = false;
+            msg = "Noclip mode disabled.";
         }
 
         G_PrintMsg( ent, msg + "\n" );
