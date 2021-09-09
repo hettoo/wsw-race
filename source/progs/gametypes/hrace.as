@@ -417,7 +417,9 @@ class Player
         int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum + 1 ) : ent.playerNum;
         String racing;
 
-        if ( this.practicing )
+        if ( this.practicing && this.recalled && ent.health > 0 && ent.moveType == MOVETYPE_PLAYER )
+            racing = S_COLOR_CYAN + "Yes";
+        else if ( this.practicing )
             racing = S_COLOR_CYAN + "No";
         else if ( this.inRace )
             racing = S_COLOR_GREEN + "Yes";
