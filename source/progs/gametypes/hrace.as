@@ -771,6 +771,7 @@ class Player
                 ent.set_velocity( Vec3() );
                 this.noclipBackup.saved = false;
                 this.recalled = false;
+                G_CenterPrintMsg( ent, S_COLOR_CYAN + "Left position recall mode" );
             }
             else
             {
@@ -778,6 +779,7 @@ class Player
                 this.noclipBackup.saved = true;
                 ent.moveType = MOVETYPE_NONE;
                 this.recallPosition( 0 );
+                G_CenterPrintMsg( ent, S_COLOR_CYAN + "Entered position recall mode" );
             }
         }
         else if ( keys & 6 != 0 && this.noclipBackup.saved )
