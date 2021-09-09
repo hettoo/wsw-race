@@ -1291,6 +1291,8 @@ class Player
 
         this.currentSector++;
 
+        G_AnnouncerSound( this.client, G_SoundIndex( "sounds/misc/timer_bip_bip" ), GS_MAX_TEAMS, false, null );
+
         return true;
     }
 
