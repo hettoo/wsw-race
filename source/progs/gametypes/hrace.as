@@ -810,7 +810,11 @@ class Player
         if ( !this.practicing )
             this.client.setRaceTime( -1, this.finishTime );
 
-        str = "Current: " + RACE_TimeToString( this.finishTime );
+        if ( this.practicing )
+            str = S_COLOR_CYAN;
+        else
+            str = S_COLOR_WHITE;
+        str += "Current: " + S_COLOR_WHITE + RACE_TimeToString( this.finishTime );
 
         for ( int i = 0; i < MAX_RECORDS; i++ )
         {
@@ -1006,7 +1010,11 @@ class Player
 
         // print some output and give awards if earned
 
-        str = "Current: " + RACE_TimeToString( this.sectorTimes[id] );
+        if ( this.practicing )
+            str = S_COLOR_CYAN;
+        else
+            str = S_COLOR_WHITE;
+        str += "Current: " + S_COLOR_WHITE + RACE_TimeToString( this.sectorTimes[id] );
 
         for ( int i = 0; i < MAX_RECORDS; i++ )
         {
