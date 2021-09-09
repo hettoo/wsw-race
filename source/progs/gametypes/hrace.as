@@ -824,7 +824,7 @@ class Player
             {
                 for ( uint i = 0; i < rows; i++ )
                     G_PrintMsg( ent, this.practiceReport.getRow( i ) + "\n" );
-                G_PrintMsg( ent, S_COLOR_CYAN + "Race cancelled\n" );
+                G_PrintMsg( ent, S_COLOR_CYAN + "Practice run cancelled\n" );
             }
         }
         this.recalled = false;
@@ -857,7 +857,7 @@ class Player
             return;
 
         if ( this.practicing )
-            this.client.addAward( S_COLOR_CYAN + "Finished in practicemode!" );
+            this.client.addAward( S_COLOR_CYAN + "Practice Run Finished!" );
         else
             this.client.addAward( S_COLOR_CYAN + "Race Finished!" );
 
