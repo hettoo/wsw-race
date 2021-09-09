@@ -649,17 +649,22 @@ class Player
         }
 
         Position@ position = this.savedPosition();
+
+        position.velocity.z = 0;
+        int speed;
+        if ( position.saved )
+            speed = position.velocity.length();
+        else
+            speed = 0;
+
         position.copy( this.currentPosition() );
         position.saved = true;
         position.recalled = false;
 
-        position.velocity.z = 0;
         Vec3 a, b, c;
         position.angles.angleVectors( a, b, c );
-        a.z = 0;
         a.normalize();
-        a *= position.velocity.length();
-        position.velocity = a;
+        position.velocity = a * speed;
 
         position.skipWeapons = ref.team == TEAM_SPECTATOR;
 
