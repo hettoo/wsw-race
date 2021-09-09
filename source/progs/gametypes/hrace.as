@@ -1572,6 +1572,14 @@ void RACE_ShowIntro(Client@ client)
     }
 }
 
+uint randrange(uint n)
+{
+    uint64 r = 0;
+    for ( int i = 0; i < 32; i++ )
+        r = ( r << 1 ) | ( ( rand() ^ ( realTime >> i ) ) & 1 );
+    return uint( ( r * uint64( n ) ) >> 32 );
+}
+
 ///*****************************************************************
 /// MODULE SCRIPT CALLS
 ///*****************************************************************
@@ -1674,8 +1682,8 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
                   return false;
               }
 
-              randmap = maps[rand() % maps.length()];
               randmap_matches = maps.length();
+              randmap = maps[randrange(randmap_matches)];
             }
 
             if ( levelTime - randmap_time < 80 )
