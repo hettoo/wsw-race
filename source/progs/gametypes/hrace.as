@@ -376,12 +376,19 @@ class Player
         String diff;
         if ( this.hasTime && levelRecords[0].saved && this.bestFinishTime >= levelRecords[0].finishTime )
         {
-            if ( this.bestFinishTime == levelRecords[0].finishTime )
+            uint change = this.bestFinishTime - levelRecords[0].finishTime;
+            if ( change == 0 )
                 diff = S_COLOR_GREEN + "0";
-            else if ( this.bestFinishTime >= levelRecords[0].finishTime + 1000 )
+            else if ( change >= 6000000 )
                 diff = S_COLOR_RED + "+";
+            else if ( change >= 100000 )
+                diff = S_COLOR_RED + ( change / 60000 ) + "m";
+            else if ( change >= 1000 && change < 10000 )
+                diff = S_COLOR_ORANGE + ( change / 1000 ) + "." + ( ( change % 1000 ) / 100 ) + "s";
+            else if ( change >= 1000 )
+                diff = S_COLOR_ORANGE + ( change / 1000 ) + "s";
             else
-                diff = S_COLOR_YELLOW + ( this.bestFinishTime - levelRecords[0].finishTime );
+                diff = S_COLOR_YELLOW + change;
         }
         else
         {
