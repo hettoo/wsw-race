@@ -853,17 +853,31 @@ class Player
         }
         else if ( keys & 6 != 0 && this.noclipBackup.saved )
         {
-            this.lerpFrom.copy( this.savedPosition() );
-            this.recallPosition( -1 );
-            this.lerpTo.copy( this.savedPosition() );
-            this.applyPosition( lerpFrom );
+            if ( this.positionCycle == 0 )
+            {
+                this.recallPosition( -1 );
+            }
+            else
+            {
+                this.lerpFrom.copy( this.savedPosition() );
+                this.recallPosition( -1 );
+                this.lerpTo.copy( this.savedPosition() );
+                this.applyPosition( lerpFrom );
+            }
         }
         else if ( keys & 9 != 0 && this.noclipBackup.saved )
         {
             this.lerpFrom.copy( this.savedPosition() );
             this.recallPosition( 1 );
-            this.lerpTo.copy( this.savedPosition() );
-            this.applyPosition( this.lerpFrom );
+            if ( this.positionCycle == 0 )
+            {
+                this.lerpFrom.saved = false;
+            }
+            else
+            {
+                this.lerpTo.copy( this.savedPosition() );
+                this.applyPosition( this.lerpFrom );
+            }
         }
         else
         {
