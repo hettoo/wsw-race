@@ -717,6 +717,7 @@ class Player
 
         Vec3 a, b, c;
         position.angles.angleVectors( a, b, c );
+        a.z = 0;
         a.normalize();
         position.velocity = a * speed;
 
