@@ -271,6 +271,48 @@ class Table
     }
 }
 
+float Lerp( float a, float t, float b )
+{
+    return a * ( 1.0 - t ) + b * t;
+}
+
+uint Lerp( uint a, float t, uint b )
+{
+    return uint( Lerp( float( a ), t, float( b ) ) );
+}
+
+Vec3 Lerp( Vec3 a, float t, Vec3 b )
+{
+    return a * ( 1.0 - t ) + b * t;
+}
+
+float LerpAngle( float a, float t, float b ) {
+    if( b - a > 180 )
+        b -= 360;
+    if( b - a < -180 )
+        b += 360;
+return Lerp( a, t, b );
+}
+
+Vec3 LerpAngles( Vec3 a, float t, Vec3 b ) {
+    return Vec3(
+        LerpAngle( a.x, t, b.x ),
+        LerpAngle( a.y, t, b.y ),
+        LerpAngle( a.z, t, b.z )
+    );
+}
+
+Position Lerp( Position a, float t, Position b )
+{
+    Position p;
+    p.copy( t < 0.5 ? a : b );
+    p.location = Lerp( a.location, t, b.location );
+    p.angles = LerpAngles( a.angles, t, b.angles );
+    p.velocity = Lerp( a.velocity, t, b.velocity );
+    p.currentTime = Lerp( a.currentTime, t, b.currentTime );
+    return p;
+}
+
 class Player
 {
     Client@ client;
@@ -297,6 +339,8 @@ class Player
     uint practiceFinish;
     Position noclipBackup;
     uint lastNoclipAction;
+    Position lerpFrom;
+    Position lerpTo;
 
     Position[] runPositions;
     int runPositionCount;
@@ -334,6 +378,8 @@ class Player
         this.preRacePosition.clear();
         this.noclipBackup.clear();
         this.lastNoclipAction = 0;
+        this.lerpFrom.saved = false;
+        this.lerpTo.saved = false;
 
         if ( !this.arraysSetUp )
             return;
@@ -469,7 +515,15 @@ class Player
         else
         {
             if ( this.recalled && ent.moveType == MOVETYPE_NONE )
+            {
                 this.startTime = this.timeStamp() - this.savedPosition().currentTime;
+                if ( this.lerpTo.saved )
+                {
+                    this.applyPosition( this.lerpTo );
+                    this.lerpFrom.saved = false;
+                    this.lerpTo.saved = false;
+                }
+            }
             ent.moveType = MOVETYPE_PLAYER;
             this.client.selectWeapon( this.noclipWeapon );
             msg = "Noclip mode disabled.";
@@ -750,14 +804,29 @@ class Player
     {
         Entity@ ent = this.client.getEnt();
 
-        if ( !this.practicing || this.client.team == TEAM_SPECTATOR || ( ent.moveType != MOVETYPE_NOCLIP && ent.moveType != MOVETYPE_NONE ) )
+        if ( !this.practicing || this.client.team == TEAM_SPECTATOR || ( ent.moveType != MOVETYPE_NOCLIP && ent.moveType != MOVETYPE_NONE ) || ent.health <= 0 )
             return;
 
         if ( this.runPositionCount == 0 )
             return;
 
-        if ( levelTime < this.lastNoclipAction + 200 )
+        uint passed = levelTime - this.lastNoclipAction;
+        if ( passed < 200 )
+        {
+            if ( this.lerpTo.saved )
+            {
+                float lerp = float( passed ) / 200.0;
+                this.applyPosition( Lerp( this.lerpFrom, lerp, this.lerpTo ) );
+            }
             return;
+        }
+
+        if ( this.lerpTo.saved )
+        {
+            this.applyPosition( this.lerpTo );
+            this.lerpFrom.saved = false;
+            this.lerpTo.saved = false;
+        }
 
         this.lastNoclipAction = levelTime;
 
@@ -784,11 +853,17 @@ class Player
         }
         else if ( keys & 6 != 0 && this.noclipBackup.saved )
         {
+            this.lerpFrom.copy( this.savedPosition() );
             this.recallPosition( -1 );
+            this.lerpTo.copy( this.savedPosition() );
+            this.applyPosition( lerpFrom );
         }
         else if ( keys & 9 != 0 && this.noclipBackup.saved )
         {
+            this.lerpFrom.copy( this.savedPosition() );
             this.recallPosition( 1 );
+            this.lerpTo.copy( this.savedPosition() );
+            this.applyPosition( this.lerpFrom );
         }
         else
         {
@@ -808,9 +883,10 @@ class Player
 
     void cancelRace()
     {
+        Entity@ ent = this.client.getEnt();
+
         if ( this.inRace && this.currentSector > 0 )
         {
-            Entity@ ent = this.client.getEnt();
             uint rows = this.report.numRows();
             for ( uint i = 0; i < rows; i++ )
                 G_PrintMsg( ent, this.report.getRow( i ) + "\n" );
@@ -818,15 +894,23 @@ class Player
         }
 
         Position@ position = this.savedPosition();
-        if ( this.practicing && this.recalled && this.currentSector > position.currentSector )
+        if ( this.practicing && this.recalled )
         {
-            Entity@ ent = this.client.getEnt();
-            uint rows = this.practiceReport.numRows();
-            if ( rows > 0 )
+            if ( this.currentSector > position.currentSector && ent.moveType == MOVETYPE_PLAYER )
             {
-                for ( uint i = 0; i < rows; i++ )
-                    G_PrintMsg( ent, this.practiceReport.getRow( i ) + "\n" );
-                G_PrintMsg( ent, S_COLOR_CYAN + "Practice run cancelled\n" );
+                uint rows = this.practiceReport.numRows();
+                if ( rows > 0 )
+                {
+                    for ( uint i = 0; i < rows; i++ )
+                        G_PrintMsg( ent, this.practiceReport.getRow( i ) + "\n" );
+                    G_PrintMsg( ent, S_COLOR_CYAN + "Practice run cancelled\n" );
+                }
+            }
+            else if ( ent.moveType == MOVETYPE_NONE && this.lerpTo.saved )
+            {
+                this.applyPosition( this.lerpTo );
+                this.lerpFrom.saved = false;
+                this.lerpTo.saved = false;
             }
         }
         this.recalled = false;
