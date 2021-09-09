@@ -295,6 +295,8 @@ class Player
     Position practicePosition;
     Position preRacePosition;
     uint practiceFinish;
+    Position noclipBackup;
+    uint lastNoclipAction;
 
     Position[] runPositions;
     int runPositionCount;
@@ -330,6 +332,8 @@ class Player
 
         this.practicePosition.clear();
         this.preRacePosition.clear();
+        this.noclipBackup.clear();
+        this.lastNoclipAction = 0;
 
         if ( !this.arraysSetUp )
             return;
@@ -457,15 +461,19 @@ class Player
         String msg;
         if ( ent.moveType == MOVETYPE_PLAYER )
         {
+            this.cancelRace();
             ent.moveType = MOVETYPE_NOCLIP;
             this.noclipWeapon = ent.weapon;
             msg = "Noclip mode enabled.";
         }
         else
         {
+            if ( this.recalled && ent.moveType == MOVETYPE_NONE )
+                this.startTime = this.timeStamp() - this.savedPosition().currentTime;
             ent.moveType = MOVETYPE_PLAYER;
             this.client.selectWeapon( this.noclipWeapon );
             msg = "Noclip mode disabled.";
+            this.noclipBackup.saved = false;
         }
 
         G_PrintMsg( ent, msg + "\n" );
@@ -515,6 +523,8 @@ class Player
                 G_PrintMsg( ent, "Position loading is not available during a race.\n" );
             return false;
         }
+
+        this.noclipBackup.saved = false;
 
         Position@ position = this.savedPosition();
 
@@ -731,6 +741,54 @@ class Player
         this.nextRunPositionTime = this.timeStamp() + POSITION_INTERVAL;
     }
 
+    void checkNoclipAction()
+    {
+        Entity@ ent = this.client.getEnt();
+
+        if ( !this.practicing || this.client.team == TEAM_SPECTATOR || ( ent.moveType != MOVETYPE_NOCLIP && ent.moveType != MOVETYPE_NONE ) )
+            return;
+
+        if ( this.runPositionCount == 0 )
+            return;
+
+        if ( levelTime < this.lastNoclipAction + 200 )
+            return;
+
+        this.lastNoclipAction = levelTime;
+
+        uint keys = this.client.get_pressedKeys();
+        if ( keys & 16 != 0 )
+        {
+            if ( this.noclipBackup.saved )
+            {
+                ent.moveType = MOVETYPE_NOCLIP;
+                this.applyPosition( this.noclipBackup );
+                ent.set_velocity( Vec3() );
+                this.noclipBackup.saved = false;
+                this.recalled = false;
+            }
+            else
+            {
+                this.noclipBackup.copy( this.currentPosition() );
+                this.noclipBackup.saved = true;
+                ent.moveType = MOVETYPE_NONE;
+                this.recallPosition( 0 );
+            }
+        }
+        else if ( keys & 6 != 0 && this.noclipBackup.saved )
+        {
+            this.recallPosition( -1 );
+        }
+        else if ( keys & 9 != 0 && this.noclipBackup.saved )
+        {
+            this.recallPosition( 1 );
+        }
+        else
+        {
+            this.lastNoclipAction = 0;
+        }
+    }
+
     bool validTime()
     {
         return this.timeStamp() >= this.startTime;
@@ -764,6 +822,7 @@ class Player
                 G_PrintMsg( ent, S_COLOR_CYAN + "Race cancelled\n" );
             }
         }
+        this.recalled = false;
 
         this.practiceReport.reset();
         for ( int i = 0; i < numCheckpoints; i++ )
@@ -1122,6 +1181,7 @@ class Player
         // for accuracy, reset scores.
         target_score_init( this.client );
 
+        this.cancelRace();
         this.practicing = false;
         G_CenterPrintMsg( this.client.getEnt(), S_COLOR_CYAN + "Left practice mode" );
         // msc: practicemode message
@@ -2308,9 +2368,6 @@ void GT_PlayerRespawn( Entity@ ent, int old_team, int new_team )
     Player@ player = RACE_GetPlayer( ent.client );
     player.cancelRace();
 
-    if ( new_team == TEAM_SPECTATOR )
-        player.recalled = false;
-
     player.setQuickMenu();
     player.updateScore();
 
@@ -2417,7 +2474,12 @@ void GT_ThinkRules()
         // all stats are set to 0 each frame, so it's only needed to set a stat if it's going to get a value
         @player = RACE_GetPlayer( client );
         if ( player.inRace || ( player.practicing && player.recalled && client.getEnt().health > 0 ) )
-            client.setHUDStat( STAT_TIME_SELF, player.raceTime() / 100 );
+        {
+            if ( client.getEnt().moveType == MOVETYPE_NONE )
+                client.setHUDStat( STAT_TIME_SELF, player.savedPosition().currentTime / 100 );
+            else
+                client.setHUDStat( STAT_TIME_SELF, player.raceTime() / 100 );
+        }
 
         client.setHUDStat( STAT_TIME_BEST, player.bestFinishTime / 100 );
         client.setHUDStat( STAT_TIME_RECORD, levelRecords[0].finishTime / 100 );
@@ -2433,6 +2495,7 @@ void GT_ThinkRules()
             client.setHUDStat( STAT_MESSAGE_BETA, CS_GENERAL + 2 );
 
         player.saveRunPosition();
+        player.checkNoclipAction();
 
         // msc: temporary MAX_ACCEL replacement
         if ( frameTime > 0 )
