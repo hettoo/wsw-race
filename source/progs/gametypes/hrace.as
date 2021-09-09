@@ -555,7 +555,7 @@ class Player
 
         this.positionCycle += offset;
         if ( this.positionCycle < 0 )
-            this.positionCycle = this.runPositionCount - ( -this.positionCycle % this.runPositionCount );
+            this.positionCycle = ( this.runPositionCount - ( -this.positionCycle % this.runPositionCount ) ) % this.runPositionCount;
         else
             this.positionCycle %= this.runPositionCount;
         Position@ position = this.runPositions[this.positionCycle];
