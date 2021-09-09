@@ -651,7 +651,7 @@ class Player
         Position@ position = this.savedPosition();
 
         position.velocity.z = 0;
-        int speed;
+        float speed;
         if ( position.saved )
             speed = position.velocity.length();
         else
