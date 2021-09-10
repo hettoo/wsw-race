@@ -408,6 +408,14 @@ class Player
         this.updateScore();
     }
 
+    void takeHistory( Player@ other )
+    {
+        this.runPositionCount = other.runPositionCount;
+        this.positionCycle = 0;
+        for ( int i = 0; i < this.runPositionCount; i++ )
+            this.runPositions[i] = other.runPositions[i];
+    }
+
     void updatePos()
     {
         this.pos = -1;
@@ -1986,10 +1994,13 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
                     return true;
             }
 
+            if ( client.team == TEAM_SPECTATOR && client.chaseActive )
+                player.takeHistory( RACE_GetPlayer( G_GetEntity( client.chaseTarget ).client ) );
+
             if ( player.inRace )
                 player.cancelRace();
 
-            if ( client.team != TEAM_SPECTATOR && player.client.getEnt().moveType == MOVETYPE_NOCLIP )
+            if ( client.team != TEAM_SPECTATOR && client.getEnt().moveType == MOVETYPE_NOCLIP )
             {
                 if ( player.loadPosition( false ) )
                 {
