@@ -2834,9 +2834,16 @@ void GT_ThinkRules()
             if ( ref.chaseActive && ref.chaseTarget != 0 )
                 @ref = G_GetEntity( ref.chaseTarget ).client;
             if ( RACE_GetPlayer( ref ).practicing && ref.team != TEAM_SPECTATOR )
+            {
                 client.setHelpMessage( practiceModeMsg );
+            }
             else
-                client.setHelpMessage( defaultMsg );
+            {
+                if ( client.getEnt().isGhosting() )
+                    client.setHelpMessage( 0 );
+                else
+                    client.setHelpMessage( defaultMsg );
+            }
         }
 
         // msc: temporary MAX_ACCEL replacement
