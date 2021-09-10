@@ -1994,7 +1994,7 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
                     return true;
             }
 
-            if ( client.team == TEAM_SPECTATOR && client.chaseActive )
+            if ( client.team == TEAM_SPECTATOR && client.chaseActive && !player.savedPosition().recalled )
             {
                 Player@ other = RACE_GetPlayer( G_GetEntity( client.chaseTarget ).client );
                 if ( other.runPositionCount > 0 )
