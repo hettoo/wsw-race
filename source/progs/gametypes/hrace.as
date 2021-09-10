@@ -664,6 +664,14 @@ class Player
             return false;
         }
 
+        if ( !this.noclipBackup.saved )
+        {
+            this.noclipBackup.copy( this.currentPosition() );
+            this.noclipBackup.saved = true;
+            ent.moveType = MOVETYPE_NONE;
+            G_CenterPrintMsg( ent, S_COLOR_CYAN + "Entered recall mode" );
+        }
+
         this.positionCycle += offset;
         if ( this.positionCycle < 0 )
             this.positionCycle = ( this.runPositionCount - ( -this.positionCycle % this.runPositionCount ) ) % this.runPositionCount;
@@ -881,11 +889,7 @@ class Player
             }
             else
             {
-                this.noclipBackup.copy( this.currentPosition() );
-                this.noclipBackup.saved = true;
-                ent.moveType = MOVETYPE_NONE;
                 this.recallPosition( 0 );
-                G_CenterPrintMsg( ent, S_COLOR_CYAN + "Entered recall mode" );
             }
         }
         else if ( keys & 2 != 0 && this.noclipBackup.saved )
