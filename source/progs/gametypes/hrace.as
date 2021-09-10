@@ -606,6 +606,8 @@ class Player
             }
             this.client.selectWeapon( position.weapon );
         }
+
+        ent.teleported = true;
     }
 
     bool loadPosition( bool verbose )
