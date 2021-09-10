@@ -663,17 +663,13 @@ class Player
             this.positionCycle %= this.runPositionCount;
         Position@ position = this.runPositions[this.positionCycle];
 
-        Client@ ref = this.client;
-        if ( this.client.team == TEAM_SPECTATOR && this.client.chaseActive )
-            @ref = G_GetEntity( this.client.chaseTarget ).client;
-
         this.applyPosition( position );
         Position@ saved = this.savedPosition();
         saved.copy( position );
         saved.saved = true;
         saved.recalled = true;
         this.recalled = true;
-        saved.skipWeapons = ref.team == TEAM_SPECTATOR;
+        saved.skipWeapons = false;
 
         this.startTime = this.timeStamp() - position.currentTime;
 
@@ -1057,10 +1053,10 @@ class Player
 
         G_CenterPrintMsg( ent, str + "\n" + RACE_TimeDiffString( this.finishTime, this.bestFinishTime, true ) );
 
-        Client@[] specs = RACE_GetSpectators(this.client);
+        Client@[] specs = RACE_GetSpectators( this.client );
         for ( uint i = 0; i < specs.length; i++ )
         {
-            Player@ spec_player = @RACE_GetPlayer(specs[i]);
+            Player@ spec_player = @RACE_GetPlayer( specs[i] );
             String line1 = "";
             String line2 = "";
 
@@ -1256,10 +1252,10 @@ class Player
 
         G_CenterPrintMsg( ent, str + "\n" + RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id], true ) );
 
-        Client@[] specs = RACE_GetSpectators(this.client);
+        Client@[] specs = RACE_GetSpectators( this.client );
         for ( uint i = 0; i < specs.length; i++ )
         {
-            Player@ spec_player = @RACE_GetPlayer(specs[i]);
+            Player@ spec_player = @RACE_GetPlayer( specs[i] );
             String line1 = "";
             String line2 = "";
 
@@ -1337,10 +1333,16 @@ class Player
         this.practicing = true;
         this.recalled = false;
         G_CenterPrintMsg( this.client.getEnt(), S_COLOR_CYAN + "Entered practice mode" );
-        // msc: practicemode message
-        client.setHelpMessage(practiceModeMsg);
+
         this.cancelRace();
         this.setQuickMenu();
+
+        // msc: practicemode message
+        client.setHelpMessage( practiceModeMsg );
+
+        Client@[] specs = RACE_GetSpectators( this.client );
+        for ( uint i = 0; i < specs.length; i++ )
+            specs[i].setHelpMessage( practiceModeMsg );
     }
 
     void leavePracticeMode()
@@ -1354,11 +1356,16 @@ class Player
         this.cancelRace();
         this.practicing = false;
         G_CenterPrintMsg( this.client.getEnt(), S_COLOR_CYAN + "Left practice mode" );
-        // msc: practicemode message
-        client.setHelpMessage(defaultMsg);
         if ( this.client.team != TEAM_SPECTATOR )
             this.client.respawn( false );
         this.setQuickMenu();
+
+        // msc: practicemode message
+        client.setHelpMessage(defaultMsg);
+
+        Client@[] specs = RACE_GetSpectators( this.client );
+        for ( uint i = 0; i < specs.length; i++ )
+            specs[i].setHelpMessage(defaultMsg);
     }
 
     void togglePracticeMode()
@@ -1559,9 +1566,7 @@ Client@[] RACE_GetSpectators( Client@ client )
         Client@ specClient = @G_GetClient(i);
 
         if ( specClient.chaseActive && specClient.chaseTarget == client.getEnt().entNum )
-        {
           speclist.push_back(@specClient);
-        }
     }
     return speclist;
 }
@@ -2574,10 +2579,13 @@ void GT_PlayerRespawn( Entity@ ent, int old_team, int new_team )
     player.loadPosition( false );
 
     // msc: permanent practicemode message
-    if ( player.practicing )
-      ent.client.setHelpMessage(practiceModeMsg);
+    Client@ ref = ent.client;
+    if ( ref.team == TEAM_SPECTATOR && ref.chaseActive )
+        @ref = G_GetEntity( ref.chaseTarget ).client;
+    if ( RACE_GetPlayer( ref ).practicing && ref.team != TEAM_SPECTATOR )
+        ent.client.setHelpMessage( practiceModeMsg );
     else
-      ent.client.setHelpMessage(defaultMsg);
+        ent.client.setHelpMessage( defaultMsg );
 
     if ( player.noclipSpawn )
     {
@@ -2676,6 +2684,18 @@ void GT_ThinkRules()
 
         player.saveRunPosition();
         player.checkNoclipAction();
+
+        // hettoo: force practicemode message on spectators
+        if ( client.team == TEAM_SPECTATOR )
+        {
+            Client@ ref = client;
+            if ( ref.chaseActive )
+                @ref = G_GetEntity( ref.chaseTarget ).client;
+            if ( RACE_GetPlayer( ref ).practicing && ref.team != TEAM_SPECTATOR )
+                client.setHelpMessage( practiceModeMsg );
+            else
+                client.setHelpMessage( defaultMsg );
+        }
 
         // msc: temporary MAX_ACCEL replacement
         if ( frameTime > 0 )
