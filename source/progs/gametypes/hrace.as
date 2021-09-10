@@ -2076,6 +2076,14 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
                 G_CenterPrintMsg( ent, S_COLOR_CYAN + "Left recall mode" );
                 return true;
             }
+            else if ( option == "start" )
+            {
+                offset = -player.positionCycle;
+            }
+            else if ( option == "end" )
+            {
+                offset = -player.positionCycle - 1;
+            }
             else if ( option.substr( 0, 2 ) == "cp" )
             {
                 int cp = option.substr( 2 ).toInt();
