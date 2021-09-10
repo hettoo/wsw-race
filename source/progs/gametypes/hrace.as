@@ -702,7 +702,7 @@ class Player
         result.saved = false;
         result.recalled = false;
         Client@ ref = this.client;
-        if ( this.client.team == TEAM_SPECTATOR && this.client.chaseActive )
+        if ( this.client.team == TEAM_SPECTATOR && this.client.chaseActive && this.client.chaseTarget != 0 )
             @ref = G_GetEntity( this.client.chaseTarget ).client;
         Entity@ ent = ref.getEnt();
         result.location = ent.origin;
@@ -724,7 +724,7 @@ class Player
     bool savePosition()
     {
         Client@ ref = this.client;
-        if ( this.client.team == TEAM_SPECTATOR && this.client.chaseActive )
+        if ( this.client.team == TEAM_SPECTATOR && this.client.chaseActive && this.client.chaseTarget != 0 )
             @ref = G_GetEntity( this.client.chaseTarget ).client;
         Entity@ ent = ref.getEnt();
 
@@ -2007,7 +2007,7 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
                     return true;
             }
 
-            if ( client.team == TEAM_SPECTATOR && client.chaseActive && !player.savedPosition().recalled )
+            if ( client.team == TEAM_SPECTATOR && client.chaseActive && client.chaseTarget != 0 && !player.savedPosition().recalled )
             {
                 Player@ other = RACE_GetPlayer( G_GetEntity( client.chaseTarget ).client );
                 if ( other.runPositionCount > 0 )
@@ -2722,7 +2722,7 @@ void GT_PlayerRespawn( Entity@ ent, int old_team, int new_team )
 
     // msc: permanent practicemode message
     Client@ ref = ent.client;
-    if ( ref.team == TEAM_SPECTATOR && ref.chaseActive )
+    if ( ref.team == TEAM_SPECTATOR && ref.chaseActive && ref.chaseTarget != 0 )
         @ref = G_GetEntity( ref.chaseTarget ).client;
     if ( RACE_GetPlayer( ref ).practicing && ref.team != TEAM_SPECTATOR )
         ent.client.setHelpMessage( practiceModeMsg );
@@ -2831,7 +2831,7 @@ void GT_ThinkRules()
         if ( client.team == TEAM_SPECTATOR )
         {
             Client@ ref = client;
-            if ( ref.chaseActive )
+            if ( ref.chaseActive && ref.chaseTarget != 0 )
                 @ref = G_GetEntity( ref.chaseTarget ).client;
             if ( RACE_GetPlayer( ref ).practicing && ref.team != TEAM_SPECTATOR )
                 client.setHelpMessage( practiceModeMsg );
