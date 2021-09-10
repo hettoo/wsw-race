@@ -1995,7 +1995,11 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
             }
 
             if ( client.team == TEAM_SPECTATOR && client.chaseActive )
-                player.takeHistory( RACE_GetPlayer( G_GetEntity( client.chaseTarget ).client ) );
+            {
+                Player@ other = RACE_GetPlayer( G_GetEntity( client.chaseTarget ).client );
+                if ( other.runPositionCount > 0 )
+                    player.takeHistory( other );
+            }
 
             if ( player.inRace )
                 player.cancelRace();
