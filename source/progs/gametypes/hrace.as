@@ -755,9 +755,16 @@ class Player
         else
             speed = 0;
 
-        position.copy( this.currentPosition() );
-        position.saved = true;
-        position.recalled = false;
+        if ( position.recalled )
+        {
+            position.recalled = false;
+        }
+        else
+        {
+            position.copy( this.currentPosition() );
+            position.saved = true;
+            position.recalled = false;
+        }
 
         Vec3 a, b, c;
         position.angles.angleVectors( a, b, c );
