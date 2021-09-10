@@ -2546,11 +2546,11 @@ String@ GT_ScoreboardMessage( uint maxlen )
     String scoreboardMessage = "";
     String entry;
     Team@ team;
-    Entity@ ent;
     Player@ player;
+    Player@ best;
     int i;
-    uint minTime, currentTime;
-    bool playerFound;
+    uint minTime;
+    int minPos;
     //int readyIcon;
 
     @team = G_GetTeam( TEAM_PLAYERS );
@@ -2561,49 +2561,37 @@ String@ GT_ScoreboardMessage( uint maxlen )
         scoreboardMessage += entry;
 
     minTime = 0;
+    minPos = -1;
 
     do
     {
-        playerFound = false;
-        currentTime = 0;
+        @best = null;
 
         // find the next best time
         for ( i = 0; @team.ent( i ) != null; i++ )
         {
-            @ent = team.ent( i );
-            @player = RACE_GetPlayer( ent.client );
+            @player = RACE_GetPlayer( team.ent( i ).client );
 
-            if ( player.hasTime && player.bestFinishTime >= minTime && ( !playerFound || player.bestFinishTime < currentTime ) )
-            {
-                playerFound = true;
-                currentTime = player.bestFinishTime;
-            }
+            if ( player.hasTime &&
+                    ( player.bestFinishTime > minTime || ( player.bestFinishTime == minTime && player.pos >= minPos ) ) &&
+                    ( @best == null || player.bestFinishTime < best.bestFinishTime || ( player.bestFinishTime == best.bestFinishTime && player.pos < best.pos ) ) )
+                @best = player;
         }
-        if ( playerFound )
+        if ( @best != null )
         {
-            // add all players with this time
-            for ( i = 0; @team.ent( i ) != null; i++ )
-            {
-                @ent = team.ent( i );
-                @player = RACE_GetPlayer( ent.client );
-
-                if ( player.hasTime && player.bestFinishTime == currentTime )
-                {
-                    entry = player.scoreboardEntry();
-                    if ( scoreboardMessage.length() + entry.length() < maxlen )
-                        scoreboardMessage += entry;
-                }
-            }
-            minTime = currentTime + 1;
+            entry = best.scoreboardEntry();
+            if ( scoreboardMessage.length() + entry.length() < maxlen )
+                scoreboardMessage += entry;
+            minTime = best.bestFinishTime;
+            minPos = best.pos + 1;
         }
     }
-    while ( playerFound );
+    while ( @best != null );
 
     // add players without time
     for ( i = 0; @team.ent( i ) != null; i++ )
     {
-        @ent = team.ent( i );
-        @player = RACE_GetPlayer( ent.client );
+        @player = RACE_GetPlayer( team.ent( i ).client );
 
         if ( !player.hasTime )
         {
