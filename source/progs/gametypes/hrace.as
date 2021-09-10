@@ -2059,7 +2059,50 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
         }
         else if ( action == "recall" )
         {
-            return RACE_GetPlayer( client ).recallPosition( argsString.getToken( 1 ).toInt() );
+            Player@ player = RACE_GetPlayer( client );
+            String option = argsString.getToken( 1 ).tolower();
+            int offset = 0;
+            if ( option == "exit" )
+            {
+                if ( !player.noclipBackup.saved )
+                    return true;
+
+                Entity@ ent = client.getEnt();
+                ent.moveType = MOVETYPE_NOCLIP;
+                player.applyPosition( player.noclipBackup );
+                ent.set_velocity( Vec3() );
+                player.noclipBackup.saved = false;
+                player.recalled = false;
+                G_CenterPrintMsg( ent, S_COLOR_CYAN + "Left recall mode" );
+                return true;
+            }
+            else if ( option.substr( 0, 2 ) == "cp" )
+            {
+                int cp = option.substr( 2 ).toInt();
+                int index = -1;
+                for ( int i = 0; i < player.runPositionCount; i++ )
+                {
+                    if ( player.runPositions[i].currentSector == cp )
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+                if ( index != -1 )
+                {
+                    offset = index - player.positionCycle;
+                }
+                else
+                {
+                    G_PrintMsg( client.getEnt(), "Not found.\n" );
+                    return false;
+                }
+            }
+            else
+            {
+                offset = option.toInt();
+            }
+            return player.recallPosition( offset );
         }
         else if ( action == "speed" && argsString.getToken( 1 ) != "" )
         {
