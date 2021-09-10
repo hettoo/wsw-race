@@ -2098,6 +2098,69 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
                     return false;
                 }
             }
+            else if ( option == "rl" )
+            {
+                int index = -1;
+                for ( int i = 0; i < player.runPositionCount; i++ )
+                {
+                    if ( player.runPositions[i].weapons[WEAP_ROCKETLAUNCHER] )
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+                if ( index != -1 )
+                {
+                    offset = index - player.positionCycle;
+                }
+                else
+                {
+                    G_PrintMsg( client.getEnt(), "Not found.\n" );
+                    return false;
+                }
+            }
+            else if ( option == "pg" )
+            {
+                int index = -1;
+                for ( int i = 0; i < player.runPositionCount; i++ )
+                {
+                    if ( player.runPositions[i].weapons[WEAP_PLASMAGUN] )
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+                if ( index != -1 )
+                {
+                    offset = index - player.positionCycle;
+                }
+                else
+                {
+                    G_PrintMsg( client.getEnt(), "Not found.\n" );
+                    return false;
+                }
+            }
+            else if ( option == "gl" )
+            {
+                int index = -1;
+                for ( int i = 0; i < player.runPositionCount; i++ )
+                {
+                    if ( player.runPositions[i].weapons[WEAP_GRENADELAUNCHER] )
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+                if ( index != -1 )
+                {
+                    offset = index - player.positionCycle;
+                }
+                else
+                {
+                    G_PrintMsg( client.getEnt(), "Not found.\n" );
+                    return false;
+                }
+            }
             else
             {
                 offset = option.toInt();
@@ -2595,19 +2658,19 @@ void GT_PlayerRespawn( Entity@ ent, int old_team, int new_team )
 {
     if ( pending_endmatch )
     {
-      if ( ent.client.team != TEAM_SPECTATOR )
-      {
-        ent.client.team = TEAM_SPECTATOR;
-        ent.client.respawn(false);
-      }
+        if ( ent.client.team != TEAM_SPECTATOR )
+        {
+          ent.client.team = TEAM_SPECTATOR;
+          ent.client.respawn(false);
+        }
 
-      if ( !Pending_AnyRacing() )
-      {
-        pending_endmatch = false;
-        match.launchState(MATCH_STATE_POSTMATCH);
-      }
+        if ( !Pending_AnyRacing() )
+        {
+          pending_endmatch = false;
+          match.launchState(MATCH_STATE_POSTMATCH);
+        }
 
-      return;
+        return;
     }
 
     Player@ player = RACE_GetPlayer( ent.client );
