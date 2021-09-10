@@ -2007,13 +2007,6 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
                     return true;
             }
 
-            if ( client.team == TEAM_SPECTATOR && client.chaseActive && client.chaseTarget != 0 && !player.savedPosition().recalled )
-            {
-                Player@ other = RACE_GetPlayer( G_GetEntity( client.chaseTarget ).client );
-                if ( other.runPositionCount > 0 )
-                    player.takeHistory( other );
-            }
-
             if ( player.inRace )
                 player.cancelRace();
 
@@ -2058,21 +2051,27 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
     else if ( cmdString == "position" )
     {
         String action = argsString.getToken( 0 );
+        Player@ player = RACE_GetPlayer ( client );
         if ( action == "save" )
         {
-            return RACE_GetPlayer( client ).savePosition();
+            return player.savePosition();
         }
         else if ( action == "load" )
         {
-            return RACE_GetPlayer( client ).loadPosition( true );
+            return player.loadPosition( true );
         }
         else if ( action == "recall" )
         {
-            Player@ player = RACE_GetPlayer( client );
             String option = argsString.getToken( 1 ).tolower();
             int offset = 0;
             if ( option == "exit" )
             {
+                if ( client.team == TEAM_SPECTATOR || !player.practicing )
+                {
+                    G_PrintMsg( client.getEnt(), "Not available.\n" );
+                    return false;
+                }
+
                 if ( !player.noclipBackup.saved )
                     return true;
 
@@ -2083,6 +2082,19 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
                 player.noclipBackup.saved = false;
                 player.recalled = false;
                 G_CenterPrintMsg( ent, S_COLOR_CYAN + "Left recall mode" );
+                return true;
+            }
+            else if ( option == "steal" )
+            {
+                if ( client.team == TEAM_SPECTATOR && client.chaseActive && client.chaseTarget != 0 )
+                {
+                    player.takeHistory( RACE_GetPlayer( G_GetEntity( client.chaseTarget ).client ) );
+                }
+                else
+                {
+                    G_PrintMsg( client.getEnt(), "Not available.\n" );
+                    return false;
+                }
                 return true;
             }
             else if ( option == "start" )
