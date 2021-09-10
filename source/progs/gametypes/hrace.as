@@ -322,6 +322,7 @@ class Player
     uint finishTime;
     bool hasTime;
     uint bestFinishTime;
+    int pos;
     bool noclipSpawn;
     Table report( S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "r " + S_COLOR_ORANGE + "/ l r " + S_COLOR_ORANGE + "/ l r" );
     Table practiceReport( S_COLOR_CYAN + "l " + S_COLOR_WHITE + "r " + S_COLOR_CYAN + "/ l r " + S_COLOR_CYAN + "/ l r" );
@@ -372,6 +373,7 @@ class Player
         this.positionCycle = 0;
         this.hasTime = false;
         this.bestFinishTime = 0;
+        this.pos = -1;
         this.noclipSpawn = false;
 
         this.practicePosition.clear();
@@ -406,6 +408,26 @@ class Player
         this.updateScore();
     }
 
+    void updatePos()
+    {
+        this.pos = -1;
+        if ( this.bestFinishTime == 0 )
+            return;
+
+        String cleanName = this.client.name.removeColorTokens().tolower();
+        for ( int i = 0; i < MAX_RECORDS; i++ )
+        {
+            if ( !levelRecords[i].saved )
+                break;
+
+            if ( this.bestFinishTime == levelRecords[i].finishTime && cleanName == levelRecords[i].playerName.removeColorTokens().tolower() )
+            {
+                this.pos = i + 1;
+                break;
+            }
+        }
+    }
+
     void updateScore()
     {
         this.client.stats.setScore( this.bestFinishTime / 10 );
@@ -416,6 +438,7 @@ class Player
         Entity@ ent = this.client.getEnt();
         int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum + 1 ) : ent.playerNum;
         String racing;
+        String pos = "\u00A0";
 
         if ( this.practicing && this.recalled && ent.health > 0 && ent.moveType == MOVETYPE_PLAYER )
             racing = S_COLOR_CYAN + "Yes";
@@ -441,12 +464,14 @@ class Player
                 diff = S_COLOR_ORANGE + ( change / 1000 ) + "s";
             else
                 diff = S_COLOR_YELLOW + change;
+            if ( this.pos != -1 )
+                pos = this.pos;
         }
         else
         {
-            diff = "-";
+            diff = "\u00A0";
         }
-        return "&p " + playerID + " " + ent.client.clanName + " " + this.bestFinishTime + " " + diff + " " + ent.client.ping + " " + racing + " ";
+        return "&p " + playerID + " " + ent.client.clanName + " " + pos + " " + this.bestFinishTime + " " + diff + " " + ent.client.ping + " " + racing + " ";
     }
 
     bool preRace()
@@ -1172,6 +1197,7 @@ class Player
 
                         RACE_WriteTopScores();
                         RACE_UpdateHUDTopScores();
+                        RACE_UpdatePosValues();
                     }
 
                     break;
@@ -1630,6 +1656,13 @@ void RACE_WriteTopScores()
     }
 
     G_WriteFile( "topscores/race/" + mapName + ".txt", topScores );
+}
+
+void RACE_UpdatePosValues()
+{
+    Team@ team = G_GetTeam( TEAM_PLAYERS );
+    for ( int i = 0; @team.ent( i ) != null; i++ )
+        RACE_GetPlayer( team.ent( i ).client ).updatePos();
 }
 
 void RACE_LoadTopScores()
@@ -2478,6 +2511,7 @@ void GT_ScoreEvent( Client@ client, const String &score_event, const String &arg
                             && ( !player.hasTime || levelRecords[i].finishTime < player.bestFinishTime ) )
                     {
                         player.setBestTime( levelRecords[i].finishTime );
+                        player.updatePos();
                         for ( int j = 0; j < numCheckpoints; j++ )
                             player.bestSectorTimes[j] = levelRecords[i].sectorTimes[j];
                         break;
@@ -2514,6 +2548,8 @@ void GT_PlayerRespawn( Entity@ ent, int old_team, int new_team )
 
     player.setQuickMenu();
     player.updateScore();
+    if ( old_team != TEAM_PLAYERS && new_team == TEAM_PLAYERS )
+        player.updatePos();
 
     if ( ent.isGhosting() )
         return;
@@ -2689,6 +2725,7 @@ bool GT_MatchStateFinished( int incomingMatchState )
 
         // ch : also send rest of results
         RACE_WriteTopScores();
+        RACE_UpdatePosValues();
 
         G_CmdExecute("set g_inactivity_maxtime 90\n");
         G_CmdExecute("set g_disable_vote_remove 1\n");
@@ -2904,8 +2941,8 @@ void GT_InitGametype()
         gametype.setTeamSpawnsystem( team, SPAWNSYSTEM_INSTANT, 0, 0, false );
 
     // define the scoreboard layout
-    G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %t 96 %s 48 %l 48 %s 52" );
-    G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Time Diff Ping Racing" );
+    G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %s 32 %t 88 %s 40 %l 40 %s 48" );
+    G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Pos Time Diff Ping Racing" );
 
     // add commands
     G_RegisterCommand( "gametype" );
