@@ -622,6 +622,7 @@ class Player
 
         if ( !position.skipWeapons )
         {
+            this.client.inventoryClear();
             for ( int i = WEAP_NONE + 1; i < WEAP_TOTAL; i++ )
             {
                 if ( position.weapons[i] )
@@ -748,7 +749,7 @@ class Player
         }
         for ( int i = POWERUP_QUAD; i < POWERUP_TOTAL; i++ )
             result.powerups[i - POWERUP_QUAD] = ref.inventoryCount( i );
-        result.weapon = ent.moveType == MOVETYPE_NOCLIP ? this.noclipWeapon : ref.weapon;
+        result.weapon = ent.moveType == MOVETYPE_NOCLIP ? this.noclipWeapon : ref.pendingWeapon;
         return result;
     }
 
@@ -2888,7 +2889,7 @@ void GT_PlayerRespawn( Entity@ ent, int old_team, int new_team )
         {
             ent.moveType = MOVETYPE_NOCLIP;
             ent.velocity = Vec3(0,0,0);
-            player.noclipWeapon = ent.weapon;
+            player.noclipWeapon = ent.client.pendingWeapon;
         }
         player.noclipSpawn = false;
     }
