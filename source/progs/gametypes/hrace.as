@@ -352,11 +352,15 @@ class Player
     uint nextRunPositionTime;
     int positionCycle;
 
+    Position[] bestRunPositions;
+    int bestRunPositionCount;
+
     void setupArrays( int size )
     {
         this.sectorTimes.resize( size );
         this.bestSectorTimes.resize( size );
         this.runPositions.resize( MAX_POSITIONS );
+        this.bestRunPositions.resize( MAX_POSITIONS );
         this.arraysSetUp = true;
         this.clear();
     }
@@ -374,6 +378,7 @@ class Player
         this.finishTime = 0;
         this.runPositionCount = 0;
         this.nextRunPositionTime = 0;
+        this.bestRunPositionCount = 0;
         this.positionCycle = 0;
         this.hasTime = false;
         this.bestFinishTime = 0;
@@ -1145,6 +1150,10 @@ class Player
                 this.setBestTime( this.finishTime );
                 for ( int i = 0; i < numCheckpoints; i++ )
                     this.bestSectorTimes[i] = this.sectorTimes[i];
+
+                this.bestRunPositionCount = this.runPositionCount;
+                for ( int i = 0; i < this.runPositionCount; i++ )
+                    this.bestRunPositions[i] = this.runPositions[i];
             }
 
             // see if the player improved one of the top scores
@@ -2096,6 +2105,21 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
                     G_PrintMsg( client.getEnt(), "Not available.\n" );
                     return false;
                 }
+                return true;
+            }
+            else if ( option == "best" )
+            {
+                if ( player.bestRunPositionCount == 0 )
+                {
+                    G_PrintMsg( client.getEnt(), "No best run recorded.\n" );
+                    return false;
+                }
+
+                player.runPositionCount = player.bestRunPositionCount;
+                for ( int i = 0; i < player.runPositionCount; i++ )
+                    player.runPositions[i] = player.bestRunPositions[i];
+                player.positionCycle = 0;
+
                 return true;
             }
             else if ( option == "start" )
