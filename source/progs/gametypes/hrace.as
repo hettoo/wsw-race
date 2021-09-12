@@ -23,6 +23,8 @@ const int MAX_RECORDS = 50;
 const int DISPLAY_RECORDS = 20;
 const int HUD_RECORDS = 3;
 
+const int MAX_FLOOD_MESSAGES = 32;
+
 const int MAX_POSITIONS = 400;
 const int POSITION_INTERVAL = 500;
 const float POSITION_HEIGHT = 24;
@@ -324,6 +326,8 @@ Position Lerp( Position a, float t, Position b )
 class Player
 {
     Client@ client;
+    uint[] messageTimes;
+    uint messageLock;
     uint[] sectorTimes;
     uint[] bestSectorTimes;
     uint startTime;
@@ -361,6 +365,7 @@ class Player
 
     void setupArrays( int size )
     {
+        this.messageTimes.resize( MAX_FLOOD_MESSAGES );
         this.sectorTimes.resize( size );
         this.bestSectorTimes.resize( size );
         this.runPositions.resize( MAX_POSITIONS );
@@ -372,6 +377,7 @@ class Player
     void clear()
     {
         @this.client = null;
+
         this.currentSector = 0;
         this.inRace = false;
         this.postRace = false;
@@ -398,6 +404,10 @@ class Player
 
         if ( !this.arraysSetUp )
             return;
+
+        this.messageLock = 0;
+        for ( int i = 0; i < MAX_FLOOD_MESSAGES; i++ )
+            this.messageTimes[i] = 0;
 
         for ( int i = 0; i < numCheckpoints; i++ )
         {
@@ -2037,6 +2047,65 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
 
         return true;
     }
+    else if ( cmdString == "m" )
+    {
+        if ( client.muted > 0 )
+        {
+            G_PrintMsg( client.getEnt(), "You are muted.\n" );
+            return false;
+        }
+
+        Player@ player = RACE_GetPlayer( client );
+        if ( player.messageLock > realTime )
+        {
+            G_PrintMsg( client.getEnt(), "You can't talk for " + ( ( player.messageLock - realTime ) / 1000 ) + " more seconds.\n" );
+            return false;
+        }
+
+        String pattern = argsString.getToken( 0 );
+        Player@[] matches = RACE_MatchPlayers( pattern );
+        if ( matches.length() == 0 )
+        {
+            G_PrintMsg( client.getEnt(), "No players matched.\n" );
+            return false;
+        }
+        else if ( matches.length() > 1 )
+        {
+            G_PrintMsg( client.getEnt(), "Multiple players matched.\n" );
+            return false;
+        }
+
+        Cvar maxMessages( "g_floodprotection_messages", "", 0 );
+        Cvar maxMessageTime( "g_floodprotection_seconds", "", 0 );
+        uint ref = player.messageTimes[MAX_FLOOD_MESSAGES - maxMessages.get_integer()];
+        if ( ref > 0 && ref + uint( maxMessageTime.get_integer() * 1000 ) > realTime )
+        {
+            Cvar lockTime( "g_floodprotection_delay", "", 0 );
+            player.messageLock = realTime + lockTime.get_integer() * 1000;
+            G_PrintMsg( client.getEnt(), "Flood protection: You can't talk for " + lockTime.get_integer() + " seconds.\n" );
+            return false;
+        }
+
+        String message = "";
+        String token;
+        int i = 1;
+        do
+        {
+            token = argsString.getToken( i++ );
+            if ( i > 1 )
+                message += " ";
+            message += token;
+        }
+        while ( token != "" );
+
+        G_PrintMsg( matches[0].client.getEnt(), S_COLOR_MAGENTA + "PM from " + client.name + S_COLOR_MAGENTA + ": " + S_COLOR_WHITE + message + "\n" );
+
+        for ( i = 0; i < MAX_FLOOD_MESSAGES - 1; i++ )
+            player.messageTimes[i] = player.messageTimes[i + 1];
+        player.messageTimes[MAX_FLOOD_MESSAGES - 1] = realTime;
+
+        return true;
+    }
     else if ( cmdString == "racerestart" || cmdString == "kill" || cmdString == "join" )
     {
         Player@ player = RACE_GetPlayer( client );
@@ -2497,6 +2566,9 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
         cmdlist.addCell( "/top" );
         cmdlist.addCell( "Shows the top record times for the current map." );
 
+        cmdlist.addCell( "/m" );
+        cmdlist.addCell( "Lets you send a private message." );
+
         cmdlist.addCell( "/maplist" );
         cmdlist.addCell( "Lets you search available maps." );
 
@@ -2510,6 +2582,11 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
           client.printMessage( cmdlist.getRow(i) + "\n" );
 
         client.printMessage( S_COLOR_WHITE + "use " + S_COLOR_YELLOW + "/help <cmd> " + S_COLOR_WHITE + "for additional information." + "\n");
+      }
+      else if ( arg1 == "m" )
+      {
+        client.printMessage( S_COLOR_YELLOW + "/m name message" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Sends a private message to the player whose name matches." + "\n" );
       }
       else if ( arg1 == "kill" || arg1 == "racerestart" )
       {
@@ -3192,6 +3269,7 @@ void GT_InitGametype()
     // add commands
     G_RegisterCommand( "gametype" );
     G_RegisterCommand( "gametypemenu" );
+    G_RegisterCommand( "m" );
     G_RegisterCommand( "racerestart" );
     G_RegisterCommand( "kill" );
     G_RegisterCommand( "join" );
