@@ -2149,7 +2149,7 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
                     }
                     else
                     {
-                        target = matches[0];
+                        @target = matches[0];
                     }
                 }
 
