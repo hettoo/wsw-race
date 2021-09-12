@@ -1994,46 +1994,39 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
     }
     else if ( cmdString == "racerestart" || cmdString == "kill" || cmdString == "join" )
     {
-        if ( @client != null )
+        Player@ player = RACE_GetPlayer( client );
+
+        // for accuracy, reset scores.
+        target_score_init( client );
+
+        if ( pending_endmatch || match.getState() >= MATCH_STATE_POSTMATCH )
         {
-            Player@ player = RACE_GetPlayer( client );
+            if ( !( player.inRace || player.postRace ) )
+                return true;
+        }
 
-            // for accuracy, reset scores.
-            target_score_init( client );
+        player.cancelRace();
 
-            if ( pending_endmatch || match.getState() >= MATCH_STATE_POSTMATCH )
+        if ( player.practicing && client.team != TEAM_SPECTATOR )
+        {
+            if ( player.loadPosition( false ) )
             {
-                if ( !(player.inRace || player.postRace) )
-                    return true;
-            }
-
-            if ( player.inRace )
-                player.cancelRace();
-
-            if ( client.team != TEAM_SPECTATOR && client.getEnt().moveType == MOVETYPE_NOCLIP )
-            {
-                if ( player.loadPosition( false ) )
-                {
-                    player.noclipWeapon = player.savedPosition().weapon;
-                }
-                else
-                {
-                    player.noclipSpawn = true;
-                    client.respawn( false );
-                }
+                player.noclipWeapon = player.savedPosition().weapon;
             }
             else
             {
-                if ( client.team == TEAM_SPECTATOR )
-                {
-                    if ( gametype.isTeamBased )
-                        return false;
-
-                    client.team = TEAM_PLAYERS;
-                    G_PrintMsg( null, client.name + S_COLOR_WHITE + " joined the " + G_GetTeam( client.team ).name + S_COLOR_WHITE + " team.\n" );
-                }
+                player.noclipSpawn = client.getEnt().moveType == MOVETYPE_NOCLIP || client.getEnt().moveType == MOVETYPE_NONE;
                 client.respawn( false );
             }
+        }
+        else
+        {
+            if ( client.team == TEAM_SPECTATOR )
+            {
+                client.team = TEAM_PLAYERS;
+                G_PrintMsg( null, client.name + S_COLOR_WHITE + " joined the " + G_GetTeam( client.team ).name + S_COLOR_WHITE + " team.\n" );
+            }
+            client.respawn( false );
         }
 
         return true;
