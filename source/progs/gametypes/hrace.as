@@ -140,6 +140,8 @@ class Position
     Vec3 location;
     Vec3 angles;
     Vec3 velocity;
+    float health;
+    float armor;
     int currentSector;
     uint currentTime;
     bool skipWeapons;
@@ -163,6 +165,8 @@ class Position
         this.location = other.location;
         this.angles = other.angles;
         this.velocity = other.velocity;
+        this.health = other.health;
+        this.armor = other.armor;
         this.currentSector = other.currentSector;
         this.currentTime = other.currentTime;
         this.skipWeapons = other.skipWeapons;
@@ -591,6 +595,8 @@ class Player
 
         ent.origin = position.location;
         ent.angles = position.angles;
+        ent.health = position.health;
+        this.client.armor = position.armor;
         if ( ent.moveType != MOVETYPE_NOCLIP )
             ent.set_velocity( position.velocity );
         this.currentSector = position.currentSector;
@@ -708,6 +714,8 @@ class Player
         result.location = ent.origin;
         result.angles = ent.angles;
         result.velocity = ent.get_velocity();
+        result.health = ent.health;
+        result.armor = ref.armor;
         result.skipWeapons = false;
         result.currentSector = this.currentSector;
         result.currentTime = this.raceTime();
