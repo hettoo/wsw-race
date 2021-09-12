@@ -874,8 +874,14 @@ class Player
         if ( !this.practicing || this.client.team == TEAM_SPECTATOR || ( ent.moveType != MOVETYPE_NOCLIP && ent.moveType != MOVETYPE_NONE ) || ent.health <= 0 )
             return;
 
+        uint keys = this.client.get_pressedKeys();
+
         if ( this.runPositionCount == 0 )
+        {
+            if ( keys & 16 != 0 )
+                G_CenterPrintMsg( ent, "No positions saved" );
             return;
+        }
 
         uint passed = levelTime - this.lastNoclipAction;
         if ( passed < 200 )
@@ -897,7 +903,6 @@ class Player
 
         this.lastNoclipAction = levelTime;
 
-        uint keys = this.client.get_pressedKeys();
         if ( keys & 16 != 0 )
         {
             if ( this.noclipBackup.saved )
