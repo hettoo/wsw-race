@@ -1603,15 +1603,30 @@ void target_startTimer( Entity@ ent )
 Client@[] RACE_GetSpectators( Client@ client )
 {
     Client@[] speclist;
-
     for ( int i = 0; i < maxClients; i++ )
     {
         Client@ specClient = @G_GetClient(i);
 
         if ( specClient.chaseActive && specClient.chaseTarget == client.getEnt().entNum )
-          speclist.push_back(@specClient);
+            speclist.push_back( @specClient );
     }
     return speclist;
+}
+
+Player@[] RACE_MatchPlayers( String pattern )
+{
+    String cleanPattern = pattern.removeColorTokens().tolower();
+
+    Player@[] playerList;
+    for ( int i = 0; i < maxClients; i++ )
+    {
+        Client@ client = @G_GetClient(i);
+
+        String clean = client.name.removeColorTokens().tolower();
+        if ( clean.locate( cleanPattern, 0 ) < clean.length() )
+            playerList.push_back( RACE_GetPlayer( client ) );
+    }
+    return playerList;
 }
 
 String RACE_TimeToString( uint time )
@@ -2114,15 +2129,39 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
             }
             else if ( option == "best" )
             {
-                if ( player.bestRunPositionCount == 0 )
+                Player@ target = player;
+
+                String pattern = argsString.getToken( 2 );
+                if ( pattern != "" )
+                {
+                    Player@[] matches = RACE_MatchPlayers( pattern );
+                    if ( matches.length() == 0 )
+                    {
+                        G_PrintMsg( client.getEnt(), "No players matched.\n" );
+                        return false;
+                    }
+                    else if ( matches.length() > 1 )
+                    {
+                        G_PrintMsg( client.getEnt(), "Multiple players matched:\n" );
+                        for ( uint i = 0; i < matches.length(); i++ )
+                            G_PrintMsg( client.getEnt(), matches[i].client.name + S_COLOR_WHITE + "\n" );
+                        return false;
+                    }
+                    else
+                    {
+                        target = matches[0];
+                    }
+                }
+
+                if ( target.bestRunPositionCount == 0 )
                 {
                     G_PrintMsg( client.getEnt(), "No best run recorded.\n" );
                     return false;
                 }
 
-                player.runPositionCount = player.bestRunPositionCount;
+                player.runPositionCount = target.bestRunPositionCount;
                 for ( int i = 0; i < player.runPositionCount; i++ )
-                    player.runPositions[i] = player.bestRunPositions[i];
+                    player.runPositions[i] = target.bestRunPositions[i];
                 player.positionCycle = 0;
 
                 return true;
