@@ -2046,15 +2046,14 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
 
         if ( player.practicing && client.team != TEAM_SPECTATOR )
         {
-            if ( player.loadPosition( false ) )
-            {
+            Entity@ ent = client.getEnt();
+            if ( ent.moveType == MOVETYPE_NOCLIP || ent.moveType == MOVETYPE_NONE )
+                player.toggleNoclip();
+
+            if ( ent.health >= 0 && player.loadPosition( false ) )
                 player.noclipWeapon = player.savedPosition().weapon;
-            }
             else
-            {
-                player.noclipSpawn = client.getEnt().moveType == MOVETYPE_NOCLIP || client.getEnt().moveType == MOVETYPE_NONE;
                 client.respawn( false );
-            }
         }
         else
         {
