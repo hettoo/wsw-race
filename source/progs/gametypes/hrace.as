@@ -148,11 +148,13 @@ class Position
     int weapon;
     bool[] weapons;
     int[] ammos;
+    int[] powerups;
 
     Position()
     {
         this.weapons.resize( WEAP_TOTAL );
         this.ammos.resize( WEAP_TOTAL );
+        this.powerups.resize( POWERUP_TOTAL - POWERUP_QUAD );
         this.clear();
     }
 
@@ -176,6 +178,8 @@ class Position
             this.weapons[i] = other.weapons[i];
             this.ammos[i] = other.ammos[i];
         }
+        for ( int i = 0; i < POWERUP_TOTAL - POWERUP_QUAD; i++ )
+            this.powerups[i] = other.powerups[i];
     }
 
     void clear()
@@ -615,6 +619,8 @@ class Player
                 Item@ item = G_GetItem( i );
                 this.client.inventorySetCount( item.ammoTag, position.ammos[i] );
             }
+            for ( int i = POWERUP_QUAD; i < POWERUP_TOTAL; i++ )
+                this.client.inventorySetCount( i, position.powerups[i - POWERUP_QUAD] );
             this.client.selectWeapon( position.weapon );
         }
 
@@ -730,6 +736,8 @@ class Player
             Item@ item = G_GetItem( i );
             result.ammos[i] = ref.inventoryCount( item.ammoTag );
         }
+        for ( int i = POWERUP_QUAD; i < POWERUP_TOTAL; i++ )
+            result.powerups[i - POWERUP_QUAD] = ref.inventoryCount( i );
         result.weapon = ent.moveType == MOVETYPE_NOCLIP ? this.noclipWeapon : ref.weapon;
         return result;
     }
