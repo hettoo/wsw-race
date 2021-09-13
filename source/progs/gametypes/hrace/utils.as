@@ -38,7 +38,7 @@ String[] GetMapsByPattern( String@ pattern, String@ ignore = null )
         String clean_map = map.removeColorTokens().tolower();
         if ( @ignore != null && map == ignore )
             continue;
-        if ( PatternMatch( clean_map, pattern ) )
+        if ( PatternMatch( clean_map, pattern, Wildcard_Yes ) )
         {
             maps.insertLast( map );
         }
