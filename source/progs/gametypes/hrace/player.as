@@ -337,12 +337,12 @@ class Player
         ent.teleported = true;
     }
 
-    bool loadPosition( bool verbose )
+    bool loadPosition( Verbosity verbosity )
     {
         Entity@ ent = this.client.getEnt();
         if ( !this.practicing && this.client.team != TEAM_SPECTATOR && !this.preRace() )
         {
-            if ( verbose )
+            if ( verbosity == Verbosity_Verbose )
                 G_PrintMsg( ent, "Position loading is not available during a race.\n" );
             return false;
         }
@@ -353,7 +353,7 @@ class Player
 
         if ( !position.saved )
         {
-            if ( verbose )
+            if ( verbosity == Verbosity_Verbose )
                 G_PrintMsg( ent, "No position has been saved yet.\n" );
             return false;
         }

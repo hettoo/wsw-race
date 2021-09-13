@@ -17,6 +17,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+enum Verbosity {
+    Verbosity_Silent,
+    Verbosity_Verbose,
+};
+
 int numCheckpoints = 0;
 bool demoRecording = false;
 
@@ -369,7 +374,7 @@ void GT_PlayerRespawn( Entity@ ent, int old_team, int new_team )
     G_RemoveProjectiles( ent );
     RS_ResetPjState( ent.client.playerNum );
 
-    player.loadPosition( false );
+    player.loadPosition( Verbosity_Silent );
 
     // msc: permanent practicemode message
     Client@ ref = ent.client;

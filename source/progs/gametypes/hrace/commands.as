@@ -177,7 +177,7 @@ bool Cmd_RaceRestart( Client@ client, const String &cmdString, const String &arg
         if ( ent.moveType == MOVETYPE_NOCLIP || ent.moveType == MOVETYPE_NONE )
             player.toggleNoclip();
 
-        if ( ent.health >= 0 && player.loadPosition( false ) )
+        if ( ent.health >= 0 && player.loadPosition( Verbosity_Silent ) )
             player.noclipWeapon = player.savedPosition().weapon;
         else
             client.respawn( false );
@@ -211,7 +211,7 @@ bool Cmd_Position( Client@ client, const String &cmdString, const String &argsSt
     if ( action == "save" )
         return player.savePosition();
     else if ( action == "load" )
-        return player.loadPosition( true );
+        return player.loadPosition( Verbosity_Verbose );
     else if ( action == "recall" )
     {
         String option = argsString.getToken( 1 ).tolower();

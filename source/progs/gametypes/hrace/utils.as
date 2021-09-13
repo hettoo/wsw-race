@@ -9,8 +9,13 @@ enum Keys {
     Key_Special = 128,
 };
 
-bool PatternMatch( String str, String pattern, bool wildcard = false ) {
-    if( wildcard && ( pattern == "*" || pattern == "" ) ) return true;
+enum Wildcard {
+    Wildcard_No,
+    Wildcard_Yes,
+};
+
+bool PatternMatch( String str, String pattern, Wildcard wildcard = Wildcard_No ) {
+    if( wildcard == Wildcard_Yes && ( pattern == "*" || pattern == "" ) ) return true;
     return str.locate( pattern, 0 ) < str.length();
 }
 
