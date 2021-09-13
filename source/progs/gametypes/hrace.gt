@@ -16,5 +16,15 @@ hrace/entities/target_delay.as;
 hrace/entities/shooters.as;
 hrace/entities/gates.as;
 hrace/entities/accuracy.as;
+hrace/entities/target_init.as;
+hrace/entities/timers.as;
+
+hrace/commands.as;
+hrace/player.as;
+hrace/math.as;
+hrace/position.as;
+hrace/quickmenu.as;
+hrace/recordtime.as;
+hrace/table.as;
 
 hrace.as;
