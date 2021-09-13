@@ -18,7 +18,7 @@ float LerpAngle( float a, float t, float b ) {
         b -= 360;
     if( b - a < -180 )
         b += 360;
-return Lerp( a, t, b );
+    return Lerp( a, t, b );
 }
 
 Vec3 LerpAngles( Vec3 a, float t, Vec3 b ) {

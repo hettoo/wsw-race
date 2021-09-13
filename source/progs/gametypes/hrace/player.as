@@ -1157,6 +1157,154 @@ class Player
         else
             this.enterPracticeMode();
     }
+
+    bool recallExit() {
+        if ( this.client.team == TEAM_SPECTATOR || !this.practicing )
+        {
+            G_PrintMsg( this.client.getEnt(), "Not available.\n" );
+            return false;
+        }
+
+        if ( !this.noclipBackup.saved )
+            return true;
+
+        Entity@ ent = this.client.getEnt();
+        ent.moveType = MOVETYPE_NOCLIP;
+        this.applyPosition( this.noclipBackup );
+        ent.set_velocity( Vec3() );
+        this.noclipBackup.saved = false;
+        this.recalled = false;
+        G_CenterPrintMsg( ent, S_COLOR_CYAN + "Left recall mode" );
+        return true;
+    }
+
+    bool recallSteal() {
+        if ( this.client.team == TEAM_SPECTATOR && this.client.chaseActive && this.client.chaseTarget != 0 )
+        {
+            this.takeHistory( RACE_GetPlayer( G_GetEntity( this.client.chaseTarget ).client ) );
+        }
+        else
+        {
+            G_PrintMsg( this.client.getEnt(), "Not available.\n" );
+            return false;
+        }
+        return true;
+    }
+
+    bool recallBest( String pattern) {
+        if ( this.inRace )
+        {
+            G_PrintMsg( this.client.getEnt(), "Not possible during a race.\n" );
+            return false;
+        }
+
+        Player@ target = this;
+
+        if ( pattern != "" )
+        {
+            Player@[] matches = RACE_MatchPlayers( pattern );
+            if ( matches.length() == 0 )
+            {
+                G_PrintMsg( this.client.getEnt(), "No players matched.\n" );
+                return false;
+            }
+            else if ( matches.length() > 1 )
+            {
+                G_PrintMsg( this.client.getEnt(), "Multiple players matched:\n" );
+                for ( uint i = 0; i < matches.length(); i++ )
+                    G_PrintMsg( this.client.getEnt(), matches[i].client.name + S_COLOR_WHITE + "\n" );
+                return false;
+            }
+            else
+            {
+                @target = matches[0];
+            }
+        }
+
+        if ( target.bestRunPositionCount == 0 )
+        {
+            G_PrintMsg( this.client.getEnt(), "No best run recorded.\n" );
+            return false;
+        }
+
+        this.runPositionCount = target.bestRunPositionCount;
+        for ( int i = 0; i < this.runPositionCount; i++ )
+            this.runPositions[i] = target.bestRunPositions[i];
+        this.positionCycle = 0;
+
+        if ( this.practicing && this.client.team != TEAM_SPECTATOR )
+            return this.recallPosition( 0 );
+        else
+            return true;
+    }
+
+    bool recallStart() {
+        return this.recallPosition( -this.positionCycle );
+    }
+
+    bool recallEnd() {
+        return this.recallPosition( -this.positionCycle - 1 );
+    }
+
+    bool recallCheckpoint( int cp ) {
+        int index = -1;
+        for ( int i = 0; i < this.runPositionCount; i++ )
+        {
+            if ( this.runPositions[i].currentSector == cp )
+            {
+                index = i;
+                break;
+            }
+        }
+        if ( index != -1 )
+        {
+            return this.recallPosition( index - this.positionCycle );
+        }
+        else
+        {
+            G_PrintMsg( this.client.getEnt(), "Not found.\n" );
+            return false;
+        }
+    }
+
+    bool recallWeapon( uint weapon ) {
+        int index = -1;
+        for ( int i = 0; i < this.runPositionCount; i++ )
+        {
+            if ( this.runPositions[i].weapons[weapon] )
+            {
+                index = i;
+                break;
+            }
+        }
+        if ( index != -1 )
+        {
+            return this.recallPosition( index - this.positionCycle );
+        }
+        else
+        {
+            G_PrintMsg( this.client.getEnt(), "Not found.\n" );
+            return false;
+        }
+    }
+
+    bool positionSpeed( String speedStr ) {
+        Position@ position = this.savedPosition();
+        float speed = 0;
+        if ( speedStr.locate( "+", 0 ) == 0 )
+            speed += speedStr.substr( 1 ).toFloat();
+        else if ( speedStr.locate( "-", 0 ) == 0 )
+            speed -= speedStr.substr( 1 ).toFloat();
+        else
+            speed = speedStr.toFloat();
+        Vec3 a, b, c;
+        position.angles.angleVectors( a, b, c );
+        a = HorizontalVelocity( a );
+        a.normalize();
+        position.velocity = a * speed;
+        position.recalled = false;
+        return true;
+    }
 }
 
 Player@ RACE_GetPlayer( Client@ client )

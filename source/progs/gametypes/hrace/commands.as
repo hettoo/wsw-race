@@ -206,127 +206,29 @@ bool Cmd_Position( Client@ client, const String &cmdString, const String &argsSt
     String action = argsString.getToken( 0 );
     Player@ player = RACE_GetPlayer ( client );
     if ( action == "save" )
-    {
         return player.savePosition();
-    }
     else if ( action == "load" )
-    {
         return player.loadPosition( true );
-    }
     else if ( action == "recall" )
     {
         String option = argsString.getToken( 1 ).tolower();
-        int offset = 0;
         if ( option == "exit" )
-        {
-            if ( client.team == TEAM_SPECTATOR || !player.practicing )
-            {
-                G_PrintMsg( client.getEnt(), "Not available.\n" );
-                return false;
-            }
-
-            if ( !player.noclipBackup.saved )
-                return true;
-
-            Entity@ ent = client.getEnt();
-            ent.moveType = MOVETYPE_NOCLIP;
-            player.applyPosition( player.noclipBackup );
-            ent.set_velocity( Vec3() );
-            player.noclipBackup.saved = false;
-            player.recalled = false;
-            G_CenterPrintMsg( ent, S_COLOR_CYAN + "Left recall mode" );
-            return true;
-        }
+            return player.recallExit();
         else if ( option == "steal" )
-        {
-            if ( client.team == TEAM_SPECTATOR && client.chaseActive && client.chaseTarget != 0 )
-            {
-                player.takeHistory( RACE_GetPlayer( G_GetEntity( client.chaseTarget ).client ) );
-            }
-            else
-            {
-                G_PrintMsg( client.getEnt(), "Not available.\n" );
-                return false;
-            }
-            return true;
-        }
+            return player.recallSteal();
         else if ( option == "best" )
         {
-            if ( player.inRace )
-            {
-                G_PrintMsg( client.getEnt(), "Not possible during a race.\n" );
-                return false;
-            }
-
-            Player@ target = player;
-
             String pattern = argsString.getToken( 2 );
-            if ( pattern != "" )
-            {
-                Player@[] matches = RACE_MatchPlayers( pattern );
-                if ( matches.length() == 0 )
-                {
-                    G_PrintMsg( client.getEnt(), "No players matched.\n" );
-                    return false;
-                }
-                else if ( matches.length() > 1 )
-                {
-                    G_PrintMsg( client.getEnt(), "Multiple players matched:\n" );
-                    for ( uint i = 0; i < matches.length(); i++ )
-                        G_PrintMsg( client.getEnt(), matches[i].client.name + S_COLOR_WHITE + "\n" );
-                    return false;
-                }
-                else
-                {
-                    @target = matches[0];
-                }
-            }
-
-            if ( target.bestRunPositionCount == 0 )
-            {
-                G_PrintMsg( client.getEnt(), "No best run recorded.\n" );
-                return false;
-            }
-
-            player.runPositionCount = target.bestRunPositionCount;
-            for ( int i = 0; i < player.runPositionCount; i++ )
-                player.runPositions[i] = target.bestRunPositions[i];
-            player.positionCycle = 0;
-
-            if ( player.practicing && client.team != TEAM_SPECTATOR )
-                offset = 0;
-            else
-                return true;
+            return player.recallBest( pattern );
         }
         else if ( option == "start" )
-        {
-            offset = -player.positionCycle;
-        }
+            return player.recallStart();
         else if ( option == "end" )
-        {
-            offset = -player.positionCycle - 1;
-        }
+            return player.recallEnd();
         else if ( option.substr( 0, 2 ) == "cp" )
         {
             int cp = option.substr( 2 ).toInt();
-            int index = -1;
-            for ( int i = 0; i < player.runPositionCount; i++ )
-            {
-                if ( player.runPositions[i].currentSector == cp )
-                {
-                    index = i;
-                    break;
-                }
-            }
-            if ( index != -1 )
-            {
-                offset = index - player.positionCycle;
-            }
-            else
-            {
-                G_PrintMsg( client.getEnt(), "Not found.\n" );
-                return false;
-            }
+            return player.recallCheckpoint( cp );
         }
         else if ( option == "rl" || option == "pg" || option == "gl" )
         {
@@ -337,61 +239,23 @@ bool Cmd_Position( Client@ client, const String &cmdString, const String &argsSt
                 weapon = WEAP_PLASMAGUN;
             if( option == "gl" )
                 weapon = WEAP_GRENADELAUNCHER;
-
-            int index = -1;
-            for ( int i = 0; i < player.runPositionCount; i++ )
-            {
-                if ( player.runPositions[i].weapons[weapon] )
-                {
-                    index = i;
-                    break;
-                }
-            }
-            if ( index != -1 )
-            {
-                offset = index - player.positionCycle;
-            }
-            else
-            {
-                G_PrintMsg( client.getEnt(), "Not found.\n" );
-                return false;
-            }
+            return player.recallWeapon( weapon );
         }
         else
-        {
-            offset = option.toInt();
-        }
-        return player.recallPosition( offset );
+            return player.recallPosition( option.toInt() );
     }
     else if ( action == "speed" && argsString.getToken( 1 ) != "" )
     {
-        Position@ position = RACE_GetPlayer( client ).savedPosition();
         String speedStr = argsString.getToken( 1 );
-        float speed = 0;
-        if ( speedStr.locate( "+", 0 ) == 0 )
-            speed += speedStr.substr( 1 ).toFloat();
-        else if ( speedStr.locate( "-", 0 ) == 0 )
-            speed -= speedStr.substr( 1 ).toFloat();
-        else
-            speed = speedStr.toFloat();
-        Vec3 a, b, c;
-        position.angles.angleVectors( a, b, c );
-        a = HorizontalVelocity( a );
-        a.normalize();
-        position.velocity = a * speed;
-        position.recalled = false;
+        return player.positionSpeed( speedStr );
     }
     else if ( action == "clear" )
-    {
-        return RACE_GetPlayer( client ).clearPosition();
-    }
+        return player.clearPosition();
     else
     {
         G_PrintMsg( client.getEnt(), "position <save | load | speed <value> | recall <offset> | clear>\n" );
         return false;
     }
-
-    return true;
 }
 
 bool Cmd_Top( Client@ client, const String &cmdString, const String &argsString, int argc ) {
