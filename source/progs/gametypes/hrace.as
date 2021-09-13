@@ -2693,6 +2693,24 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
       }
       else if ( arg1 == "position" && arg2 == "recall" )
       {
+        client.printMessage( S_COLOR_YELLOW + "/position recall exit" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Leave recall mode." + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/position recall best [player]" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Loads positions from your best run, or a matching player." + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/position recall steal" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Loads current positions from the player you are spectating." + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/position recall start" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Moves to the first recalled position." + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/position recall end" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Moves to the last recalled position." + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/position recall cpX" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Moves to the first position past checkpoint X." + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/position recall rl" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Moves to the first position with a rocket launcher." + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/position recall pg" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Moves to the first position with a plasma gun." + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/position recall gl" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Moves to the first position with a grenade launcher." + "\n" );
         client.printMessage( S_COLOR_YELLOW + "/position recall <offset>" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Cycles through automatically saved positions from your previous run." + "\n" );
       }
