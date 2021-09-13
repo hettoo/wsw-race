@@ -30,55 +30,14 @@ bool Cmd_CallvoteValidate( Client@ client, const String &cmdString, const String
 
     if ( votename == "randmap" )
     {
-        Cvar mapname( "mapname", "", 0 );
-        String current = mapname.string.tolower();
-        String pattern = argsString.getToken( 1 ).tolower();
-        String[] maps;
-        const String@ map;
-        String lmap;
-        int i = 0;
 
         if ( levelTime - randmap_time > 1100 )
         {
-            if ( pattern == "*" )
-                pattern = "";
+            Cvar mapname( "mapname", "", 0 );
+            String current = mapname.string;
+            String pattern = argsString.getToken( 1 );
 
-            do
-            {
-                @map = ML_GetMapByNum( i );
-                if ( @map != null)
-                {
-                    lmap = map.tolower();
-                    uint p;
-                    bool match = false;
-                    if ( pattern == "" )
-                    {
-                        match = true;
-                    }
-                    else
-                    {
-                        for ( p = 0; p < map.length(); p++ )
-                        {
-                            uint eq = 0;
-                            while ( eq < pattern.length() && p + eq < lmap.length() )
-                            {
-                                if ( lmap[p + eq] != pattern[eq] )
-                                    break;
-                                eq++;
-                            }
-                            if ( eq == pattern.length() )
-                            {
-                                match = true;
-                                break;
-                            }
-                        }
-                    }
-                    if ( match && map != current )
-                        maps.insertLast( map );
-                }
-                i++;
-            }
-            while ( @map != null );
+            String[] maps = GetMapsByPattern( pattern, current );
 
             if ( maps.length() == 0 )
             {
@@ -465,7 +424,6 @@ bool Cmd_Top( Client@ client, const String &cmdString, const String &argsString,
 bool Cmd_Maplist( Client@ client, const String &cmdString, const String &argsString, int argc ) {
     String arg1 = argsString.getToken( 0 ).tolower();
     String arg2 = argsString.getToken( 1 ).tolower();
-    String pattern;
     uint old_page = maplist_page[client.playerNum];
     int page;
     int last_page;
@@ -476,7 +434,7 @@ bool Cmd_Maplist( Client@ client, const String &cmdString, const String &argsStr
         return false;
     }
 
-    pattern = arg1;
+    String pattern = arg1;
 
     if ( arg2 == "next" )
     {
@@ -500,59 +458,7 @@ bool Cmd_Maplist( Client@ client, const String &cmdString, const String &argsStr
         return false;
     }
 
-    String[] maps;
-    const String@ map;
-    String lmap;
-    uint i = 0;
-
-    if ( pattern == "*" )
-        pattern = "";
-
-    uint longest = 0;
-    String longest_name;
-
-    do
-    {
-        @map = ML_GetMapByNum( i );
-        if ( @map != null)
-        {
-            lmap = map.tolower();
-            uint p;
-            bool match = false;
-            if ( pattern == "" )
-            {
-                match = true;
-            }
-            else
-            {
-                for ( p = 0; p < map.length(); p++ )
-                {
-                    uint eq = 0;
-                    while ( eq < pattern.length() && p + eq < lmap.length() )
-                    {
-                        if ( lmap[p + eq] != pattern[eq] )
-                            break;
-                        eq++;
-                    }
-                    if ( eq == pattern.length() )
-                    {
-                        match = true;
-                        break;
-                    }
-                }
-            }
-            if ( match )
-                maps.insertLast( map );
-
-            if ( map.length() > longest )
-            {
-                longest = map.length();
-                longest_name = map;
-            }
-        }
-        i++;
-    }
-    while ( @map != null );
+    String[] maps = GetMapsByPattern( pattern );
 
     if ( maps.length() == 0 )
     {
@@ -576,7 +482,7 @@ bool Cmd_Maplist( Client@ client, const String &cmdString, const String &argsStr
     if ( end > maps.length() )
     end = maps.length();
 
-    for ( i = start; i < end; i++ )
+    for ( uint i = start; i < end; i++ )
     {
         if ( i >= maps.length() )
             break;
@@ -586,7 +492,7 @@ bool Cmd_Maplist( Client@ client, const String &cmdString, const String &argsStr
     client.printMessage( S_COLOR_YELLOW + "Found " + S_COLOR_WHITE + maps.length() + S_COLOR_YELLOW + " maps" +
     S_COLOR_WHITE + " (" + (start+1) + "-" + end + "), " + S_COLOR_YELLOW + "page " + S_COLOR_WHITE + (page+1) + "/" + (last_page+1) + "\n" );
 
-    for ( i = 0; i < maplist.numRows(); i++ )
+    for ( uint i = 0; i < maplist.numRows(); i++ )
         client.printMessage( maplist.getRow(i) + "\n" );
 
     return true;

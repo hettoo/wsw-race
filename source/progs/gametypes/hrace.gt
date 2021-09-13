@@ -19,6 +19,7 @@ hrace/entities/accuracy.as;
 hrace/entities/target_init.as;
 hrace/entities/timers.as;
 
+hrace/utils.as;
 hrace/commands.as;
 hrace/player.as;
 hrace/math.as;

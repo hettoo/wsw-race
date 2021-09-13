@@ -89,15 +89,15 @@ Client@[] RACE_GetSpectators( Client@ client )
 
 Player@[] RACE_MatchPlayers( String pattern )
 {
-    String cleanPattern = pattern.removeColorTokens().tolower();
+    pattern = pattern.removeColorTokens().tolower();
 
     Player@[] playerList;
     for ( int i = 0; i < maxClients; i++ )
     {
         Client@ client = @G_GetClient(i);
-
         String clean = client.name.removeColorTokens().tolower();
-        if ( clean.locate( cleanPattern, 0 ) < clean.length() )
+
+        if ( PatternMatch( clean, pattern ) )
             playerList.push_back( RACE_GetPlayer( client ) );
     }
     return playerList;
