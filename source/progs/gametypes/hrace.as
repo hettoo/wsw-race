@@ -328,6 +328,7 @@ class Player
     Client@ client;
     uint[] messageTimes;
     uint messageLock;
+    bool firstMessage;
     uint[] sectorTimes;
     uint[] bestSectorTimes;
     uint startTime;
@@ -409,6 +410,7 @@ class Player
         if ( !this.arraysSetUp )
             return;
 
+        this.firstMessage = true;
         this.messageLock = 0;
         for ( int i = 0; i < MAX_FLOOD_MESSAGES; i++ )
             this.messageTimes[i] = 0;
@@ -2133,8 +2135,13 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
             return false;
         }
 
-        G_PrintMsg( matches[0].client.getEnt(), S_COLOR_MAGENTA + "PM from " + client.name + S_COLOR_MAGENTA + ": " + S_COLOR_WHITE + message + "\n" );
-        G_PrintMsg( client.getEnt(), S_COLOR_MAGENTA + "PM to " + matches[0].client.name + S_COLOR_MAGENTA + ": " + S_COLOR_WHITE + message + "\n" );
+        G_PrintMsg( matches[0].client.getEnt(), client.name + S_COLOR_MAGENTA + " >>> " + S_COLOR_WHITE + message + "\n" );
+        if ( matches[0].firstMessage )
+        {
+            G_PrintMsg( matches[0].client.getEnt(), "Use /m with part of the player name to reply.\n" );
+            matches[0].firstMessage = false;
+        }
+        G_PrintMsg( client.getEnt(), matches[0].client.name + S_COLOR_MAGENTA + " <<< " + S_COLOR_WHITE + message + "\n" );
 
         for ( i = 0; i < MAX_FLOOD_MESSAGES - 1; i++ )
             player.messageTimes[i] = player.messageTimes[i + 1];
