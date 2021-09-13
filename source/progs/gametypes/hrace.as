@@ -2297,7 +2297,10 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
                     player.runPositions[i] = target.bestRunPositions[i];
                 player.positionCycle = 0;
 
-                return true;
+                if ( player.practicing && client.team != TEAM_SPECTATOR )
+                    offset = 0;
+                else
+                    return true;
             }
             else if ( option == "start" )
             {
