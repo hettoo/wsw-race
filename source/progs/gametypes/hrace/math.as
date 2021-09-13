@@ -13,15 +13,17 @@ Vec3 Lerp( Vec3 a, float t, Vec3 b )
     return a * ( 1.0 - t ) + b * t;
 }
 
-float LerpAngle( float a, float t, float b ) {
-    if( b - a > 180 )
+float LerpAngle( float a, float t, float b )
+{
+    if ( b - a > 180 )
         b -= 360;
-    if( b - a < -180 )
+    if ( b - a < -180 )
         b += 360;
     return Lerp( a, t, b );
 }
 
-Vec3 LerpAngles( Vec3 a, float t, Vec3 b ) {
+Vec3 LerpAngles( Vec3 a, float t, Vec3 b )
+{
     return Vec3(
         LerpAngle( a.x, t, b.x ),
         LerpAngle( a.y, t, b.y ),
@@ -40,12 +42,14 @@ Position Lerp( Position a, float t, Position b )
     return p;
 }
 
-Vec3 HorizontalVelocity( Vec3 vel ) {
+Vec3 HorizontalVelocity( Vec3 vel )
+{
     vel.z = 0;
     return vel;
 }
 
-float HorizontalSpeed( Vec3 vel ) {
+float HorizontalSpeed( Vec3 vel )
+{
     return HorizontalVelocity( vel ).length();
 }
 

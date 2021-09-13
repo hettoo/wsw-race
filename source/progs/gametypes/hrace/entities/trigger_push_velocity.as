@@ -135,7 +135,9 @@ void trigger_push_velocity_touch( Entity @ent, Entity @other, const Vec3 planeNo
     {
         hor_base_vel = hor_vel;
         hor_base_speed = hor_speed;
-    } else {
+    }
+    else
+    {
         hor_base_vel = hor_target;
         hor_base_speed = hor_target_speed;
     }
@@ -172,7 +174,9 @@ void trigger_push_velocity_touch( Entity @ent, Entity @other, const Vec3 planeNo
     {
         vert_base_vel = vert_vel;
         vert_base_speed = vert_speed;
-    } else {
+    }
+    else
+    {
         vert_base_vel = vert_target;
         vert_base_speed = vert_target_speed;
     }

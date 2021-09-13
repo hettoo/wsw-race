@@ -11,32 +11,34 @@ Cvar rs_grenade_splash( "rs_grenade_splash", "170", CVAR_ARCHIVE );
 //==============
 //RS_UseShooter
 //==============
-void RS_UseShooter( Entity @self, Entity @other, Entity @activator ) {
+void RS_UseShooter( Entity @self, Entity @other, Entity @activator )
+{
+    Vec3 dir;
+    Vec3 angles;
 
-	Vec3 dir;
-	Vec3 angles;
-
-    if ( @self.enemy != null ) {
+    if ( @self.enemy != null )
+    {
         dir = self.enemy.origin - self.origin;
         dir.normalize();
-    } else {
+    }
+    else
+    {
         dir = self.movedir;
         dir.normalize();
     }
     angles = dir.toAngles();
-	switch ( self.weapon )
-	{
+    switch ( self.weapon )
+    {
         case WEAP_GRENADELAUNCHER:
-        	G_FireGrenade( self.origin, angles, rs_grenade_speed.integer, rs_grenade_splash.integer, 65, rs_grenade_knockback.integer, 0, @activator );
+            G_FireGrenade( self.origin, angles, rs_grenade_speed.integer, rs_grenade_splash.integer, 65, rs_grenade_knockback.integer, 0, @activator );
             break;
         case WEAP_ROCKETLAUNCHER:
-        	G_FireRocket( self.origin, angles, rs_rocket_speed.integer, rs_rocket_splash.integer, 75, rs_rocket_knockback.integer, 0, @activator );
+            G_FireRocket( self.origin, angles, rs_rocket_speed.integer, rs_rocket_splash.integer, 75, rs_rocket_knockback.integer, 0, @activator );
             break;
         case WEAP_PLASMAGUN:
-        	G_FirePlasma( self.origin, angles, rs_plasma_speed.integer, rs_plasma_splash.integer, 15, rs_plasma_knockback.integer, 0, @activator );
+            G_FirePlasma( self.origin, angles, rs_plasma_speed.integer, rs_plasma_splash.integer, 15, rs_plasma_knockback.integer, 0, @activator );
             break;
     }
-
 }
 
 //======================
@@ -44,11 +46,11 @@ void RS_UseShooter( Entity @self, Entity @other, Entity @activator ) {
 //======================
 void RS_InitShooter_Finish( Entity @self )
 {
-	array<Entity@> targets = self.findTargets();
-	if( targets.length() > 0 )
-		@self.enemy = targets[0]; // Use the first target
-	else
-		@self.enemy = null;
+    array<Entity@> targets = self.findTargets();
+    if ( targets.length() > 0 )
+        @self.enemy = targets[0]; // Use the first target
+    else
+        @self.enemy = null;
 
     self.nextThink = 0;
 }
@@ -56,10 +58,12 @@ void RS_InitShooter_Finish( Entity @self )
 //===============
 //RS_InitShooter
 //===============
-void RS_InitShooter( Entity @self, int weapon ) {
+void RS_InitShooter( Entity @self, int weapon )
+{
     self.weapon = weapon;
     // target might be a moving object, so we can't set a movedir for it
-    if ( self.targetname != "" ) {
+    if ( self.targetname != "" )
+    {
         self.nextThink = levelTime + 500;
     }
     self.linkEntity();
@@ -69,7 +73,8 @@ void RS_InitShooter( Entity @self, int weapon ) {
 //=================
 //RS_shooter_rocket
 //=================
-void shooter_rocket( Entity @ent ) {
+void shooter_rocket( Entity @ent )
+{
     @ent.think = RS_InitShooter_Finish;
     @ent.use = RS_UseShooter;
     RS_InitShooter( @ent, WEAP_ROCKETLAUNCHER );
@@ -78,7 +83,8 @@ void shooter_rocket( Entity @ent ) {
 //=================
 //RS_shooter_plasma
 //=================
-void shooter_plasma( Entity @ent ) {
+void shooter_plasma( Entity @ent )
+{
     @ent.think = RS_InitShooter_Finish;
     @ent.use = RS_UseShooter;
     RS_InitShooter( @ent, WEAP_PLASMAGUN );
@@ -87,7 +93,8 @@ void shooter_plasma( Entity @ent ) {
 //=================
 //RS_shooter_grenade
 //=================
-void shooter_grenade( Entity @ent ) {
+void shooter_grenade( Entity @ent )
+{
     @ent.think = RS_InitShooter_Finish;
     @ent.use = RS_UseShooter;
     RS_InitShooter( @ent, WEAP_GRENADELAUNCHER );

@@ -1166,7 +1166,8 @@ class Player
             this.enterPracticeMode();
     }
 
-    bool recallExit() {
+    bool recallExit()
+    {
         if ( this.client.team == TEAM_SPECTATOR || !this.practicing )
         {
             G_PrintMsg( this.client.getEnt(), "Not available.\n" );
@@ -1186,7 +1187,8 @@ class Player
         return true;
     }
 
-    bool recallSteal() {
+    bool recallSteal()
+    {
         if ( this.client.team == TEAM_SPECTATOR && this.client.chaseActive && this.client.chaseTarget != 0 )
         {
             this.takeHistory( RACE_GetPlayer( G_GetEntity( this.client.chaseTarget ).client ) );
@@ -1199,7 +1201,8 @@ class Player
         return true;
     }
 
-    bool recallBest( String pattern) {
+    bool recallBest( String pattern )
+    {
         if ( this.inRace )
         {
             G_PrintMsg( this.client.getEnt(), "Not possible during a race.\n" );
@@ -1246,15 +1249,18 @@ class Player
             return true;
     }
 
-    bool recallStart() {
+    bool recallStart()
+    {
         return this.recallPosition( -this.positionCycle );
     }
 
-    bool recallEnd() {
+    bool recallEnd()
+    {
         return this.recallPosition( -this.positionCycle - 1 );
     }
 
-    bool recallCheckpoint( int cp ) {
+    bool recallCheckpoint( int cp )
+    {
         int index = -1;
         for ( int i = 0; i < this.runPositionCount; i++ )
         {
@@ -1275,7 +1281,8 @@ class Player
         }
     }
 
-    bool recallWeapon( uint weapon ) {
+    bool recallWeapon( uint weapon )
+    {
         int index = -1;
         for ( int i = 0; i < this.runPositionCount; i++ )
         {
@@ -1296,7 +1303,8 @@ class Player
         }
     }
 
-    bool positionSpeed( String speedStr ) {
+    bool positionSpeed( String speedStr )
+    {
         Position@ position = this.savedPosition();
         float speed = 0;
         if ( speedStr.locate( "+", 0 ) == 0 )

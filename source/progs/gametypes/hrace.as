@@ -517,10 +517,12 @@ void GT_ThinkRules()
         Entity@ ent = @client.getEnt();
         if ( ent.client.state() >= CS_SPAWNED && ent.team != TEAM_SPECTATOR )
         {
-            if ( ent.health > ent.maxHealth ) {
+            if ( ent.health > ent.maxHealth )
+            {
                 ent.health -= ( frameTime * 0.001f );
                 // fix possible rounding errors
-                if( ent.health < ent.maxHealth ) {
+                if ( ent.health < ent.maxHealth )
+                {
                     ent.health = ent.maxHealth;
                 }
             }

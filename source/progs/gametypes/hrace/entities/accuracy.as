@@ -27,7 +27,8 @@ class TargetScore
   {
     @this.ent = @ent;
     this.score = ent.count;
-    if ( ent.count <= 0 ) {
+    if ( ent.count <= 0 )
+    {
       this.score = 1;
     }
 
@@ -40,14 +41,15 @@ class TargetScore
 
   void Use( Entity@ activator )
   {
-    if( @activator == null || (activator.svflags & SVF_NOCLIENT) == 1 || @activator.client == null )
+    if ( @activator == null || (activator.svflags & SVF_NOCLIENT) == 1 || @activator.client == null )
     {
       return;
     }
 
     Client@ client = @activator.client;
 
-    if ( this.touched[client.playerNum] ) {
+    if ( this.touched[client.playerNum] )
+    {
       return;
     }
 
@@ -161,7 +163,8 @@ class TargetFragsFilter
     @this.ent = @ent;
     String fragsStr = G_SpawnTempValue("frags");
     this.frags = fragsStr.toInt();
-    if ( this.frags <= 0 ) {
+    if ( this.frags <= 0 )
+    {
       this.frags = 1;
     }
 
@@ -185,7 +188,9 @@ class TargetFragsFilter
     {
       @ent.think = target_fragsFilter_think;
       ent.nextThink = levelTime + 1;
-    } else {
+    }
+    else
+    {
       @ent.think = null;
     }
   }
@@ -209,7 +214,7 @@ class TargetFragsFilter
 
   void Use(Entity@ activator)
   {
-    if( @activator == null || (activator.svflags & SVF_NOCLIENT) == 1 || @activator.client == null )
+    if ( @activator == null || (activator.svflags & SVF_NOCLIENT) == 1 || @activator.client == null )
     {
       return;
     }
