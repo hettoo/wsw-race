@@ -477,6 +477,7 @@ class Player
         int playerID = ( ent.isGhosting() && ( match.getState() == MATCH_STATE_PLAYTIME ) ) ? -( ent.playerNum + 1 ) : ent.playerNum;
         String racing;
         String pos = "\u00A0";
+        String speed;
 
         if ( this.practicing && this.recalled && ent.health > 0 && ent.moveType == MOVETYPE_PLAYER )
             racing = S_COLOR_CYAN + "Yes";
@@ -486,6 +487,7 @@ class Player
             racing = S_COLOR_GREEN + "Yes";
         else
             racing = S_COLOR_RED + "No";
+
         String diff;
         if ( this.hasTime && levelRecords[0].saved && this.bestFinishTime >= levelRecords[0].finishTime )
         {
@@ -509,7 +511,13 @@ class Player
         {
             diff = "\u00A0";
         }
-        return "&p " + playerID + " " + ent.client.clanName + " " + pos + " " + this.bestFinishTime + " " + diff + " " + this.bestMaxSpeed + " " + ent.client.ping + " " + racing + " ";
+
+        if ( this.hasTime )
+            speed = this.bestMaxSpeed + "";
+        else
+            speed = "\u00A0";
+
+        return "&p " + playerID + " " + ent.client.clanName + " " + pos + " " + this.bestFinishTime + " " + diff + " " + speed + " " + ent.client.ping + " " + racing + " ";
     }
 
     bool preRace()
