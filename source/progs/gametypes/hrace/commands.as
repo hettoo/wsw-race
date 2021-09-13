@@ -181,13 +181,16 @@ bool Cmd_RaceRestart( Client@ client, const String &cmdString, const String &arg
     if ( player.practicing && client.team != TEAM_SPECTATOR )
     {
         Entity@ ent = client.getEnt();
-        if ( ent.moveType == MOVETYPE_NOCLIP || ent.moveType == MOVETYPE_NONE )
+        if ( ent.moveType == MOVETYPE_NONE )
             player.toggleNoclip();
 
         if ( ent.health >= 0 && player.loadPosition( Verbosity_Silent ) )
             player.noclipWeapon = player.savedPosition().weapon;
         else
             client.respawn( false );
+
+        if ( ent.moveType == MOVETYPE_NOCLIP )
+            ent.velocity = Vec3();
     }
     else
     {
