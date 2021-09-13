@@ -747,7 +747,7 @@ class Player
                 {
                     for ( uint i = 0; i < rows; i++ )
                         G_PrintMsg( ent, this.practiceReport.getRow( i ) + "\n" );
-                    G_PrintMsg( ent, S_COLOR_CYAN + "Practice run cancelled, max speed " + S_COLOR_WHITE + this.maxSpeed + "\n" );
+                    G_PrintMsg( ent, S_COLOR_CYAN + "Practice run cancelled\n" );
                 }
             }
             else if ( ent.moveType == MOVETYPE_NONE && this.lerpTo.saved )
@@ -879,8 +879,16 @@ class Player
         report.addCell( RACE_TimeDiffString( this.finishTime, levelRecords[0].finishTime, false ) );
         report.addCell( "Speed:" );
         report.addCell( this.getSpeed() + "" );
-        report.addCell( ", max" );
-        report.addCell( S_COLOR_WHITE + this.maxSpeed );
+        if ( this.practicing )
+        {
+            report.addCell( "" );
+            report.addCell( "" );
+        }
+        else
+        {
+            report.addCell( ", max" );
+            report.addCell( S_COLOR_WHITE + this.maxSpeed );
+        }
         uint rows = report.numRows();
         for ( uint i = 0; i < rows; i++ )
             G_PrintMsg( ent, report.getRow( i ) + "\n" );
@@ -1088,8 +1096,16 @@ class Player
         report.addCell( RACE_TimeDiffString( this.sectorTimes[id], levelRecords[0].sectorTimes[id], false ) );
         report.addCell( "Speed:" );
         report.addCell( this.getSpeed() + "" );
-        report.addCell( ", max" );
-        report.addCell( S_COLOR_WHITE + this.maxSpeed );
+        if ( this.practicing )
+        {
+            report.addCell( "" );
+            report.addCell( "" );
+        }
+        else
+        {
+            report.addCell( ", max" );
+            report.addCell( S_COLOR_WHITE + this.maxSpeed );
+        }
 
         if ( !this.practicing )
         {
