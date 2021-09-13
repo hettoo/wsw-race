@@ -1134,7 +1134,7 @@ class Player
         {
             if ( !levelRecords[i].saved )
                 break;
-            if ( this.finishTime <= levelRecords[i].finishTime )
+            if ( this.finishTime < levelRecords[i].finishTime )
             {
                 str += " (" + S_COLOR_GREEN + "#" + ( i + 1 ) + S_COLOR_WHITE + ")"; // extra id when on server record beating time
                 break;
@@ -1339,7 +1339,7 @@ class Player
 
         for ( int i = 0; i < MAX_RECORDS; i++ )
         {
-            if ( this.sectorTimes[id] <= levelRecords[i].sectorTimes[id] )
+            if ( this.sectorTimes[id] < levelRecords[i].sectorTimes[id] )
             {
                 str += " (" + S_COLOR_GREEN + "#" + ( i + 1 ) + S_COLOR_WHITE + ")"; // extra id when on server record beating time
                 break;
