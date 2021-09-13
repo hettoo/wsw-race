@@ -1,3 +1,10 @@
+const int MAX_POSITIONS = 400;
+const int POSITION_INTERVAL = 500;
+const float POSITION_HEIGHT = 24;
+
+const int RECALL_ACTION_TIME = 200;
+const int RECALL_ACTION_JUMP = 5;
+
 Player[] players( maxClients );
 
 class Player
@@ -594,17 +601,17 @@ class Player
 
         if ( this.runPositionCount == 0 )
         {
-            if ( keys & 16 != 0 )
+            if ( keys & Key_Attack != 0 )
                 G_CenterPrintMsg( ent, "No positions saved" );
             return;
         }
 
         uint passed = levelTime - this.lastNoclipAction;
-        if ( passed < 200 )
+        if ( passed < RECALL_ACTION_TIME )
         {
             if ( this.lerpTo.saved )
             {
-                float lerp = float( passed ) / 200.0;
+                float lerp = float( passed ) / float( RECALL_ACTION_TIME );
                 this.applyPosition( Lerp( this.lerpFrom, lerp, this.lerpTo ) );
             }
             return;
@@ -619,7 +626,7 @@ class Player
 
         this.lastNoclipAction = levelTime;
 
-        if ( keys & 16 != 0 )
+        if ( keys & Key_Attack != 0 )
         {
             if ( this.noclipBackup.saved )
             {
@@ -635,7 +642,7 @@ class Player
                 this.recallPosition( 0 );
             }
         }
-        else if ( keys & 2 != 0 && this.noclipBackup.saved )
+        else if ( keys & Key_Backward != 0 && this.noclipBackup.saved )
         {
             if ( this.positionCycle == 0 )
             {
@@ -649,21 +656,21 @@ class Player
                 this.applyPosition( lerpFrom );
             }
         }
-        else if ( keys & 4 != 0 && this.noclipBackup.saved )
+        else if ( keys & Key_Left != 0 && this.noclipBackup.saved )
         {
-            if ( this.positionCycle < 5 )
+            if ( this.positionCycle < RECALL_ACTION_JUMP )
             {
                 this.recallPosition( -this.positionCycle - 1 );
             }
             else
             {
                 this.lerpFrom.copy( this.savedPosition() );
-                this.recallPosition( -5 );
+                this.recallPosition( -RECALL_ACTION_JUMP );
                 this.lerpTo.copy( this.savedPosition() );
                 this.applyPosition( lerpFrom );
             }
         }
-        else if ( keys & 1 != 0 && this.noclipBackup.saved )
+        else if ( keys & Key_Forward != 0 && this.noclipBackup.saved )
         {
             this.lerpFrom.copy( this.savedPosition() );
             this.recallPosition( 1 );
@@ -677,11 +684,11 @@ class Player
                 this.applyPosition( this.lerpFrom );
             }
         }
-        else if ( keys & 8 != 0 && this.noclipBackup.saved )
+        else if ( keys & Key_Right != 0 && this.noclipBackup.saved )
         {
             this.lerpFrom.copy( this.savedPosition() );
-            this.recallPosition( 5 );
-            if ( this.positionCycle < 5 )
+            this.recallPosition( RECALL_ACTION_JUMP );
+            if ( this.positionCycle < RECALL_ACTION_JUMP )
             {
                 this.lerpFrom.saved = false;
                 this.recallPosition( -this.positionCycle );

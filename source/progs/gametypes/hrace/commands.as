@@ -29,14 +29,15 @@ String randmap;
 String randmap_passed = "";
 uint randmap_time = 0;
 uint randmap_matches;
+const uint RANDMAP_DELAY_MIN = 80;
+const uint RANDMAP_DELAY_MAX = 1100;
 
 bool Cmd_CallvoteValidate( Client@ client, const String &cmdString, const String &argsString, int argc ) {
     String votename = argsString.getToken( 0 );
 
     if ( votename == "randmap" )
     {
-
-        if ( levelTime - randmap_time > 1100 )
+        if ( levelTime - randmap_time > RANDMAP_DELAY_MAX )
         {
             Cvar mapname( "mapname", "", 0 );
             String current = mapname.string;
@@ -54,7 +55,7 @@ bool Cmd_CallvoteValidate( Client@ client, const String &cmdString, const String
             randmap = maps[randrange(randmap_matches)];
         }
 
-        if ( levelTime - randmap_time < 80 )
+        if ( levelTime - randmap_time < RANDMAP_DELAY_MIN )
         {
             G_PrintMsg( null, S_COLOR_YELLOW + "Chosen map: " + S_COLOR_WHITE + randmap + S_COLOR_YELLOW + " (out of " + S_COLOR_WHITE + randmap_matches + S_COLOR_YELLOW + " matches)\n" );
             return true;
@@ -82,6 +83,8 @@ bool Cmd_CallvotePassed( Client@ client, const String &cmdString, const String &
 
     return true;
 }
+
+const int MAX_FLOOD_MESSAGES = 32;
 
 bool Cmd_PrivateMessage( Client@ client, const String &cmdString, const String &argsString, int argc ) {
     if ( client.muted > 0 )
@@ -290,6 +293,7 @@ bool Cmd_Top( Client@ client, const String &cmdString, const String &argsString,
     return true;
 }
 
+const uint MAPS_PER_PAGE = 30;
 uint[] maplist_page( maxClients );
 
 bool Cmd_Maplist( Client@ client, const String &cmdString, const String &argsString, int argc ) {
@@ -308,21 +312,13 @@ bool Cmd_Maplist( Client@ client, const String &cmdString, const String &argsStr
     String pattern = arg1;
 
     if ( arg2 == "next" )
-    {
         page = old_page + 1;
-    }
     else if ( arg2 == "prev" )
-    {
         page = old_page - 1;
-    }
     else if ( arg2.isNumeric() )
-    {
-        page = arg2.toInt()-1;
-    }
+        page = arg2.toInt() - 1;
     else if ( arg2 == "" )
-    {
         page = 0;
-    }
     else
     {
         client.printMessage( "Page must be a number, \"prev\" or \"next\".\n" );
@@ -339,7 +335,7 @@ bool Cmd_Maplist( Client@ client, const String &cmdString, const String &argsStr
 
     Table maplist("l l l");
 
-    last_page = maps.length()/30;
+    last_page = maps.length() / MAPS_PER_PAGE;
 
     if ( page < 0 || page > last_page )
     {
@@ -348,8 +344,8 @@ bool Cmd_Maplist( Client@ client, const String &cmdString, const String &argsStr
     }
     maplist_page[client.playerNum] = page;
 
-    uint start = 30*page;
-    uint end = 30*page+30;
+    uint start = MAPS_PER_PAGE * page;
+    uint end = MAPS_PER_PAGE * ( page + 1 );
     if ( end > maps.length() )
     end = maps.length();
 
@@ -369,10 +365,11 @@ bool Cmd_Maplist( Client@ client, const String &cmdString, const String &argsStr
     return true;
 }
 
-bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString, int argc ) {String arg1 = argsString.getToken( 0 ).tolower();
-    String arg2 = argsString.getToken( 1 ).tolower();
+bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString, int argc ) {
+    String command = argsString.getToken( 0 ).tolower();
+    String subcommand = argsString.getToken( 1 ).tolower();
 
-    if ( arg1 == "" )
+    if ( command == "" )
     {
         Table cmdlist( S_COLOR_YELLOW + "l " + S_COLOR_WHITE + "l" );
         cmdlist.addCell( "/kill /racerestart" );
@@ -416,55 +413,55 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
 
         client.printMessage( S_COLOR_WHITE + "use " + S_COLOR_YELLOW + "/help <cmd> " + S_COLOR_WHITE + "for additional information." + "\n");
     }
-    else if ( arg1 == "m" )
+    else if ( command == "m" )
     {
         client.printMessage( S_COLOR_YELLOW + "/m name message" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Sends a private message to the player whose name matches." + "\n" );
     }
-    else if ( arg1 == "kill" || arg1 == "racerestart" )
+    else if ( command == "kill" || command == "racerestart" )
     {
         client.printMessage( S_COLOR_YELLOW + "/kill /racerestart" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Respawns you. I mean srsly.. that's it." + "\n" );
     }
-    else if ( arg1 == "practicemode" )
+    else if ( command == "practicemode" )
     {
         client.printMessage( S_COLOR_YELLOW + "/practicemode" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Toggles between race and practicemode. Race mode is the only mode in which your time will" + "\n" );
         client.printMessage( S_COLOR_WHITE + "  be recorded. Practicemode is used to practice specific parts of the map. Some commands are" + "\n" );
         client.printMessage( S_COLOR_WHITE + "  restricted to practicemode." + "\n" );
     }
-    else if ( arg1 == "noclip" )
+    else if ( command == "noclip" )
     {
         client.printMessage( S_COLOR_YELLOW + "/noclip" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Lets you move freely through the world whilst in practicemode. Use this command to get more" + "\n" );
         client.printMessage( S_COLOR_WHITE + "  control over your position when using /position save. Only works in practicemode." + "\n" );
     }
-    else if ( arg1 == "position" && arg2 == "save" )
+    else if ( command == "position" && subcommand == "save" )
     {
         client.printMessage( S_COLOR_YELLOW + "/position save" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Saves your position including your weapons as the new spawn position. You can save a separate" + "\n" );
         client.printMessage( S_COLOR_WHITE + "  position for prerace and practicemode, depending on which mode you are in when using the command." + "\n" );
         client.printMessage( S_COLOR_WHITE + "  Note: Using this command during race will save your position for practicemode." + "\n" );
     }
-    else if ( arg1 == "position" && arg2 == "load" )
+    else if ( command == "position" && subcommand == "load" )
     {
         client.printMessage( S_COLOR_YELLOW + "/position load" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Teleports you to your saved position depending on which mode you are in." + "\n" );
         client.printMessage( S_COLOR_WHITE + "  Note: This command does not work during race." + "\n" );
     }
-    else if ( arg1 == "position" && arg2 == "speed" )
+    else if ( command == "position" && subcommand == "speed" )
     {
         client.printMessage( S_COLOR_YELLOW + "/position speed <value>" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Example: /position speed 1000 - Sets your spawn speed to 1000." + "\n" );
         client.printMessage( S_COLOR_WHITE + "  Sets the speed at which you spawn in practicemode. This does not affect prerace speed." + "\n" );
         client.printMessage( S_COLOR_WHITE + "  Use /position speed 0 to reset. Note: You don't get spawn speed while in noclip mode." + "\n" );
     }
-    else if ( arg1 == "position" && arg2 == "clear" )
+    else if ( command == "position" && subcommand == "clear" )
     {
         client.printMessage( S_COLOR_YELLOW + "/position clear" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Resets your weapons and spawn position to their defaults." + "\n" );
     }
-    else if ( arg1 == "position" && arg2 == "recall" )
+    else if ( command == "position" && subcommand == "recall" )
     {
         client.printMessage( S_COLOR_YELLOW + "/position recall exit" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Leave recall mode." + "\n" );
@@ -487,25 +484,25 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         client.printMessage( S_COLOR_YELLOW + "/position recall <offset>" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Cycles through automatically saved positions from your previous run." + "\n" );
     }
-    else if ( arg1 == "top" )
+    else if ( command == "top" )
     {
         client.printMessage( S_COLOR_YELLOW + "/top" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Shows a list of the top record times for the current map along with the names and time" + "\n" );
         client.printMessage( S_COLOR_WHITE + "  difference compared to the number 1 time. To see all lists visit: http://livesow.net/race." + "\n" );
     }
-    else if ( arg1 == "maplist" )
+    else if ( command == "maplist" )
     {
         client.printMessage( S_COLOR_YELLOW + "/maplist <* | pattern> [<page# | prev | next>]" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Shows a list of available maps. Use wildcard '*' to list all maps. Alternatively, specify a" + "\n" );
         client.printMessage( S_COLOR_WHITE + "  pattern keyword for a list of maps containing the pattern as a partial match. The second" + "\n" );
         client.printMessage( S_COLOR_WHITE + "  argument is optional and is used to browse multiple pages of results." + "\n" );
     }
-    else if ( arg1 == "callvote" && arg2 == "map" )
+    else if ( command == "callvote" && subcommand == "map" )
     {
         client.printMessage( S_COLOR_YELLOW + "/callvote map <mapname>" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Calls a vote for the specified map. You can use /maplist to search for a map." + "\n" );
     }
-    else if ( arg1 == "callvote" && arg2 == "randmap" )
+    else if ( command == "callvote" && subcommand == "randmap" )
     {
         client.printMessage( S_COLOR_YELLOW + "/callvote randmap <* | pattern>" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Calls a vote for a random map in the current mappool. Use wildcard '*' to match any map." + "\n" );

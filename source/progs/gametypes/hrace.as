@@ -20,12 +20,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 int numCheckpoints = 0;
 bool demoRecording = false;
 
-const int MAX_FLOOD_MESSAGES = 32;
-
-const int MAX_POSITIONS = 400;
-const int POSITION_INTERVAL = 500;
-const float POSITION_HEIGHT = 24;
-
 // ch : MM
 const uint RECORD_SEND_INTERVAL = 5 * 60 * 1000; // 5 minutes
 uint lastRecordSent = 0;

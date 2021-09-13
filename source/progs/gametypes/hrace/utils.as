@@ -1,3 +1,14 @@
+enum Keys {
+    Key_Forward = 1,
+    Key_Backward = 2,
+    Key_Left = 4,
+    Key_Right = 8,
+    Key_Attack = 16,
+    Key_Jump = 32,
+    Key_Crouch = 64,
+    Key_Special = 128,
+};
+
 bool PatternMatch( String str, String pattern, bool wildcard = false ) {
     if( wildcard && ( pattern == "*" || pattern == "" ) ) return true;
     return str.locate( pattern, 0 ) < str.length();
