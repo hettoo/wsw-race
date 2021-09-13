@@ -333,7 +333,9 @@ class Player
     uint startTime;
     uint finishTime;
     bool hasTime;
+    int maxSpeed;
     uint bestFinishTime;
+    int bestMaxSpeed;
     int pos;
     bool noclipSpawn;
     Table report( S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "r " + S_COLOR_ORANGE + "/ l r " + S_COLOR_ORANGE + "/ l r " + S_COLOR_ORANGE + "/ l " + S_COLOR_WHITE + "r" );
@@ -386,6 +388,8 @@ class Player
         this.practiceFinish = 0;
         this.startTime = 0;
         this.finishTime = 0;
+        this.maxSpeed = 0;
+        this.bestMaxSpeed = 0;
         this.runPositionCount = 0;
         this.nextRunPositionTime = 0;
         this.bestRunPositionCount = 0;
@@ -424,10 +428,11 @@ class Player
 
     ~Player() {}
 
-    void setBestTime( uint time )
+    void setBestTime( uint time, int maxSpeed )
     {
         this.hasTime = true;
         this.bestFinishTime = time;
+        this.bestMaxSpeed = maxSpeed;
         this.updateScore();
     }
 
@@ -502,7 +507,7 @@ class Player
         {
             diff = "\u00A0";
         }
-        return "&p " + playerID + " " + ent.client.clanName + " " + pos + " " + this.bestFinishTime + " " + diff + " " + ent.client.ping + " " + racing + " ";
+        return "&p " + playerID + " " + ent.client.clanName + " " + pos + " " + this.bestFinishTime + " " + diff + " " + this.bestMaxSpeed + " " + ent.client.ping + " " + racing + " ";
     }
 
     bool preRace()
@@ -1008,6 +1013,16 @@ class Player
         }
     }
 
+    void updateMaxSpeed()
+    {
+        if ( !this.inRace )
+            return;
+
+        int current = this.getSpeed();
+        if ( current > this.maxSpeed )
+            this.maxSpeed = current;
+    }
+
     bool validTime()
     {
         return this.timeStamp() >= this.startTime;
@@ -1059,6 +1074,7 @@ class Player
         this.inRace = false;
         this.postRace = false;
         this.finishTime = 0;
+        this.maxSpeed = 0;
     }
 
     void completeRace()
@@ -1089,6 +1105,7 @@ class Player
         this.recalled = false;
 
         this.finishTime = this.raceTime();
+        this.updateMaxSpeed();
         this.inRace = false;
         if ( !this.practicing )
             this.postRace = true;
@@ -1180,7 +1197,7 @@ class Player
             {
                 this.client.addAward( S_COLOR_YELLOW + "Personal record!" );
                 // copy all the sectors into the new personal record backup
-                this.setBestTime( this.finishTime );
+                this.setBestTime( this.finishTime, this.maxSpeed );
                 for ( int i = 0; i < numCheckpoints; i++ )
                     this.bestSectorTimes[i] = this.sectorTimes[i];
 
@@ -2829,7 +2846,7 @@ void GT_ScoreEvent( Client@ client, const String &score_event, const String &arg
                     if ( levelRecords[i].login == login
                             && ( !player.hasTime || levelRecords[i].finishTime < player.bestFinishTime ) )
                     {
-                        player.setBestTime( levelRecords[i].finishTime );
+                        player.setBestTime( levelRecords[i].finishTime, 0 );
                         player.updatePos();
                         for ( int j = 0; j < numCheckpoints; j++ )
                             player.bestSectorTimes[j] = levelRecords[i].sectorTimes[j];
@@ -2998,6 +3015,7 @@ void GT_ThinkRules()
 
         player.saveRunPosition();
         player.checkNoclipAction();
+        player.updateMaxSpeed();
 
         // hettoo: force practicemode message on spectators
         if ( client.team == TEAM_SPECTATOR )
@@ -3282,8 +3300,8 @@ void GT_InitGametype()
         gametype.setTeamSpawnsystem( team, SPAWNSYSTEM_INSTANT, 0, 0, false );
 
     // define the scoreboard layout
-    G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %s 32 %t 88 %s 40 %l 40 %s 48" );
-    G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Pos Time Diff Ping Racing" );
+    G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %s 32 %t 80 %s 36 %s 48 %l 40 %s 48" );
+    G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Pos Time Diff Speed Ping Racing" );
 
     // add commands
     G_RegisterCommand( "gametype" );
