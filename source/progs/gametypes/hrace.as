@@ -1197,7 +1197,10 @@ class Player
         report.addCell( RACE_TimeDiffString( this.finishTime, levelRecords[0].finishTime, false ) );
         report.addCell( "Speed:" );
         report.addCell( this.getSpeed() + "" );
-        report.addCell( ", max " + S_COLOR_WHITE + this.maxSpeed );
+        if ( this.getSpeed() == this.maxSpeed )
+            report.addCell( "" );
+        else
+            report.addCell( ", max " + S_COLOR_WHITE + this.maxSpeed );
         uint rows = report.numRows();
         for ( uint i = 0; i < rows; i++ )
             G_PrintMsg( ent, report.getRow( i ) + "\n" );
