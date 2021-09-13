@@ -336,8 +336,8 @@ class Player
     uint bestFinishTime;
     int pos;
     bool noclipSpawn;
-    Table report( S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "r " + S_COLOR_ORANGE + "/ l r " + S_COLOR_ORANGE + "/ l r" );
-    Table practiceReport( S_COLOR_CYAN + "l " + S_COLOR_WHITE + "r " + S_COLOR_CYAN + "/ l r " + S_COLOR_CYAN + "/ l r" );
+    Table report( S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "r " + S_COLOR_ORANGE + "/ l r " + S_COLOR_ORANGE + "/ l r " + S_COLOR_ORANGE + "/ l " + S_COLOR_WHITE + "r" );
+    Table practiceReport( S_COLOR_CYAN + "l " + S_COLOR_WHITE + "r " + S_COLOR_CYAN + "/ l r " + S_COLOR_CYAN + "/ l r " + S_COLOR_CYAN + "/ l " + S_COLOR_WHITE + "r" );
     int currentSector;
     bool inRace;
     bool postRace;
@@ -886,6 +886,13 @@ class Player
         this.nextRunPositionTime = this.timeStamp() + POSITION_INTERVAL;
     }
 
+    int getSpeed()
+    {
+        Vec3 vel = this.client.getEnt().get_velocity();
+        vel.z = 0;
+        return int(vel.length());
+    }
+
     void checkNoclipAction()
     {
         Entity@ ent = this.client.getEnt();
@@ -1161,6 +1168,8 @@ class Player
         report.addCell( RACE_TimeDiffString( this.finishTime, this.bestFinishTime, false ) );
         report.addCell( "Server:" );
         report.addCell( RACE_TimeDiffString( this.finishTime, levelRecords[0].finishTime, false ) );
+        report.addCell( "Speed:" );
+        report.addCell( this.getSpeed() + "" );
         uint rows = report.numRows();
         for ( uint i = 0; i < rows; i++ )
             G_PrintMsg( ent, report.getRow( i ) + "\n" );
@@ -1364,6 +1373,8 @@ class Player
         report.addCell( RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id], false ) );
         report.addCell( "Server:" );
         report.addCell( RACE_TimeDiffString( this.sectorTimes[id], levelRecords[0].sectorTimes[id], false ) );
+        report.addCell( "Speed:" );
+        report.addCell( this.getSpeed() + "" );
 
         if ( !this.practicing )
         {
