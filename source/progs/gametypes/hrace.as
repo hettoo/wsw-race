@@ -2256,6 +2256,12 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
             }
             else if ( option == "best" )
             {
+                if ( player.inRace )
+                {
+                    G_PrintMsg( client.getEnt(), "Not possible during a race.\n" );
+                    return false;
+                }
+
                 Player@ target = player;
 
                 String pattern = argsString.getToken( 2 );
