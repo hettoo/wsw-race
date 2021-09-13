@@ -23,8 +23,8 @@ class Player
     int bestMaxSpeed;
     int pos;
     bool noclipSpawn;
-    Table report( S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "r " + S_COLOR_ORANGE + "/ l r " + S_COLOR_ORANGE + "/ l r " + S_COLOR_ORANGE + "/ l " + S_COLOR_WHITE + "r" + S_COLOR_ORANGE + "r" );
-    Table practiceReport( S_COLOR_CYAN + "l " + S_COLOR_WHITE + "r " + S_COLOR_CYAN + "/ l r " + S_COLOR_CYAN + "/ l r " + S_COLOR_CYAN + "/ l " + S_COLOR_WHITE + "r" + S_COLOR_CYAN + "r" );
+    Table report( S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "r " + S_COLOR_ORANGE + "/ l r " + S_COLOR_ORANGE + "/ l r " + S_COLOR_ORANGE + "/ l " + S_COLOR_WHITE + "r" + S_COLOR_ORANGE + "l r" );
+    Table practiceReport( S_COLOR_CYAN + "l " + S_COLOR_WHITE + "r " + S_COLOR_CYAN + "/ l r " + S_COLOR_CYAN + "/ l r " + S_COLOR_CYAN + "/ l " + S_COLOR_WHITE + "r" + S_COLOR_CYAN + "l r" );
     int currentSector;
     bool inRace;
     bool postRace;
@@ -879,10 +879,8 @@ class Player
         report.addCell( RACE_TimeDiffString( this.finishTime, levelRecords[0].finishTime, false ) );
         report.addCell( "Speed:" );
         report.addCell( this.getSpeed() + "" );
-        if ( this.getSpeed() == this.maxSpeed )
-            report.addCell( "" );
-        else
-            report.addCell( ", max " + S_COLOR_WHITE + this.maxSpeed );
+        report.addCell( ", max" );
+        report.addCell( S_COLOR_WHITE + this.maxSpeed );
         uint rows = report.numRows();
         for ( uint i = 0; i < rows; i++ )
             G_PrintMsg( ent, report.getRow( i ) + "\n" );
@@ -1036,6 +1034,8 @@ class Player
 
         G_CenterPrintMsg( ent, str + "\n" + RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id], true ) );
 
+        this.updateMaxSpeed();
+
         Client@[] specs = RACE_GetSpectators( this.client );
         for ( uint i = 0; i < specs.length; i++ )
         {
@@ -1088,7 +1088,8 @@ class Player
         report.addCell( RACE_TimeDiffString( this.sectorTimes[id], levelRecords[0].sectorTimes[id], false ) );
         report.addCell( "Speed:" );
         report.addCell( this.getSpeed() + "" );
-        report.addCell( "" );
+        report.addCell( ", max" );
+        report.addCell( S_COLOR_WHITE + this.maxSpeed );
 
         if ( !this.practicing )
         {
