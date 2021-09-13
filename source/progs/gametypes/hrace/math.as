@@ -48,3 +48,11 @@ Vec3 HorizontalVelocity( Vec3 vel ) {
 float HorizontalSpeed( Vec3 vel ) {
     return HorizontalVelocity( vel ).length();
 }
+
+uint randrange(uint n)
+{
+    uint64 r = 0;
+    for ( int i = 0; i < 32; i++ )
+        r = ( r << 1 ) | ( ( rand() ^ ( realTime >> i ) ) & 1 );
+    return uint( ( r * uint64( n ) ) >> 32 );
+}

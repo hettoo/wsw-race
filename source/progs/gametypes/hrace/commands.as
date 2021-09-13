@@ -25,6 +25,11 @@ bool Cmd_CvarInfo( Client@ client, const String &cmdString, const String &argsSt
     return true;
 }
 
+String randmap;
+String randmap_passed = "";
+uint randmap_time = 0;
+uint randmap_matches;
+
 bool Cmd_CallvoteValidate( Client@ client, const String &cmdString, const String &argsString, int argc ) {
     String votename = argsString.getToken( 0 );
 
@@ -420,6 +425,8 @@ bool Cmd_Top( Client@ client, const String &cmdString, const String &argsString,
 
     return true;
 }
+
+uint[] maplist_page( maxClients );
 
 bool Cmd_Maplist( Client@ client, const String &cmdString, const String &argsString, int argc ) {
     String arg1 = argsString.getToken( 0 ).tolower();

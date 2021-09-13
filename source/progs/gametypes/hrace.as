@@ -19,9 +19,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 int numCheckpoints = 0;
 bool demoRecording = false;
-const int MAX_RECORDS = 50;
-const int DISPLAY_RECORDS = 20;
-const int HUD_RECORDS = 3;
 
 const int MAX_FLOOD_MESSAGES = 32;
 
@@ -29,31 +26,12 @@ const int MAX_POSITIONS = 400;
 const int POSITION_INTERVAL = 500;
 const float POSITION_HEIGHT = 24;
 
-uint[] levelRecordSectors;
-uint levelRecordFinishTime;
-String levelRecordPlayerName;
-
 // ch : MM
 const uint RECORD_SEND_INTERVAL = 5 * 60 * 1000; // 5 minutes
 uint lastRecordSent = 0;
 
 // msc: practicemode message
 uint practiceModeMsg, defaultMsg;
-
-RecordTime[] levelRecords( MAX_RECORDS );
-
-Player[] players( maxClients );
-
-Player@ RACE_GetPlayer( Client@ client )
-{
-    if ( @client == null || client.playerNum < 0 )
-        return null;
-
-    Player@ player = players[client.playerNum];
-    @player.client = client;
-
-    return player;
-}
 
 // the player has finished the race. This entity times his automatic respawning
 void race_respawner_think( Entity@ respawner )
@@ -85,203 +63,6 @@ Client@[] RACE_GetSpectators( Client@ client )
             speclist.push_back( @specClient );
     }
     return speclist;
-}
-
-Player@[] RACE_MatchPlayers( String pattern )
-{
-    pattern = pattern.removeColorTokens().tolower();
-
-    Player@[] playerList;
-    for ( int i = 0; i < maxClients; i++ )
-    {
-        Client@ client = @G_GetClient(i);
-        String clean = client.name.removeColorTokens().tolower();
-
-        if ( PatternMatch( clean, pattern ) )
-            playerList.push_back( RACE_GetPlayer( client ) );
-    }
-    return playerList;
-}
-
-String RACE_TimeToString( uint time )
-{
-    // convert times to printable form
-    String minsString, secsString, millString;
-    uint min, sec, milli;
-
-    milli = time;
-    min = milli / 60000;
-    milli -= min * 60000;
-    sec = milli / 1000;
-    milli -= sec * 1000;
-
-    if ( min == 0 )
-        minsString = "00";
-    else if ( min < 10 )
-        minsString = "0" + min;
-    else
-        minsString = min;
-
-    if ( sec == 0 )
-        secsString = "00";
-    else if ( sec < 10 )
-        secsString = "0" + sec;
-    else
-        secsString = sec;
-
-    if ( milli == 0 )
-        millString = "000";
-    else if ( milli < 10 )
-        millString = "00" + milli;
-    else if ( milli < 100 )
-        millString = "0" + milli;
-    else
-        millString = milli;
-
-    return minsString + ":" + secsString + "." + millString;
-}
-
-String RACE_TimeDiffString( uint time, uint reference, bool clean )
-{
-    if ( reference == 0 && clean )
-        return "";
-    else if ( reference == 0 )
-        return S_COLOR_WHITE + "--:--.---";
-    else if ( time == reference )
-        return S_COLOR_YELLOW + "+-" + RACE_TimeToString( 0 );
-    else if ( time < reference )
-        return S_COLOR_GREEN + "-" + RACE_TimeToString( reference - time );
-    else
-        return S_COLOR_RED + "+" + RACE_TimeToString( time - reference );
-}
-
-void RACE_UpdateHUDTopScores()
-{
-    for ( int i = 0; i < HUD_RECORDS; i++ )
-    {
-        G_ConfigString( CS_GENERAL + i, "" ); // somehow it is not shown the first time if it isn't initialized like this
-        if ( levelRecords[i].saved && levelRecords[i].playerName.length() > 0 )
-            G_ConfigString( CS_GENERAL + i, "#" + ( i + 1 ) + " - " + levelRecords[i].playerName + " - " + RACE_TimeToString( levelRecords[i].finishTime ) );
-    }
-}
-
-void RACE_WriteTopScores()
-{
-    String topScores;
-    Cvar mapNameVar( "mapname", "", 0 );
-    String mapName = mapNameVar.string.tolower();
-
-    topScores = "//" + mapName + " top scores\n\n";
-
-    for ( int i = 0; i < MAX_RECORDS; i++ )
-    {
-        if ( levelRecords[i].saved && levelRecords[i].playerName.length() > 0 )
-        {
-            topScores += "\"" + int( levelRecords[i].finishTime );
-            if ( levelRecords[i].login != "" )
-                topScores += "|" + levelRecords[i].login; // optionally storing it in a token with another value provides backwards compatibility
-            topScores += "\" \"" + levelRecords[i].playerName + "\" ";
-
-            // add the sectors
-            topScores += "\"" + numCheckpoints+ "\" ";
-
-            for ( int j = 0; j < numCheckpoints; j++ )
-                topScores += "\"" + int( levelRecords[i].sectorTimes[j] ) + "\" ";
-
-            topScores += "\n";
-        }
-    }
-
-    G_WriteFile( "topscores/race/" + mapName + ".txt", topScores );
-}
-
-void RACE_UpdatePosValues()
-{
-    Team@ team = G_GetTeam( TEAM_PLAYERS );
-    for ( int i = 0; @team.ent( i ) != null; i++ )
-        RACE_GetPlayer( team.ent( i ).client ).updatePos();
-}
-
-void RACE_LoadTopScores()
-{
-    String topScores;
-    Cvar mapNameVar( "mapname", "", 0 );
-    String mapName = mapNameVar.string.tolower();
-
-    topScores = G_LoadFile( "topscores/race/" + mapName + ".txt" );
-
-    if ( topScores.length() > 0 )
-    {
-        String timeToken, loginToken, nameToken, sectorToken;
-        int count = 0;
-        uint sep;
-
-        int i = 0;
-        while ( i < MAX_RECORDS )
-        {
-            timeToken = topScores.getToken( count++ );
-            if ( timeToken.length() == 0 )
-                break;
-
-            sep = timeToken.locate( "|", 0 );
-            if ( sep == timeToken.length() )
-            {
-                loginToken = "";
-            }
-            else
-            {
-                loginToken = timeToken.substr( sep + 1 );
-                timeToken = timeToken.substr( 0, sep );
-            }
-
-            nameToken = topScores.getToken( count++ );
-            if ( nameToken.length() == 0 )
-                break;
-
-            sectorToken = topScores.getToken( count++ );
-            if ( sectorToken.length() == 0 )
-                break;
-
-            int numSectors = sectorToken.toInt();
-
-            // store this one
-            for ( int j = 0; j < numSectors; j++ )
-            {
-                sectorToken = topScores.getToken( count++ );
-                if ( sectorToken.length() == 0 )
-                    break;
-
-                levelRecords[i].sectorTimes[j] = uint( sectorToken.toInt() );
-            }
-
-            // check if he already has a score
-            String cleanName = nameToken.removeColorTokens().tolower();
-            bool exists = false;
-            for ( int j = 0; j < i; j++ )
-            {
-                if ( ( loginToken != "" && levelRecords[j].login == loginToken )
-                        || ( loginToken == "" && levelRecords[j].playerName.removeColorTokens().tolower() == cleanName ) )
-                {
-                    exists = true;
-                    break;
-                }
-            }
-            if ( exists )
-            {
-                levelRecords[i].clear();
-                continue;
-            }
-
-            levelRecords[i].saved = true;
-            levelRecords[i].finishTime = uint( timeToken.toInt() );
-            levelRecords[i].playerName = nameToken;
-            levelRecords[i].login = loginToken;
-
-            i++;
-        }
-
-        RACE_UpdateHUDTopScores();
-    }
 }
 
 // a player has just died. The script is warned about it so it can account scores
@@ -361,24 +142,9 @@ void RACE_ShowIntro(Client@ client)
     }
 }
 
-uint randrange(uint n)
-{
-    uint64 r = 0;
-    for ( int i = 0; i < 32; i++ )
-        r = ( r << 1 ) | ( ( rand() ^ ( realTime >> i ) ) & 1 );
-    return uint( ( r * uint64( n ) ) >> 32 );
-}
-
 ///*****************************************************************
 /// MODULE SCRIPT CALLS
 ///*****************************************************************
-
-String randmap;
-String randmap_passed = "";
-uint randmap_time = 0;
-uint randmap_matches;
-
-uint[] maplist_page( maxClients );
 
 bool GT_Command( Client@ client, const String &cmdString, const String &argsString, int argc )
 {

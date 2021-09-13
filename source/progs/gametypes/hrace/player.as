@@ -1,3 +1,5 @@
+Player[] players( maxClients );
+
 class Player
 {
     Client@ client;
@@ -1155,4 +1157,38 @@ class Player
         else
             this.enterPracticeMode();
     }
+}
+
+Player@ RACE_GetPlayer( Client@ client )
+{
+    if ( @client == null || client.playerNum < 0 )
+        return null;
+
+    Player@ player = players[client.playerNum];
+    @player.client = client;
+
+    return player;
+}
+
+Player@[] RACE_MatchPlayers( String pattern )
+{
+    pattern = pattern.removeColorTokens().tolower();
+
+    Player@[] playerList;
+    for ( int i = 0; i < maxClients; i++ )
+    {
+        Client@ client = @G_GetClient(i);
+        String clean = client.name.removeColorTokens().tolower();
+
+        if ( PatternMatch( clean, pattern ) )
+            playerList.push_back( RACE_GetPlayer( client ) );
+    }
+    return playerList;
+}
+
+void RACE_UpdatePosValues()
+{
+    Team@ team = G_GetTeam( TEAM_PLAYERS );
+    for ( int i = 0; @team.ent( i ) != null; i++ )
+        RACE_GetPlayer( team.ent( i ).client ).updatePos();
 }

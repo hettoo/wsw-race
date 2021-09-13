@@ -1,3 +1,9 @@
+const int MAX_RECORDS = 50;
+const int DISPLAY_RECORDS = 20;
+const int HUD_RECORDS = 3;
+
+RecordTime[] levelRecords( MAX_RECORDS );
+
 class RecordTime
 {
     bool saved;
@@ -64,4 +70,126 @@ class RecordTime
         for ( int i = 0; i < numCheckpoints; i++ )
             this.sectorTimes[i] = player.sectorTimes[i];
     }
+}
+
+void RACE_LoadTopScores()
+{
+    String topScores;
+    Cvar mapNameVar( "mapname", "", 0 );
+    String mapName = mapNameVar.string.tolower();
+
+    topScores = G_LoadFile( "topscores/race/" + mapName + ".txt" );
+
+    if ( topScores.length() > 0 )
+    {
+        String timeToken, loginToken, nameToken, sectorToken;
+        int count = 0;
+        uint sep;
+
+        int i = 0;
+        while ( i < MAX_RECORDS )
+        {
+            timeToken = topScores.getToken( count++ );
+            if ( timeToken.length() == 0 )
+                break;
+
+            sep = timeToken.locate( "|", 0 );
+            if ( sep == timeToken.length() )
+            {
+                loginToken = "";
+            }
+            else
+            {
+                loginToken = timeToken.substr( sep + 1 );
+                timeToken = timeToken.substr( 0, sep );
+            }
+
+            nameToken = topScores.getToken( count++ );
+            if ( nameToken.length() == 0 )
+                break;
+
+            sectorToken = topScores.getToken( count++ );
+            if ( sectorToken.length() == 0 )
+                break;
+
+            int numSectors = sectorToken.toInt();
+
+            // store this one
+            for ( int j = 0; j < numSectors; j++ )
+            {
+                sectorToken = topScores.getToken( count++ );
+                if ( sectorToken.length() == 0 )
+                    break;
+
+                levelRecords[i].sectorTimes[j] = uint( sectorToken.toInt() );
+            }
+
+            // check if he already has a score
+            String cleanName = nameToken.removeColorTokens().tolower();
+            bool exists = false;
+            for ( int j = 0; j < i; j++ )
+            {
+                if ( ( loginToken != "" && levelRecords[j].login == loginToken )
+                        || ( loginToken == "" && levelRecords[j].playerName.removeColorTokens().tolower() == cleanName ) )
+                {
+                    exists = true;
+                    break;
+                }
+            }
+            if ( exists )
+            {
+                levelRecords[i].clear();
+                continue;
+            }
+
+            levelRecords[i].saved = true;
+            levelRecords[i].finishTime = uint( timeToken.toInt() );
+            levelRecords[i].playerName = nameToken;
+            levelRecords[i].login = loginToken;
+
+            i++;
+        }
+
+        RACE_UpdateHUDTopScores();
+    }
+}
+
+void RACE_UpdateHUDTopScores()
+{
+    for ( int i = 0; i < HUD_RECORDS; i++ )
+    {
+        G_ConfigString( CS_GENERAL + i, "" ); // somehow it is not shown the first time if it isn't initialized like this
+        if ( levelRecords[i].saved && levelRecords[i].playerName.length() > 0 )
+            G_ConfigString( CS_GENERAL + i, "#" + ( i + 1 ) + " - " + levelRecords[i].playerName + " - " + RACE_TimeToString( levelRecords[i].finishTime ) );
+    }
+}
+
+void RACE_WriteTopScores()
+{
+    String topScores;
+    Cvar mapNameVar( "mapname", "", 0 );
+    String mapName = mapNameVar.string.tolower();
+
+    topScores = "//" + mapName + " top scores\n\n";
+
+    for ( int i = 0; i < MAX_RECORDS; i++ )
+    {
+        if ( levelRecords[i].saved && levelRecords[i].playerName.length() > 0 )
+        {
+            topScores += "\"" + int( levelRecords[i].finishTime );
+            if ( levelRecords[i].login != "" )
+                topScores += "|" + levelRecords[i].login; // optionally storing it in a token with another value provides backwards compatibility
+            topScores += "\" \"" + levelRecords[i].playerName + "\" ";
+
+            // add the sectors
+            topScores += "\"" + numCheckpoints+ "\" ";
+
+            for ( int j = 0; j < numCheckpoints; j++ )
+                topScores += "\"" + int( levelRecords[i].sectorTimes[j] ) + "\" ";
+
+            topScores += "\n";
+        }
+    }
+
+    G_WriteFile( "topscores/race/" + mapName + ".txt", topScores );
 }
