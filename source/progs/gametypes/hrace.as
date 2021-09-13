@@ -2087,6 +2087,24 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
             return false;
         }
 
+        String message = "";
+        String token;
+        int i = 1;
+        do
+        {
+            token = argsString.getToken( i );
+            if ( i++ > 1 )
+                message += " ";
+            message += token;
+        }
+        while ( token != "" );
+
+        if ( i == 2 )
+        {
+            G_PrintMsg( client.getEnt(), "Empty message.\n" );
+            return false;
+        }
+
         Cvar maxMessages( "g_floodprotection_messages", "", 0 );
         Cvar maxMessageTime( "g_floodprotection_seconds", "", 0 );
         uint ref = player.messageTimes[MAX_FLOOD_MESSAGES - maxMessages.get_integer()];
@@ -2098,19 +2116,8 @@ bool GT_Command( Client@ client, const String &cmdString, const String &argsStri
             return false;
         }
 
-        String message = "";
-        String token;
-        int i = 1;
-        do
-        {
-            token = argsString.getToken( i++ );
-            if ( i > 1 )
-                message += " ";
-            message += token;
-        }
-        while ( token != "" );
-
         G_PrintMsg( matches[0].client.getEnt(), S_COLOR_MAGENTA + "PM from " + client.name + S_COLOR_MAGENTA + ": " + S_COLOR_WHITE + message + "\n" );
+        G_PrintMsg( client.getEnt(), S_COLOR_MAGENTA + "PM to " + matches[0].client.name + S_COLOR_MAGENTA + ": " + S_COLOR_WHITE + message + "\n" );
 
         for ( i = 0; i < MAX_FLOOD_MESSAGES - 1; i++ )
             player.messageTimes[i] = player.messageTimes[i + 1];
