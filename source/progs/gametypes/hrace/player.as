@@ -448,7 +448,7 @@ class Player
         }
         for ( int i = POWERUP_QUAD; i < POWERUP_TOTAL; i++ )
             result.powerups[i - POWERUP_QUAD] = ref.inventoryCount( i );
-        result.weapon = ent.moveType == MOVETYPE_NOCLIP ? this.noclipWeapon : ref.pendingWeapon;
+        result.weapon = ( ent.moveType == MOVETYPE_NOCLIP || ent.moveType == MOVETYPE_NONE ) ? this.noclipWeapon : ref.pendingWeapon;
         return result;
     }
 
@@ -483,21 +483,14 @@ class Player
 
         position.velocity = HorizontalVelocity( position.velocity );
         float speed;
-        if ( position.saved )
+        if ( position.saved && !position.recalled )
             speed = position.velocity.length();
         else
             speed = 0;
 
-        if ( position.recalled )
-        {
-            position.recalled = false;
-        }
-        else
-        {
-            position.copy( this.currentPosition() );
-            position.saved = true;
-            position.recalled = false;
-        }
+        position.copy( this.currentPosition() );
+        position.saved = true;
+        position.recalled = false;
 
         Vec3 a, b, c;
         position.angles.angleVectors( a, b, c );
