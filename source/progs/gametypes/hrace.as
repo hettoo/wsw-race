@@ -664,10 +664,10 @@ void GT_SpawnGametype()
     for ( int i = 0; i < maxClients; i++ )
         players[i].setupArrays( numCheckpoints );
 
-    for ( int i = 0; i < MAX_RECORDS; i++ )
-        levelRecords[i].setupArrays( numCheckpoints );
+    Cvar mapNameVar( "mapname", "", 0 );
+    RACE_LoadTopScores( levelRecords, mapNameVar.string.tolower(), numCheckpoints );
 
-    RACE_LoadTopScores();
+    RACE_UpdateHUDTopScores();
 }
 
 float GT_VotePower( Client@ client, String& votename, bool voted, bool yes )

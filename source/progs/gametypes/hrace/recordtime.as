@@ -3,6 +3,7 @@ const int DISPLAY_RECORDS = 20;
 const int HUD_RECORDS = 3;
 
 RecordTime[] levelRecords( MAX_RECORDS );
+RecordTime[] topRequestRecords( MAX_RECORDS );
 
 class RecordTime
 {
@@ -72,13 +73,17 @@ class RecordTime
     }
 }
 
-void RACE_LoadTopScores()
+void RACE_LoadTopScores( RecordTime[]@ records, String mapName, int checkpoints )
 {
     String topScores;
-    Cvar mapNameVar( "mapname", "", 0 );
-    String mapName = mapNameVar.string.tolower();
 
     topScores = G_LoadFile( "topscores/race/" + mapName + ".txt" );
+
+    for ( int i = 0; i < MAX_RECORDS; i++ )
+    {
+        records[i].setupArrays( checkpoints );
+        records[i].saved = false;
+    }
 
     if ( topScores.length() > 0 )
     {
@@ -121,7 +126,8 @@ void RACE_LoadTopScores()
                 if ( sectorToken.length() == 0 )
                     break;
 
-                levelRecords[i].sectorTimes[j] = uint( sectorToken.toInt() );
+                if ( j < checkpoints )
+                    records[i].sectorTimes[j] = uint( sectorToken.toInt() );
             }
 
             // check if he already has a score
@@ -129,8 +135,8 @@ void RACE_LoadTopScores()
             bool exists = false;
             for ( int j = 0; j < i; j++ )
             {
-                if ( ( loginToken != "" && levelRecords[j].login == loginToken )
-                        || ( loginToken == "" && levelRecords[j].playerName.removeColorTokens().tolower() == cleanName ) )
+                if ( ( loginToken != "" && records[j].login == loginToken )
+                        || ( loginToken == "" && records[j].playerName.removeColorTokens().tolower() == cleanName ) )
                 {
                     exists = true;
                     break;
@@ -138,19 +144,17 @@ void RACE_LoadTopScores()
             }
             if ( exists )
             {
-                levelRecords[i].clear();
+                records[i].clear();
                 continue;
             }
 
-            levelRecords[i].saved = true;
-            levelRecords[i].finishTime = uint( timeToken.toInt() );
-            levelRecords[i].playerName = nameToken;
-            levelRecords[i].login = loginToken;
+            records[i].saved = true;
+            records[i].finishTime = uint( timeToken.toInt() );
+            records[i].playerName = nameToken;
+            records[i].login = loginToken;
 
             i++;
         }
-
-        RACE_UpdateHUDTopScores();
     }
 }
 

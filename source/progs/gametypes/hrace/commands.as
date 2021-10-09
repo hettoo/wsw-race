@@ -283,7 +283,18 @@ bool Cmd_Position( Client@ client, const String &cmdString, const String &argsSt
 
 bool Cmd_Top( Client@ client, const String &cmdString, const String &argsString, int argc )
 {
-    RecordTime@ top = levelRecords[0];
+    String mapName = argsString.getToken( 0 ).tolower().replace( "/", "" );
+
+    RecordTime[]@ records;
+    if ( mapName == "" )
+        @records = levelRecords;
+    else
+    {
+        @records = topRequestRecords;
+        RACE_LoadTopScores( records, mapName, 0 );
+    }
+
+    RecordTime@ top = records[0];
     if ( !top.saved )
     {
         client.printMessage( S_COLOR_RED + "No records yet.\n" );
@@ -293,7 +304,7 @@ bool Cmd_Top( Client@ client, const String &cmdString, const String &argsString,
         Table table( "r r r l l" );
         for ( int i = 0; i < DISPLAY_RECORDS; i++ )
         {
-            RecordTime@ record = levelRecords[i];
+            RecordTime@ record = records[i];
             if ( record.saved )
             {
                 table.addCell( ( i + 1 ) + "." );
@@ -511,8 +522,8 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
     }
     else if ( command == "top" )
     {
-        client.printMessage( S_COLOR_YELLOW + "/top" + "\n" );
-        client.printMessage( S_COLOR_WHITE + "- Shows a list of the top record times for the current map along with the names and time" + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/top" + " [mapname]\n" );
+        client.printMessage( S_COLOR_WHITE + "- Shows a list of the top record times for the current/provided map along with the names and time" + "\n" );
         client.printMessage( S_COLOR_WHITE + "  difference compared to the number 1 time. To see all lists visit: http://livesow.net/race." + "\n" );
     }
     else if ( command == "maplist" )
