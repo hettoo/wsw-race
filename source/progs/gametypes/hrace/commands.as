@@ -237,6 +237,13 @@ bool Cmd_Position( Client@ client, const String &cmdString, const String &argsSt
             String pattern = argsString.getToken( 2 );
             return player.recallBest( pattern );
         }
+        else if ( option == "interval" )
+        {
+            String number = argsString.getToken( 2 );
+            if ( number == "" )
+                return player.recallInterval( -1 );
+            return player.recallInterval( number.toInt() );
+        }
         else if ( option == "start" )
             return player.recallStart();
         else if ( option == "end" )
@@ -483,6 +490,8 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         client.printMessage( S_COLOR_WHITE + "- Leave recall mode." + "\n" );
         client.printMessage( S_COLOR_YELLOW + "/position recall best [player]" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Loads positions from your best run, or a matching player." + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/position recall interval [interval]" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Shows/sets the interval at which positions are recorded." + "\n" );
         client.printMessage( S_COLOR_YELLOW + "/position recall steal" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Loads current positions from the player you are spectating." + "\n" );
         client.printMessage( S_COLOR_YELLOW + "/position recall start" + "\n" );

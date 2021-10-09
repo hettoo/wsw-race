@@ -13,6 +13,7 @@ class Player
     uint[] messageTimes;
     uint messageLock;
     bool firstMessage;
+    int positionInterval;
     uint[] sectorTimes;
     uint[] bestSectorTimes;
     uint startTime;
@@ -64,6 +65,8 @@ class Player
     void clear()
     {
         @this.client = null;
+
+        this.positionInterval = POSITION_INTERVAL;
 
         this.currentSector = 0;
         this.inRace = false;
@@ -534,7 +537,7 @@ class Player
         this.startTime = this.timeStamp();
         this.runPositionCount = 0;
         this.positionCycle = 0;
-        this.nextRunPositionTime = this.timeStamp() + POSITION_INTERVAL;
+        this.nextRunPositionTime = this.timeStamp() + this.positionInterval;
 
         if ( RS_QueryPjState( this.client.playerNum )  )
         {
@@ -575,7 +578,7 @@ class Player
             return;
 
         this.runPositions[this.runPositionCount++] = this.currentPosition();
-        this.nextRunPositionTime = this.timeStamp() + POSITION_INTERVAL;
+        this.nextRunPositionTime = this.timeStamp() + this.positionInterval;
     }
 
     int getSpeed()
@@ -1207,6 +1210,15 @@ class Player
             G_PrintMsg( this.client.getEnt(), "Not available.\n" );
             return false;
         }
+        return true;
+    }
+
+    bool recallInterval( int number )
+    {
+        if ( number < 0 )
+            G_PrintMsg( this.client.getEnt(), this.positionInterval + "\n" );
+        else
+            this.positionInterval = number;
         return true;
     }
 
