@@ -185,7 +185,11 @@ bool Cmd_RaceRestart( Client@ client, const String &cmdString, const String &arg
             player.toggleNoclip();
 
         if ( ent.health >= 0 && player.loadPosition( Verbosity_Silent ) )
+        {
             player.noclipWeapon = player.savedPosition().weapon;
+            if ( player.getSpeed() == 0 )
+                client.respawn( false );
+        }
         else
             client.respawn( false );
 
