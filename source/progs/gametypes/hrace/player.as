@@ -1324,6 +1324,36 @@ class Player
         }
     }
 
+    bool joinPosition( String pattern )
+    {
+        Entity@ ent = this.client.getEnt();
+
+        if ( !this.practicing && this.client.team != TEAM_SPECTATOR )
+        {
+            G_PrintMsg( ent, "Position loading is not available during a race.\n" );
+            return false;
+        }
+
+        Player@[] matches = RACE_MatchPlayers( pattern );
+        if ( matches.length() == 0 )
+        {
+            G_PrintMsg( ent, "No players matched.\n" );
+            return false;
+        }
+        else if ( matches.length() > 1 )
+        {
+            G_PrintMsg( this.client.getEnt(), "Multiple players matched:\n" );
+            for ( uint i = 0; i < matches.length(); i++ )
+                G_PrintMsg( this.client.getEnt(), matches[i].client.name + S_COLOR_WHITE + "\n" );
+            return false;
+        }
+
+        this.applyPosition( matches[0].currentPosition() );
+        ent.set_velocity( Vec3() );
+
+        return true;
+    }
+
     bool positionSpeed( String speedStr )
     {
         Position@ position = this.savedPosition();

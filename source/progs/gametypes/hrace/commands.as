@@ -229,6 +229,8 @@ bool Cmd_Position( Client@ client, const String &cmdString, const String &argsSt
         return player.savePosition();
     else if ( action == "load" )
         return player.loadPosition( Verbosity_Verbose );
+    else if ( action == "join" )
+        return player.joinPosition( argsString.getToken( 1 ) );
     else if ( action == "recall" )
     {
         String option = argsString.getToken( 1 ).tolower();
@@ -237,10 +239,7 @@ bool Cmd_Position( Client@ client, const String &cmdString, const String &argsSt
         else if ( option == "steal" )
             return player.recallSteal();
         else if ( option == "best" )
-        {
-            String pattern = argsString.getToken( 2 );
-            return player.recallBest( pattern );
-        }
+            return player.recallBest( argsString.getToken( 2 ) );
         else if ( option == "interval" )
         {
             String number = argsString.getToken( 2 );
@@ -280,7 +279,7 @@ bool Cmd_Position( Client@ client, const String &cmdString, const String &argsSt
         return player.clearPosition();
     else
     {
-        G_PrintMsg( client.getEnt(), "position <save | load | speed <value> | recall <offset> | clear>\n" );
+        G_PrintMsg( client.getEnt(), "position <save | load | join | speed <value> | recall <offset> | clear>\n" );
         return false;
     }
 }
@@ -425,6 +424,9 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         cmdlist.addCell( "/position load" );
         cmdlist.addCell( "Teleports you to your saved position." );
 
+        cmdlist.addCell( "/position join <pattern>" );
+        cmdlist.addCell( "Teleports you to the player whose name matches pattern." );
+
         cmdlist.addCell( "/position speed" );
         cmdlist.addCell( "Sets the speed at which you spawn in practicemode." );
 
@@ -485,6 +487,12 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
     {
         client.printMessage( S_COLOR_YELLOW + "/position load" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Teleports you to your saved position depending on which mode you are in." + "\n" );
+        client.printMessage( S_COLOR_WHITE + "  Note: This command does not work during race." + "\n" );
+    }
+    else if ( command == "position" && subcommand == "join" )
+    {
+        client.printMessage( S_COLOR_YELLOW + "/position join <pattern>" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Teleports you to the player whose name matches pattern." + "\n" );
         client.printMessage( S_COLOR_WHITE + "  Note: This command does not work during race." + "\n" );
     }
     else if ( command == "position" && subcommand == "speed" )
