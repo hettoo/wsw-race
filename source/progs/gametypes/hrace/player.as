@@ -1169,6 +1169,7 @@ class Player
 
         this.cancelRace();
         this.practicing = false;
+        this.release = 0;
         G_CenterPrintMsg( this.client.getEnt(), S_COLOR_CYAN + "Left practice mode" );
         if ( this.client.team != TEAM_SPECTATOR )
             this.client.respawn( false );
