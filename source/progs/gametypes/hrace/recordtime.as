@@ -18,7 +18,7 @@ class RecordTime
     {
         this.sectorTimes.resize( size );
 
-        for ( int i = 0; i < numCheckpoints; i++ )
+        for ( int i = 0; i < size; i++ )
             this.sectorTimes[i] = 0;
 
         this.arraysSetUp = true;
@@ -40,7 +40,7 @@ class RecordTime
         this.login = "";
         this.finishTime = 0;
 
-        for ( int i = 0; i < numCheckpoints; i++ )
+        for ( uint i = 0; i < sectorTimes.length(); i++ )
             this.sectorTimes[i] = 0;
     }
 
@@ -53,7 +53,7 @@ class RecordTime
         this.finishTime = other.finishTime;
         this.playerName = other.playerName;
         this.login = other.login;
-        for ( int i = 0; i < numCheckpoints; i++ )
+        for ( uint i = 0; i < sectorTimes.length(); i++ )
             this.sectorTimes[i] = other.sectorTimes[i];
     }
 
@@ -68,7 +68,7 @@ class RecordTime
         this.finishTime = player.finishTime;
         this.playerName = client.name;
         this.login = client.getMMLogin();
-        for ( int i = 0; i < numCheckpoints; i++ )
+        for ( uint i = 0; i < sectorTimes.length(); i++ )
             this.sectorTimes[i] = player.sectorTimes[i];
     }
 }
