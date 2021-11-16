@@ -189,6 +189,12 @@ bool Cmd_RaceRestart( Client@ client, const String &cmdString, const String &arg
             player.noclipWeapon = player.savedPosition().weapon;
             if ( player.getSpeed() == 0 )
                 client.respawn( false );
+            else if ( player.recalled )
+            {
+                ent.moveType = MOVETYPE_NONE;
+                player.release = 2;
+                return true;
+            }
         }
         else
             client.respawn( false );

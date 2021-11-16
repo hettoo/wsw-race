@@ -483,6 +483,7 @@ void GT_ThinkRules()
         player.saveRunPosition();
         player.checkNoclipAction();
         player.updateMaxSpeed();
+        player.checkRelease();
 
         // hettoo: force practicemode message on spectators
         if ( client.team == TEAM_SPECTATOR )

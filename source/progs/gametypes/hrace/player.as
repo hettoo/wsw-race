@@ -31,6 +31,7 @@ class Player
     bool postRace;
     bool practicing;
     bool recalled;
+    uint release;
     bool arraysSetUp;
 
     // hettoo : practicemode
@@ -73,6 +74,7 @@ class Player
         this.postRace = false;
         this.practicing = false;
         this.recalled = false;
+        this.release = 0;
         this.practiceFinish = 0;
         this.startTime = 0;
         this.finishTime = 0;
@@ -527,6 +529,18 @@ class Player
         return this.client.uCmdTimeStamp;
     }
 
+    void checkRelease()
+    {
+        if ( this.release > 1 )
+            this.release -= 1;
+        else if ( this.release == 1 )
+        {
+            this.client.getEnt().moveType = MOVETYPE_PLAYER;
+            this.loadPosition( Verbosity_Silent );
+            this.release = 0;
+        }
+    }
+
     bool startRace()
     {
         if ( !this.preRace() )
@@ -590,7 +604,7 @@ class Player
     {
         Entity@ ent = this.client.getEnt();
 
-        if ( !this.practicing || this.client.team == TEAM_SPECTATOR || ( ent.moveType != MOVETYPE_NOCLIP && ent.moveType != MOVETYPE_NONE ) || ent.health <= 0 )
+        if ( !this.practicing || this.client.team == TEAM_SPECTATOR || ( ent.moveType != MOVETYPE_NOCLIP && ent.moveType != MOVETYPE_NONE ) || this.release > 0 || ent.health <= 0 )
             return;
 
         uint keys = this.client.pressedKeys;
