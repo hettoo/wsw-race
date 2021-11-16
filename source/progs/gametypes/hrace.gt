@@ -18,6 +18,7 @@ hrace/entities/gates.as;
 hrace/entities/accuracy.as;
 hrace/entities/target_init.as;
 hrace/entities/timers.as;
+hrace/entities/xonotic.as;
 
 hrace/utils.as;
 hrace/commands.as;
