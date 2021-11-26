@@ -1387,7 +1387,7 @@ class Player
             }
             origin = startPosition;
         }
-        else if ( entity = "finish" )
+        else if ( entity == "finish" )
         {
             if ( !hasFinish )
             {
