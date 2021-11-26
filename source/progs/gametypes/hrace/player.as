@@ -556,6 +556,18 @@ class Player
 
     bool startRace()
     {
+        if ( this.practicing && this.autoRecall && !this.recalled )
+        {
+            this.startTime = this.timeStamp();
+            this.recalled = true;
+            this.runPositionCount = 0;
+            this.positionCycle = 0;
+            this.extRunPositionCount = 0;
+            this.nextRunPositionTime = this.timeStamp() + this.positionInterval;
+            this.autoRecallStart = -1;
+            return true;
+        }
+
         if ( !this.preRace() )
             return false;
 
