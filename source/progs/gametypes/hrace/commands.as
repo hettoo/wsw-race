@@ -545,12 +545,8 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         client.printMessage( S_COLOR_WHITE + "- Toggles automatically extending recall runs and enabling the start timer in practicemode." + "\n" );
         client.printMessage( S_COLOR_YELLOW + "/position recall cpX" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Moves to the first position past checkpoint X." + "\n" );
-        client.printMessage( S_COLOR_YELLOW + "/position recall rl" + "\n" );
-        client.printMessage( S_COLOR_WHITE + "- Moves to the first position with a rocket launcher." + "\n" );
-        client.printMessage( S_COLOR_YELLOW + "/position recall pg" + "\n" );
-        client.printMessage( S_COLOR_WHITE + "- Moves to the first position with a plasma gun." + "\n" );
-        client.printMessage( S_COLOR_YELLOW + "/position recall gl" + "\n" );
-        client.printMessage( S_COLOR_WHITE + "- Moves to the first position with a grenade launcher." + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/position recall <rl|pg|gl>" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Moves to the first position with the given weapon." + "\n" );
         client.printMessage( S_COLOR_YELLOW + "/position recall <offset>" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Cycles through automatically saved positions from your previous run." + "\n" );
     }
