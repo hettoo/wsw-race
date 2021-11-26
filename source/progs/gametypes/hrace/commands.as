@@ -259,6 +259,8 @@ bool Cmd_Position( Client@ client, const String &cmdString, const String &argsSt
             return player.recallEnd();
         else if ( option == "extend" )
             return player.recallExtend();
+        else if ( option == "auto" )
+            return player.recallAuto();
         else if ( option.substr( 0, 2 ) == "cp" )
         {
             int cp = option.substr( 2 ).toInt();
@@ -534,6 +536,8 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         client.printMessage( S_COLOR_WHITE + "- Moves to the last recalled position." + "\n" );
         client.printMessage( S_COLOR_YELLOW + "/position recall extend" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Adds the positions from the current practice run." + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/position recall auto" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Toggles automatically extending recall runs." + "\n" );
         client.printMessage( S_COLOR_YELLOW + "/position recall cpX" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Moves to the first position past checkpoint X." + "\n" );
         client.printMessage( S_COLOR_YELLOW + "/position recall rl" + "\n" );

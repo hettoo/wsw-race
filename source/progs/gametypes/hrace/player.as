@@ -31,6 +31,8 @@ class Player
     bool postRace;
     bool practicing;
     bool recalled;
+    bool autoRecall;
+    int autoRecallStart;
     uint release;
     bool arraysSetUp;
 
@@ -77,6 +79,8 @@ class Player
         this.postRace = false;
         this.practicing = false;
         this.recalled = false;
+        this.autoRecall = false;
+        this.autoRecallStart = -1;
         this.release = 0;
         this.practiceFinish = 0;
         this.startTime = 0;
@@ -296,6 +300,7 @@ class Player
                 {
                     this.applyPosition( this.savedPosition() );
                 }
+                this.autoRecallStart = this.positionCycle;
             }
             this.noclipBackup.saved = false;
             msg = "Noclip mode disabled.";
@@ -380,6 +385,7 @@ class Player
             this.recalled = true;
             this.extRunPositionCount = 0;
             this.nextRunPositionTime = this.timeStamp() + this.positionInterval;
+            this.autoRecallStart = this.positionCycle;
         }
         else if ( this.practicing )
         {
@@ -602,7 +608,14 @@ class Player
         if ( tr.doTrace( ent.origin, mins, maxs, down, ent.entNum, MASK_PLAYERSOLID ) && tr.surfFlags & SURF_SLICK == 0 )
             return;
 
-        if ( this.inRace )
+        if ( !this.inRace && this.autoRecall && this.autoRecallStart >= 0 )
+        {
+            if ( this.autoRecallStart < this.runPositionCount )
+                this.runPositionCount = this.autoRecallStart + 1;
+            this.autoRecallStart = -1;
+        }
+
+        if ( this.inRace || this.autoRecall )
             this.runPositions[this.runPositionCount++] = this.currentPosition();
         else
             this.extRunPositions[this.extRunPositionCount++] = this.currentPosition();
@@ -780,6 +793,7 @@ class Player
                 this.lerpFrom.saved = false;
                 this.lerpTo.saved = false;
             }
+            this.autoRecallStart = this.positionCycle;
         }
         this.recalled = false;
 
@@ -1313,15 +1327,15 @@ class Player
     {
         Entity@ ent = this.client.getEnt();
 
-        if ( this.extRunPositionCount == 0 )
-        {
-            G_PrintMsg( ent, "No practice run positions set.\n" );
-            return false;
-        }
-
         if ( !this.recalled || ent.moveType == MOVETYPE_NONE )
         {
             G_PrintMsg( ent, "Only possible during a practice run.\n" );
+            return false;
+        }
+
+        if ( this.extRunPositionCount == 0 )
+        {
+            G_PrintMsg( ent, "No practice run positions set.\n" );
             return false;
         }
 
@@ -1331,6 +1345,18 @@ class Player
         for ( int i = 0; i < this.extRunPositionCount && this.runPositionCount < MAX_POSITIONS; i++ )
             this.runPositions[this.runPositionCount++] = this.extRunPositions[i];
 
+        return true;
+    }
+
+    bool recallAuto()
+    {
+        this.autoRecall = !this.autoRecall;
+        Entity@ ent = this.client.getEnt();
+        if ( this.autoRecall )
+            G_PrintMsg( ent, "Auto recall extend ON.\n" );
+        else
+            G_PrintMsg( ent, "Auto recall extend OFF.\n" );
+        this.extRunPositionCount = 0;
         return true;
     }
 
