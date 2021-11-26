@@ -1412,13 +1412,7 @@ class Player
 
     bool positionSpeed( String speedStr )
     {
-        if ( !this.practicing )
-        {
-            G_PrintMsg( this.client.getEnt(), "Position speed is only available in practicemode.\n" );
-            return false;
-        }
-
-        Position@ position = this.savedPosition();
+        Position@ position = practicePosition;
         if ( !position.saved )
         {
             position.copy( this.currentPosition() );
