@@ -517,7 +517,7 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
     {
         client.printMessage( S_COLOR_YELLOW + "/position speed <value>" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Example: /position speed 1000 - Sets your spawn speed to 1000." + "\n" );
-        client.printMessage( S_COLOR_WHITE + "  Sets the speed at which you spawn in practicemode. This does not affect prerace speed." + "\n" );
+        client.printMessage( S_COLOR_WHITE + "  Sets the speed at which you spawn in practicemode. This does not affect prerace speed. Prefix with + or - to change the speed relative to the currently set one." + "\n" );
         client.printMessage( S_COLOR_WHITE + "  Use /position speed 0 to reset. Note: You don't get spawn speed while in noclip mode." + "\n" );
     }
     else if ( command == "position" && subcommand == "clear" )
