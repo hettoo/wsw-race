@@ -1412,12 +1412,30 @@ class Player
 
     bool positionSpeed( String speedStr )
     {
+        if ( !this.practicing )
+        {
+            G_PrintMsg( this.client.getEnt(), "Position speed is only available in practicemode.\n" );
+            return false;
+        }
+
         Position@ position = this.savedPosition();
+        if ( !position.saved )
+        {
+            position.copy( this.currentPosition() );
+            position.saved = true;
+        }
         float speed = 0;
-        if ( speedStr.locate( "+", 0 ) == 0 )
-            speed += speedStr.substr( 1 ).toFloat();
-        else if ( speedStr.locate( "-", 0 ) == 0 )
-            speed -= speedStr.substr( 1 ).toFloat();
+        bool doAdd = speedStr.locate( "+", 0 ) == 0;
+        bool doSubtract = speedStr.locate( "-", 0 ) == 0;
+        if ( position.saved && ( doAdd || doSubtract ) )
+        {
+            speed = HorizontalSpeed( position.velocity );
+            float diff = speedStr.substr( 1 ).toFloat();
+            if ( doAdd )
+                speed += diff;
+            else
+                speed -= diff;
+        }
         else
             speed = speedStr.toFloat();
         Vec3 a, b, c;
