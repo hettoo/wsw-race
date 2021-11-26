@@ -1244,20 +1244,6 @@ class Player
         return true;
     }
 
-    bool recallSteal()
-    {
-        if ( this.client.team == TEAM_SPECTATOR && this.client.chaseActive && this.client.chaseTarget != 0 )
-        {
-            this.takeHistory( RACE_GetPlayer( G_GetEntity( this.client.chaseTarget ).client ) );
-        }
-        else
-        {
-            G_PrintMsg( this.client.getEnt(), "Not available.\n" );
-            return false;
-        }
-        return true;
-    }
-
     bool recallInterval( int number )
     {
         if ( number < 0 )
