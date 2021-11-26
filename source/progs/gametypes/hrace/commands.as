@@ -148,13 +148,13 @@ bool Cmd_PrivateMessage( Client@ client, const String &cmdString, const String &
         return false;
     }
 
-    G_PrintMsg( matches[0].client.getEnt(), client.name + S_COLOR_MAGENTA + " >>> " + S_COLOR_WHITE + message + "\n" );
+    G_PrintMsg( matches[0].client.getEnt(), client.name + S_COLOR_MAGENTA + " >>> " + message + "\n" );
     if ( matches[0].firstMessage )
     {
         G_PrintMsg( matches[0].client.getEnt(), "Use /m with part of the player name to reply.\n" );
         matches[0].firstMessage = false;
     }
-    G_PrintMsg( client.getEnt(), matches[0].client.name + S_COLOR_MAGENTA + " <<< " + S_COLOR_WHITE + message + "\n" );
+    G_PrintMsg( client.getEnt(), matches[0].client.name + S_COLOR_MAGENTA + " <<< " + message + "\n" );
 
     for ( i = 0; i < MAX_FLOOD_MESSAGES - 1; i++ )
         player.messageTimes[i] = player.messageTimes[i + 1];
