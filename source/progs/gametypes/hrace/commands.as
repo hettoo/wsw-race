@@ -431,10 +431,10 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         cmdlist.addCell( "Teleports you to your saved position." );
 
         cmdlist.addCell( "/position find" );
-        cmdlist.addCell( "Teleports you to the start trigger." );
+        cmdlist.addCell( "Teleports you to the start or stop trigger." );
 
         cmdlist.addCell( "/position join" );
-        cmdlist.addCell( "Teleports you to the player whose name matches pattern." );
+        cmdlist.addCell( "Teleports you to a player." );
 
         cmdlist.addCell( "/position speed" );
         cmdlist.addCell( "Sets the speed at which you spawn in practicemode." );
