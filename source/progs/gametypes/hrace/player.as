@@ -48,8 +48,6 @@ class Player
 
     Position[] runPositions;
     int runPositionCount;
-    Position[] extRunPositions;
-    int extRunPositionCount;
     uint nextRunPositionTime;
     int positionCycle;
 
@@ -62,7 +60,6 @@ class Player
         this.sectorTimes.resize( size );
         this.bestSectorTimes.resize( size );
         this.runPositions.resize( MAX_POSITIONS );
-        this.extRunPositions.resize( MAX_POSITIONS );
         this.bestRunPositions.resize( MAX_POSITIONS );
         this.arraysSetUp = true;
         this.clear();
@@ -88,7 +85,6 @@ class Player
         this.maxSpeed = 0;
         this.bestMaxSpeed = 0;
         this.runPositionCount = 0;
-        this.extRunPositionCount = 0;
         this.nextRunPositionTime = 0;
         this.bestRunPositionCount = 0;
         this.positionCycle = 0;
@@ -383,7 +379,6 @@ class Player
             this.cancelRace();
             this.startTime = this.timeStamp() - position.currentTime;
             this.recalled = true;
-            this.extRunPositionCount = 0;
             this.nextRunPositionTime = this.timeStamp() + this.positionInterval;
             this.autoRecallStart = this.positionCycle;
         }
@@ -431,7 +426,6 @@ class Player
         saved.saved = true;
         saved.recalled = true;
         this.recalled = true;
-        this.extRunPositionCount = 0;
         saved.skipWeapons = false;
 
         this.startTime = this.timeStamp() - position.currentTime;
@@ -562,7 +556,6 @@ class Player
             this.recalled = true;
             this.runPositionCount = 0;
             this.positionCycle = 0;
-            this.extRunPositionCount = 0;
             this.nextRunPositionTime = this.timeStamp() + this.positionInterval;
             this.autoRecallStart = -1;
             return true;
@@ -604,12 +597,12 @@ class Player
 
     void saveRunPosition()
     {
-        if ( this.runPositionCount + this.extRunPositionCount == MAX_POSITIONS || this.timeStamp() < this.nextRunPositionTime )
+        if ( this.runPositionCount == MAX_POSITIONS || this.timeStamp() < this.nextRunPositionTime )
             return;
 
         Entity@ ent = this.client.getEnt();
 
-        if ( !this.inRace && ( !this.recalled || ent.moveType == MOVETYPE_NONE ) )
+        if ( !this.inRace && ( !this.recalled || !this.autoRecall || ent.moveType == MOVETYPE_NONE ) )
             return;
 
         Vec3 mins, maxs;
@@ -627,10 +620,7 @@ class Player
             this.autoRecallStart = -1;
         }
 
-        if ( this.inRace || this.autoRecall )
-            this.runPositions[this.runPositionCount++] = this.currentPosition();
-        else
-            this.extRunPositions[this.extRunPositionCount++] = this.currentPosition();
+        this.runPositions[this.runPositionCount++] = this.currentPosition();
         this.nextRunPositionTime = this.timeStamp() + this.positionInterval;
     }
 
@@ -1337,38 +1327,12 @@ class Player
 
     bool recallExtend()
     {
-        Entity@ ent = this.client.getEnt();
-
-        if ( !this.recalled || ent.moveType == MOVETYPE_NONE )
-        {
-            G_PrintMsg( ent, "Only possible during a practice run.\n" );
-            return false;
-        }
-
-        if ( this.extRunPositionCount == 0 )
-        {
-            G_PrintMsg( ent, "No practice run positions set.\n" );
-            return false;
-        }
-
-        if ( this.runPositionCount != 0 )
-            this.runPositionCount = this.positionCycle + 1;
-
-        for ( int i = 0; i < this.extRunPositionCount && this.runPositionCount < MAX_POSITIONS; i++ )
-            this.runPositions[this.runPositionCount++] = this.extRunPositions[i];
-
-        return true;
-    }
-
-    bool recallAuto()
-    {
         this.autoRecall = !this.autoRecall;
         Entity@ ent = this.client.getEnt();
         if ( this.autoRecall )
             G_PrintMsg( ent, "Auto recall extend ON.\n" );
         else
             G_PrintMsg( ent, "Auto recall extend OFF.\n" );
-        this.extRunPositionCount = 0;
         return true;
     }
 
