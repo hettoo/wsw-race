@@ -1,6 +1,6 @@
 const int MAX_POSITIONS = 400;
 const int POSITION_INTERVAL = 500;
-const float POSITION_HEIGHT = 24;
+const float POSITION_HEIGHT = 32;
 
 const int RECALL_ACTION_TIME = 200;
 const int RECALL_ACTION_JUMP = 5;
@@ -605,13 +605,20 @@ class Player
         if ( !this.inRace && ( this.client.team == TEAM_SPECTATOR || !this.practicing || !this.recalled || !this.autoRecall || ent.moveType != MOVETYPE_PLAYER ) )
             return;
 
-        Vec3 mins, maxs;
-        ent.getSize( mins, maxs );
-        Vec3 down = ent.origin;
-        down.z -= POSITION_HEIGHT;
-        Trace tr;
-        if ( tr.doTrace( ent.origin, mins, maxs, down, ent.entNum, MASK_PLAYERSOLID ) && tr.surfFlags & SURF_SLICK == 0 )
+        if ( ent.velocity.length() == 0 )
             return;
+
+        uint keys = this.client.pressedKeys;
+        if ( ent.velocity.z <= 0 && keys & ( Key_Jump | Key_Crouch | Key_Special ) != 0 )
+        {
+            Vec3 mins, maxs;
+            ent.getSize( mins, maxs );
+            Vec3 down = ent.origin;
+            down.z -= POSITION_HEIGHT;
+            Trace tr;
+            if ( tr.doTrace( ent.origin, mins, maxs, down, ent.entNum, MASK_PLAYERSOLID ) )
+                return;
+        }
 
         if ( !this.inRace && this.autoRecall && this.autoRecallStart >= 0 )
         {
