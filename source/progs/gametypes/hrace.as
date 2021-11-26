@@ -32,6 +32,11 @@ uint lastRecordSent = 0;
 // msc: practicemode message
 uint practiceModeMsg, defaultMsg;
 
+bool hasStart;
+bool hasFinish;
+Vec3 startPosition;
+Vec3 finishPosition;
+
 // the player has finished the race. This entity times his automatic respawning
 void race_respawner_think( Entity@ respawner )
 {
@@ -655,7 +660,13 @@ void GT_SpawnGametype()
                 if ( target.classname == "target_starttimer" )
                 {
                     ent.wait = 0;
-                    break;
+                    hasStart = true;
+                    startPosition = ent.origin;
+                }
+                else if ( target.classname == "target_stoptimer" )
+                {
+                    hasFinish = true;
+                    finishPosition = ent.origin;
                 }
             }
         }

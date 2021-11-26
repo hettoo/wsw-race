@@ -233,6 +233,8 @@ bool Cmd_Position( Client@ client, const String &cmdString, const String &argsSt
         return player.savePosition();
     else if ( action == "load" )
         return player.loadPosition( Verbosity_Verbose );
+    else if ( action == "find" )
+        return player.findPosition( argsString.getToken( 1 ) );
     else if ( action == "join" )
         return player.joinPosition( argsString.getToken( 1 ) );
     else if ( action == "recall" )
@@ -430,6 +432,9 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         cmdlist.addCell( "/position load" );
         cmdlist.addCell( "Teleports you to your saved position." );
 
+        cmdlist.addCell( "/position find <start|finish>" );
+        cmdlist.addCell( "Teleports you to the start trigger." );
+
         cmdlist.addCell( "/position join <pattern>" );
         cmdlist.addCell( "Teleports you to the player whose name matches pattern." );
 
@@ -496,6 +501,12 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
     {
         client.printMessage( S_COLOR_YELLOW + "/position load" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Teleports you to your saved position depending on which mode you are in." + "\n" );
+        client.printMessage( S_COLOR_WHITE + "  Note: This command does not work during race." + "\n" );
+    }
+    else if ( command == "position" && subcommand == "find" )
+    {
+        client.printMessage( S_COLOR_YELLOW + "/position find <start|finish>" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Teleports you to the start or finish trigger." + "\n" );
         client.printMessage( S_COLOR_WHITE + "  Note: This command does not work during race." + "\n" );
     }
     else if ( command == "position" && subcommand == "join" )

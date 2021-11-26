@@ -1380,6 +1380,47 @@ class Player
         }
     }
 
+    bool findPosition( String entity )
+    {
+        Entity@ ent = this.client.getEnt();
+
+        if ( !this.practicing && this.client.team != TEAM_SPECTATOR )
+        {
+            G_PrintMsg( ent, "Position loading is not available during a race.\n" );
+            return false;
+        }
+
+        Vec3 origin;
+
+        if ( entity == "start" )
+        {
+            if ( !hasStart )
+            {
+                G_PrintMsg( ent, "No trigger_multiple targetting a target_starttimer found.\n" );
+                return true;
+            }
+            origin = startPosition;
+        }
+        else if ( entity = "finish" )
+        {
+            if ( !hasFinish )
+            {
+                G_PrintMsg( ent, "No trigger_multiple targetting a target_stoptimer found.\n" );
+                return true;
+            }
+            origin = finishPosition;
+        }
+        else
+        {
+            G_PrintMsg( ent, "Usage: /position find <start|finish>.\n" );
+            return false;
+        }
+
+        ent.origin = origin;
+
+        return true;
+    }
+
     bool joinPosition( String pattern )
     {
         Entity@ ent = this.client.getEnt();
