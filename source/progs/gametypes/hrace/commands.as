@@ -533,7 +533,7 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         client.printMessage( S_COLOR_YELLOW + "/position recall end" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Moves to the last recalled position." + "\n" );
         client.printMessage( S_COLOR_YELLOW + "/position recall extend" + "\n" );
-        client.printMessage( S_COLOR_WHITE + "- Toggles automatically extending recall runs." + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Toggles automatically extending recall runs and enabling the start timer in practicemode." + "\n" );
         client.printMessage( S_COLOR_YELLOW + "/position recall cpX" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Moves to the first position past checkpoint X." + "\n" );
         client.printMessage( S_COLOR_YELLOW + "/position recall rl" + "\n" );
