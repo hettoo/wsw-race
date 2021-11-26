@@ -661,12 +661,16 @@ void GT_SpawnGametype()
                 {
                     ent.wait = 0;
                     hasStart = true;
-                    startPosition = ent.origin;
+                    Vec3 mins, maxs;
+                    ent.getSize( mins, maxs );
+                    startPosition = ent.origin + 0.5 * mins + 0.5 * maxs;
                 }
                 else if ( target.classname == "target_stoptimer" )
                 {
                     hasFinish = true;
-                    finishPosition = ent.origin;
+                    Vec3 mins, maxs;
+                    ent.getSize( mins, maxs );
+                    finishPosition = ent.origin + 0.5 * mins + 0.5 * maxs;
                 }
             }
         }
