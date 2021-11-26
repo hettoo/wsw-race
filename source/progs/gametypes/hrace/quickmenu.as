@@ -13,7 +13,7 @@ enum eMenuItems
 
 array<const String@> menuItems = {
     '"" ""',
-    '"Restart race" "racerestart"',
+    '"Restart race" "kill"',
     '"Enter practice mode" "practicemode" ',
     '"Leave practice mode" "practicemode" ',
     '"Enable noclip mode" "noclip" ',
