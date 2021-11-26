@@ -438,6 +438,9 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         cmdlist.addCell( "/position speed" );
         cmdlist.addCell( "Sets the speed at which you spawn in practicemode." );
 
+        cmdlist.addCell( "/position recall" );
+        cmdlist.addCell( "Cycle through positions of your last run in practicemode." );
+
         cmdlist.addCell( "/position clear" );
         cmdlist.addCell( "Resets your weapons and spawn position to their defaults." );
 
