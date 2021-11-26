@@ -602,7 +602,7 @@ class Player
 
         Entity@ ent = this.client.getEnt();
 
-        if ( !this.inRace && ( !this.practicing || !this.recalled || !this.autoRecall || ent.moveType != MOVETYPE_PLAYER ) )
+        if ( !this.inRace && ( this.client.team == TEAM_SPECTATOR || !this.practicing || !this.recalled || !this.autoRecall || ent.moveType != MOVETYPE_PLAYER ) )
             return;
 
         Vec3 mins, maxs;
