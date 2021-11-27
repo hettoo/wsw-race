@@ -1,3 +1,5 @@
+Cvar race_toplists( "race_toplists", "", CVAR_ARCHIVE );
+
 bool Cmd_GametypeMenu( Client@ client, const String &cmdString, const String &argsString, int argc )
 {
     client.execGameCommand( "meop racemod_main" );
@@ -548,7 +550,9 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
     {
         client.printMessage( S_COLOR_YELLOW + "/top" + " [mapname]\n" );
         client.printMessage( S_COLOR_WHITE + "- Shows a list of the top record times for the current/provided map along with the names and time" + "\n" );
-        client.printMessage( S_COLOR_WHITE + "  difference compared to the number 1 time. To see all lists visit: http://livesow.net/race." + "\n" );
+        client.printMessage( S_COLOR_WHITE + "  difference compared to the number 1 time." + "\n" );
+        if ( race_toplists.string != "" )
+            client.printMessage( S_COLOR_WHITE + "  To see all lists visit: " + race_toplists.string + "." + "\n" );
     }
     else if ( command == "maplist" )
     {

@@ -974,12 +974,12 @@ class Player
 
                         if ( levelRecords[0].finishTime == 0 )
                         {
-                          G_PrintMsg( null, this.client.name + S_COLOR_YELLOW + " set a new ^2livesow.net ^3record: "
+                          G_PrintMsg( null, this.client.name + S_COLOR_YELLOW + " set a new " + S_COLOR_GREEN + race_servername.string + " " + S_COLOR_YELLOW + "record: "
                                   + S_COLOR_GREEN + RACE_TimeToString( this.finishTime ) + "\n" );
                         }
                         else
                         {
-                          G_PrintMsg( null, this.client.name + S_COLOR_YELLOW + " set a new ^2livesow.net ^3record: "
+                          G_PrintMsg( null, this.client.name + S_COLOR_YELLOW + " set a new " + S_COLOR_GREEN + race_servername.string + " " + S_COLOR_YELLOW + "record: "
                                   + S_COLOR_GREEN + RACE_TimeToString( this.finishTime ) + " " + S_COLOR_YELLOW + "[-" + RACE_TimeToString( levelRecords[0].finishTime - this.finishTime ) + "]\n" );
                         }
                     }

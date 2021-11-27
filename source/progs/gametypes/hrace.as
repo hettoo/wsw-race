@@ -17,6 +17,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+Cvar race_servername( "race_servername", "server", CVAR_ARCHIVE );
+Cvar race_RulesFile( "race_rulesfile", "", CVAR_ARCHIVE );
+Cvar race_forceFiles( "race_forcefiles", "", CVAR_ARCHIVE );
+
 enum Verbosity {
     Verbosity_Silent,
     Verbosity_Verbose,
@@ -112,6 +116,10 @@ void RACE_SetUpMatch()
 uint[] rules_timestamp( maxClients );
 void RACE_ShowRules(Client@ client, int delay)
 {
+    String filename = race_RulesFile.string;
+    if ( filename == "" )
+        return;
+
     if ( delay > 0 )
     {
         rules_timestamp[client.playerNum] = levelTime + delay;
@@ -119,23 +127,20 @@ void RACE_ShowRules(Client@ client, int delay)
     }
     rules_timestamp[client.playerNum] = 0;
 
-    //client.printMessage( S_COLOR_WHITE + "Due to recent events, this server will enforce the following rules:\n" );
-    //client.printMessage( S_COLOR_WHITE + "\n" );
-    client.printMessage( S_COLOR_WHITE + "\u2022 Be respectful towards other players\n" );
-    client.printMessage( S_COLOR_WHITE + "\u2022 No bigotry or hate speech\n" );
-    client.printMessage( S_COLOR_WHITE + "\u2022 No threats or provocative behaviour towards players or admins\n" );
-    client.printMessage( S_COLOR_WHITE + "\u2022 No attempts to cause lag on the server by any means\n" );
-    client.printMessage( S_COLOR_WHITE + "\u2022 No forced attacks against livesow or warsow affiliated services\n" );
-    client.printMessage( S_COLOR_WHITE + "\u2022 No spreading of harmful software\n" );
-    client.printMessage( S_COLOR_WHITE + "\u2022 No promoting of illegal activities\n" );
-    client.printMessage( S_COLOR_WHITE + "\u2022 No evading of bans or mutes\n" );
-    client.printMessage( S_COLOR_WHITE + "\u2022 All hail our duck overlords\n" );
-    client.printMessage( S_COLOR_WHITE + "\n" );
-    client.printMessage( S_COLOR_WHITE + "Breaking any of these rules can result in a ban.\n" );
-    client.printMessage( S_COLOR_WHITE + "If you are banned or have any objection towards these rules,\n" );
-    client.printMessage( S_COLOR_WHITE + "feel free to contact an admin on #livesow @ irc.quakenet.org\n" );
+    G_Print( "Showing rules to: " + client.name + "\n" );
 
-    G_Print("Showing rules to: "+client.name+"\n");
+    String messages = G_LoadFile( filename );
+    while ( messages != "" )
+    {
+        uint end = messages.locate( "\n", 0 );
+        if ( end < messages.length() )
+        {
+            client.printMessage( S_COLOR_WHITE + messages.substr( 0, end + 1 ) );
+            messages = messages.substr( end + 1 );
+        }
+        else
+            client.printMessage( S_COLOR_WHITE + messages + "\n" );
+    }
 }
 
 void RACE_ShowIntro(Client@ client)
@@ -143,6 +148,17 @@ void RACE_ShowIntro(Client@ client)
     if ( client.getUserInfoKey("racemod_seenintro").toInt() == 0 )
     {
         client.execGameCommand("meop racemod_main");
+    }
+}
+
+void RACE_ForceFiles()
+{
+    // msc: force pk3 download
+    String token = race_forceFiles.string.getToken( 0 );
+    for ( int i = 1; token != ""; i++ )
+    {
+        G_SoundIndex( token, true );
+        token = race_forceFiles.string.getToken( i );
     }
 }
 
@@ -808,9 +824,7 @@ void GT_InitGametype()
     practiceModeMsg = G_RegisterHelpMessage(S_COLOR_CYAN + "Practicing");
     defaultMsg = G_RegisterHelpMessage(" ");
 
-    // msc: force pk3 download
-    G_SoundIndex( "racemod_ui_v3.txt", true );
-    G_SoundIndex( "missing_tex.txt", true );
+    RACE_ForceFiles();
 
     demoRecording = false;
 
