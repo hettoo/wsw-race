@@ -16,6 +16,8 @@ class Player
     int positionInterval;
     uint[] sectorTimes;
     uint[] bestSectorTimes;
+    int[] sectorOrder;
+    int[] bestSectorOrder;
     uint startTime;
     uint finishTime;
     bool hasTime;
@@ -59,6 +61,8 @@ class Player
         this.messageTimes.resize( MAX_FLOOD_MESSAGES );
         this.sectorTimes.resize( size );
         this.bestSectorTimes.resize( size );
+        this.sectorOrder.resize( size );
+        this.bestSectorOrder.resize( size );
         this.runPositions.resize( MAX_POSITIONS );
         this.bestRunPositions.resize( MAX_POSITIONS );
         this.arraysSetUp = true;
@@ -112,6 +116,8 @@ class Player
         {
             this.sectorTimes[i] = 0;
             this.bestSectorTimes[i] = 0;
+            this.sectorOrder[i] = -1;
+            this.bestSectorOrder[i] = -1;
         }
     }
 
@@ -584,7 +590,10 @@ class Player
         }
 
         for ( int i = 0; i < numCheckpoints; i++ )
+        {
             this.sectorTimes[i] = 0;
+            this.sectorOrder[i] = -1;
+        }
 
         this.report.reset();
 
@@ -808,7 +817,10 @@ class Player
 
         this.practiceReport.reset();
         for ( int i = 0; i < numCheckpoints; i++ )
+        {
             this.sectorTimes[i] = 0;
+            this.sectorOrder[i] = -1;
+        }
 
         this.inRace = false;
         this.postRace = false;
@@ -948,7 +960,10 @@ class Player
                 // copy all the sectors into the new personal record backup
                 this.setBestTime( this.finishTime, this.maxSpeed );
                 for ( int i = 0; i < numCheckpoints; i++ )
+                {
                     this.bestSectorTimes[i] = this.sectorTimes[i];
+                    this.bestSectorOrder[i] = this.sectorOrder[i];
+                }
 
                 this.bestRunPositionCount = this.runPositionCount;
                 for ( int i = 0; i < this.runPositionCount; i++ )
@@ -1063,6 +1078,7 @@ class Player
             return false;
 
         this.sectorTimes[id] = this.raceTime();
+        this.sectorOrder[this.currentSector] = id;
 
         // send this checkpoint to MM
         if ( !this.practicing )
@@ -1472,6 +1488,100 @@ class Player
         a.normalize();
         position.velocity = a * speed;
         position.recalled = false;
+        return true;
+    }
+
+    bool showCPs()
+    {
+        Entity@ ent = this.client.getEnt();
+        if ( this.bestFinishTime == 0 )
+        {
+            G_PrintMsg( ent, "You haven't finished yet.\n" );
+            return false;
+        }
+
+        Table table( S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "r" + S_COLOR_ORANGE + " / l r " + S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "l" );
+        int i;
+        for ( i = 0; i < numCheckpoints && this.bestSectorOrder[i] >= 0; i++ )
+        {
+            uint time = this.bestSectorTimes[this.bestSectorOrder[i]];
+            if ( i > 0 )
+                time -= this.bestSectorTimes[this.bestSectorOrder[i - 1]];
+
+            bool bestSet = false;
+            uint best = 0;
+            String bestName;
+            for ( int j = 0; j < DISPLAY_RECORDS && levelRecords[j].saved; j++ )
+            {
+                uint other = levelRecords[j].sectorTimes[this.bestSectorOrder[i]];
+                uint previous = 0;
+                if ( i > 0 )
+                {
+                    previous = levelRecords[j].sectorTimes[this.bestSectorOrder[i - 1]];
+                    other -= previous;
+                }
+                if ( other != 0 && ( i == 0 || previous != 0 ) )
+                {
+                    if ( !bestSet || other < best )
+                    {
+                        bestSet = true;
+                        best = other;
+                        bestName = levelRecords[j].playerName;
+                    }
+                }
+            }
+
+            if ( bestSet )
+            {
+                table.addCell( "CP" + ( i + 1 ) + ":" );
+                table.addCell( RACE_TimeToString( time ) );
+                table.addCell( "Server:" );
+                table.addCell( RACE_TimeDiffString( time, best, false ) );
+                table.addCell( "by" );
+                table.addCell( bestName );
+            }
+        }
+
+        uint time = this.bestFinishTime;
+        if ( i > 0 )
+            time -= this.bestSectorTimes[this.bestSectorOrder[i - 1]];
+        bool bestSet = false;
+        uint best = 0;
+        String bestName;
+        for ( int j = 0; j < DISPLAY_RECORDS && levelRecords[j].saved; j++ )
+        {
+            uint other = levelRecords[j].finishTime;
+            uint previous = 0;
+            if ( i > 0 )
+            {
+                previous = levelRecords[j].sectorTimes[this.bestSectorOrder[i - 1]];
+                other -= previous;
+            }
+            if ( i == 0 || previous != 0 )
+            {
+                if ( !bestSet || other < best )
+                {
+                    bestSet = true;
+                    best = other;
+                    bestName = levelRecords[j].playerName;
+                }
+            }
+        }
+
+        if ( bestSet )
+        {
+            table.addCell( "Finish:" );
+            table.addCell( RACE_TimeToString( time ) );
+            table.addCell( "Server:" );
+            table.addCell( RACE_TimeDiffString( time, best, false ) );
+            table.addCell( "by" );
+            table.addCell( bestName );
+        }
+
+        uint rows = table.numRows();
+        for ( uint j = 0; j < rows; j++ )
+            G_PrintMsg( ent, table.getRow( j ) + "\n" );
+
         return true;
     }
 }

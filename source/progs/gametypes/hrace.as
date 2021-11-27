@@ -168,38 +168,7 @@ void RACE_ForceFiles()
 
 bool GT_Command( Client@ client, const String &cmdString, const String &argsString, int argc )
 {
-    if ( cmdString == "gametypemenu" )
-        return Cmd_GametypeMenu( client, cmdString, argsString, argc );
-    else if ( cmdString == "gametype" )
-        return Cmd_Gametype( client, cmdString, argsString, argc );
-    else if ( cmdString == "cvarinfo" )
-        return Cmd_CvarInfo( client, cmdString, argsString, argc );
-    else if ( cmdString == "callvotevalidate" )
-        return Cmd_CallvoteValidate( client, cmdString, argsString, argc );
-    else if ( cmdString == "callvotepassed" )
-        return Cmd_CallvotePassed( client, cmdString, argsString, argc );
-    else if ( cmdString == "m" )
-        return Cmd_PrivateMessage( client, cmdString, argsString, argc );
-    else if ( cmdString == "racerestart" || cmdString == "kill" || cmdString == "join" )
-        return Cmd_RaceRestart( client, cmdString, argsString, argc );
-    else if ( cmdString == "practicemode" )
-        return Cmd_Practicemode( client, cmdString, argsString, argc );
-    else if ( cmdString == "noclip" )
-        return Cmd_Noclip( client, cmdString, argsString, argc );
-    else if ( cmdString == "position" )
-        return Cmd_Position( client, cmdString, argsString, argc );
-    else if ( cmdString == "top" )
-        return Cmd_Top( client, cmdString, argsString, argc );
-    else if ( cmdString == "maplist" )
-        return Cmd_Maplist( client, cmdString, argsString, argc );
-    else if ( cmdString == "help" )
-        return Cmd_Help( client, cmdString, argsString, argc );
-    else if ( cmdString == "rules")
-        return Cmd_Rules( client, cmdString, argsString, argc );
-
-    G_PrintMsg( null, "unknown: " + cmdString + "\n" );
-
-    return false;
+    return RACE_HandleCommand( client, cmdString, argsString, argc );
 }
 
 // When this function is called the weights of items have been reset to their default values,
@@ -802,20 +771,7 @@ void GT_InitGametype()
     G_ConfigString( CS_SCB_PLAYERTAB_LAYOUT, "%n 112 %s 52 %s 32 %t 80 %s 36 %s 48 %l 40 %s 48" );
     G_ConfigString( CS_SCB_PLAYERTAB_TITLES, "Name Clan Pos Time Diff Speed Ping Racing" );
 
-    // add commands
-    G_RegisterCommand( "gametype" );
-    G_RegisterCommand( "gametypemenu" );
-    G_RegisterCommand( "m" );
-    G_RegisterCommand( "racerestart" );
-    G_RegisterCommand( "kill" );
-    G_RegisterCommand( "join" );
-    G_RegisterCommand( "practicemode" );
-    G_RegisterCommand( "noclip" );
-    G_RegisterCommand( "position" );
-    G_RegisterCommand( "top" );
-    G_RegisterCommand( "maplist" );
-    G_RegisterCommand( "help" );
-    G_RegisterCommand( "rules" );
+    RACE_RegisterCommands();
 
     // add votes
     G_RegisterCallvote( "randmap", "<* | pattern>", "string", "Changes to a random map" );

@@ -336,6 +336,11 @@ bool Cmd_Top( Client@ client, const String &cmdString, const String &argsString,
     return true;
 }
 
+bool Cmd_CPs( Client@ client, const String &cmdString, const String &argsString, int argc )
+{
+    return RACE_GetPlayer( client ).showCPs();
+}
+
 const uint MAPS_PER_PAGE = 30;
 uint[] maplist_page( maxClients );
 
@@ -450,6 +455,9 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         cmdlist.addCell( "/top" );
         cmdlist.addCell( "Shows the top record times for the current map." );
 
+        cmdlist.addCell( "/cps" );
+        cmdlist.addCell( "Shows your times between checkpoints for the current map." );
+
         cmdlist.addCell( "/m" );
         cmdlist.addCell( "Lets you send a private message." );
 
@@ -554,6 +562,11 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         if ( race_toplists.string != "" )
             client.printMessage( S_COLOR_WHITE + "  To see all lists visit: " + race_toplists.string + "." + "\n" );
     }
+    else if ( command == "cps" )
+    {
+        client.printMessage( S_COLOR_YELLOW + "/cps" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Shows your times between checkpoints on the current map and compares to the best recorded times." + "\n" );
+    }
     else if ( command == "maplist" )
     {
         client.printMessage( S_COLOR_YELLOW + "/maplist <* | pattern> [<page# | prev | next>]" + "\n" );
@@ -584,4 +597,60 @@ bool Cmd_Rules( Client@ client, const String &cmdString, const String &argsStrin
 {
     RACE_ShowRules(client, 0);
     return true;
+}
+
+bool RACE_HandleCommand( Client@ client, const String &cmdString, const String &argsString, int argc )
+{
+    if ( cmdString == "gametypemenu" )
+        return Cmd_GametypeMenu( client, cmdString, argsString, argc );
+    else if ( cmdString == "gametype" )
+        return Cmd_Gametype( client, cmdString, argsString, argc );
+    else if ( cmdString == "cvarinfo" )
+        return Cmd_CvarInfo( client, cmdString, argsString, argc );
+    else if ( cmdString == "callvotevalidate" )
+        return Cmd_CallvoteValidate( client, cmdString, argsString, argc );
+    else if ( cmdString == "callvotepassed" )
+        return Cmd_CallvotePassed( client, cmdString, argsString, argc );
+    else if ( cmdString == "m" )
+        return Cmd_PrivateMessage( client, cmdString, argsString, argc );
+    else if ( cmdString == "racerestart" || cmdString == "kill" || cmdString == "join" )
+        return Cmd_RaceRestart( client, cmdString, argsString, argc );
+    else if ( cmdString == "practicemode" )
+        return Cmd_Practicemode( client, cmdString, argsString, argc );
+    else if ( cmdString == "noclip" )
+        return Cmd_Noclip( client, cmdString, argsString, argc );
+    else if ( cmdString == "position" )
+        return Cmd_Position( client, cmdString, argsString, argc );
+    else if ( cmdString == "top" )
+        return Cmd_Top( client, cmdString, argsString, argc );
+    else if ( cmdString == "cps" )
+        return Cmd_CPs( client, cmdString, argsString, argc );
+    else if ( cmdString == "maplist" )
+        return Cmd_Maplist( client, cmdString, argsString, argc );
+    else if ( cmdString == "help" )
+        return Cmd_Help( client, cmdString, argsString, argc );
+    else if ( cmdString == "rules")
+        return Cmd_Rules( client, cmdString, argsString, argc );
+
+    G_PrintMsg( null, "unknown: " + cmdString + "\n" );
+
+    return false;
+}
+
+void RACE_RegisterCommands()
+{
+    G_RegisterCommand( "gametype" );
+    G_RegisterCommand( "gametypemenu" );
+    G_RegisterCommand( "m" );
+    G_RegisterCommand( "racerestart" );
+    G_RegisterCommand( "kill" );
+    G_RegisterCommand( "join" );
+    G_RegisterCommand( "practicemode" );
+    G_RegisterCommand( "noclip" );
+    G_RegisterCommand( "position" );
+    G_RegisterCommand( "top" );
+    G_RegisterCommand( "cps" );
+    G_RegisterCommand( "maplist" );
+    G_RegisterCommand( "help" );
+    G_RegisterCommand( "rules" );
 }
