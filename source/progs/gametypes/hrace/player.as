@@ -1561,7 +1561,7 @@ class Player
                 table.addCell( RACE_TimeToString( time ) );
                 table.addCell( "Server:" );
                 table.addCell( RACE_TimeDiffString( time, best, false ) );
-                table.addCell( "by" );
+                table.addCell( "from" );
                 table.addCell( bestName );
             }
         }
