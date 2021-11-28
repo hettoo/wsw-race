@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 Cvar race_servername( "race_servername", "server", CVAR_ARCHIVE );
-Cvar race_RulesFile( "race_rulesfile", "", CVAR_ARCHIVE );
+Cvar race_rulesFile( "race_rulesfile", "", CVAR_ARCHIVE );
 Cvar race_forceFiles( "race_forcefiles", "", CVAR_ARCHIVE );
 
 enum Verbosity {
@@ -116,7 +116,7 @@ void RACE_SetUpMatch()
 uint[] rules_timestamp( maxClients );
 void RACE_ShowRules(Client@ client, int delay)
 {
-    String filename = race_RulesFile.string;
+    String filename = race_rulesFile.string;
     if ( filename == "" )
         return;
 
@@ -130,16 +130,15 @@ void RACE_ShowRules(Client@ client, int delay)
     G_Print( "Showing rules to: " + client.name + "\n" );
 
     String messages = G_LoadFile( filename );
-    while ( messages != "" )
+    int len = messages.length();
+    int i = 0;
+    while ( i < len )
     {
-        uint end = messages.locate( "\n", 0 );
-        if ( end < messages.length() )
-        {
-            client.printMessage( S_COLOR_WHITE + messages.substr( 0, end + 1 ) );
-            messages = messages.substr( end + 1 );
-        }
-        else
-            client.printMessage( S_COLOR_WHITE + messages + "\n" );
+        int current = 0;
+        while ( i + current < len && messages.substr( i + current, 1 ) != "\n" )
+            current++;
+        client.printMessage( S_COLOR_WHITE + messages.substr( i, current ) + "\n" );
+        i += current + 1;
     }
 }
 
