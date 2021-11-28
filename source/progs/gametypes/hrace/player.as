@@ -1077,12 +1077,16 @@ class Player
         if ( !this.validTime() ) // something is very wrong here
             return false;
 
-        this.sectorTimes[id] = this.raceTime();
-        this.sectorOrder[this.currentSector] = id;
+        uint time = this.raceTime();
+        this.sectorTimes[id] = time;
 
-        // send this checkpoint to MM
         if ( !this.practicing )
-            this.client.setRaceTime( id, this.sectorTimes[id] );
+        {
+            this.sectorOrder[this.currentSector] = id;
+
+            // send this checkpoint to MM
+            this.client.setRaceTime( id, time );
+        }
 
         // print some output and give awards if earned
 
@@ -1090,11 +1094,11 @@ class Player
             str = S_COLOR_CYAN;
         else
             str = S_COLOR_WHITE;
-        str += "Current: " + S_COLOR_WHITE + RACE_TimeToString( this.sectorTimes[id] );
+        str += "Current: " + S_COLOR_WHITE + RACE_TimeToString( time );
 
         for ( int i = 0; i < MAX_RECORDS; i++ )
         {
-            if ( this.sectorTimes[id] < levelRecords[i].sectorTimes[id] )
+            if ( time < levelRecords[i].sectorTimes[id] )
             {
                 str += " (" + S_COLOR_GREEN + "#" + ( i + 1 ) + S_COLOR_WHITE + ")"; // extra id when on server record beating time
                 break;
@@ -1103,7 +1107,7 @@ class Player
 
         Entity@ ent = this.client.getEnt();
 
-        G_CenterPrintMsg( ent, str + "\n" + RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id], true ) );
+        G_CenterPrintMsg( ent, str + "\n" + RACE_TimeDiffString( time, this.bestSectorTimes[id], true ) );
 
         this.updateMaxSpeed();
 
@@ -1114,21 +1118,21 @@ class Player
             String line1 = "";
             String line2 = "";
 
-            if ( this.hasTime && this.sectorTimes[id] != 0 )
+            if ( this.hasTime && time != 0 )
             {
-                line1 += "\u00A0   Current: " + RACE_TimeToString( this.sectorTimes[id] ) + "   \u00A0";
-                line2 += "\u00A0           " + RACE_TimeDiffString(this.sectorTimes[id], this.bestSectorTimes[id], true) + "           \u00A0";
+                line1 += "\u00A0   Current: " + RACE_TimeToString( time ) + "   \u00A0";
+                line2 += "\u00A0           " + RACE_TimeDiffString(time, this.bestSectorTimes[id], true) + "           \u00A0";
             }
             else
             {
-                line1 += "\u00A0   Current: " + RACE_TimeToString( this.sectorTimes[id] ) + "   \u00A0";
+                line1 += "\u00A0   Current: " + RACE_TimeToString( time ) + "   \u00A0";
                 line2 += "\u00A0           " + "                    " + "           \u00A0";
             }
 
             if ( spec_player.hasTime && spec_player.bestSectorTimes[id] != 0 )
             {
                 line1 = "\u00A0  Personal:    " + "          " + line1;
-                line2 = RACE_TimeDiffString(this.sectorTimes[id], spec_player.bestSectorTimes[id], true) + "          " + line2;
+                line2 = RACE_TimeDiffString(time, spec_player.bestSectorTimes[id], true) + "          " + line2;
             }
             else if ( levelRecords[0].finishTime != 0 )
             {
@@ -1139,7 +1143,7 @@ class Player
             if ( levelRecords[0].finishTime != 0 && levelRecords[0].sectorTimes[id] != 0 )
             {
                 line1 += "\u00A0          " + "Server:     \u00A0";
-                line2 += "\u00A0      " + RACE_TimeDiffString(this.sectorTimes[id], levelRecords[0].sectorTimes[id], true) + "\u00A0";
+                line2 += "\u00A0      " + RACE_TimeDiffString(time, levelRecords[0].sectorTimes[id], true) + "\u00A0";
             }
 
             G_CenterPrintMsg(specs[i].getEnt(), line1 + "\n" + line2);
@@ -1152,11 +1156,11 @@ class Player
             @report = @this.report;
 
         report.addCell( "CP" + (this.currentSector + 1) + ":" );
-        report.addCell( RACE_TimeToString( this.sectorTimes[id] ) );
+        report.addCell( RACE_TimeToString( time ) );
         report.addCell( "Personal:" );
-        report.addCell( RACE_TimeDiffString( this.sectorTimes[id], this.bestSectorTimes[id], false ) );
+        report.addCell( RACE_TimeDiffString( time, this.bestSectorTimes[id], false ) );
         report.addCell( "Server:" );
-        report.addCell( RACE_TimeDiffString( this.sectorTimes[id], levelRecords[0].sectorTimes[id], false ) );
+        report.addCell( RACE_TimeDiffString( time, levelRecords[0].sectorTimes[id], false ) );
         report.addCell( "Speed:" );
         report.addCell( this.getSpeed() + "" );
         if ( this.practicing )
@@ -1173,12 +1177,12 @@ class Player
         if ( !this.practicing )
         {
             // if beating the level record on this sector give an award
-            if ( this.sectorTimes[id] < levelRecords[0].sectorTimes[id] )
+            if ( time < levelRecords[0].sectorTimes[id] )
             {
                 this.client.addAward( "Server record on CP" + (this.currentSector + 1) + "!" );
             }
-            // if beating his own record on this sector give an award
-            else if ( this.sectorTimes[id] < this.bestSectorTimes[id] )
+            // if beating own record on this sector give an award
+            else if ( time < this.bestSectorTimes[id] )
             {
                 // ch : does racesow apply sector records only if race is completed?
                 this.client.addAward( "Personal record on CP" + (this.currentSector + 1) + "!" );
