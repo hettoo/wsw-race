@@ -258,7 +258,7 @@ bool Cmd_Position( Client@ client, const String &cmdString, const String &argsSt
         else if ( option == "end" )
             return player.recallEnd();
         else if ( option == "extend" )
-            return player.recallExtend();
+            return player.recallExtend( argsString.getToken( 2 ).tolower() );
         else if ( option.substr( 0, 2 ) == "cp" )
         {
             int cp = option.substr( 2 ).toInt();

@@ -1334,9 +1334,14 @@ class Player
         return this.recallPosition( -this.positionCycle - 1 );
     }
 
-    bool recallExtend()
+    bool recallExtend( String option )
     {
-        this.autoRecall = !this.autoRecall;
+        if ( option == "on" )
+            this.autoRecall = true;
+        else if ( option == "off" )
+            this.autoRecall = false;
+        else
+            this.autoRecall = !this.autoRecall;
         Entity@ ent = this.client.getEnt();
         if ( this.autoRecall )
             G_PrintMsg( ent, "Auto recall extend ON.\n" );
