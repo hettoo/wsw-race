@@ -1612,7 +1612,7 @@ class Player
                 improve += "CP" + worst;
             improve += " and ";
             if ( worst == i )
-                improve += "FINISH";
+                improve += "END";
             else
                 improve += "CP" + ( worst + 1 );
             G_PrintMsg( ent, improve + "\n" );
