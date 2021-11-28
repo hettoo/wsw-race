@@ -1514,9 +1514,15 @@ class Player
             bool bestSet = false;
             uint best = 0;
             String bestName;
+            bool missing = false;
             for ( int j = 0; j < DISPLAY_RECORDS && levelRecords[j].saved; j++ )
             {
                 uint other = levelRecords[j].sectorTimes[this.bestSectorOrder[i]];
+                if ( !missing && other == 0 )
+                {
+                    G_PrintMsg( ent, levelRecords[j].playerName + S_COLOR_ORANGE + " is missing CP" + ( i + 1 ) + "\n" );
+                    missing = true;
+                }
                 uint previous = 0;
                 if ( i > 0 )
                 {
