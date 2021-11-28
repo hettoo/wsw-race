@@ -1500,6 +1500,9 @@ class Player
             return false;
         }
 
+        int worst = -1;
+        uint worstDiff = 0;
+
         Table table( S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "r" + S_COLOR_ORANGE + " / l r " + S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "l" );
         int i;
         for ( i = 0; i < numCheckpoints && this.bestSectorOrder[i] >= 0; i++ )
@@ -1533,6 +1536,12 @@ class Player
 
             if ( bestSet )
             {
+                uint diff = time - best;
+                if ( best < time && ( worst < 0 || diff > worstDiff ) )
+                {
+                    worst = i;
+                    worstDiff = diff;
+                }
                 table.addCell( "CP" + ( i + 1 ) + ":" );
                 table.addCell( RACE_TimeToString( time ) );
                 table.addCell( "Server:" );
@@ -1570,6 +1579,13 @@ class Player
 
         if ( bestSet )
         {
+            uint diff = time - best;
+            if ( best < time && ( worst < 0 || diff > worstDiff ) )
+            {
+                worst = i;
+                worstDiff = diff;
+            }
+
             table.addCell( "Finish:" );
             table.addCell( RACE_TimeToString( time ) );
             table.addCell( "Server:" );
@@ -1581,6 +1597,20 @@ class Player
         uint rows = table.numRows();
         for ( uint j = 0; j < rows; j++ )
             G_PrintMsg( ent, table.getRow( j ) + "\n" );
+        if ( worst >= 0 )
+        {
+            String improve = S_COLOR_ORANGE + "Worst loss between ";
+            if ( worst == 0 )
+                improve += "START";
+            else
+                improve += "CP" + worst;
+            improve += " and ";
+            if ( worst == i )
+                improve += "FINISH";
+            else
+                improve += "CP" + ( worst + 1 );
+            G_PrintMsg( ent, improve + "\n" );
+        }
 
         return true;
     }
