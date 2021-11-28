@@ -930,7 +930,7 @@ class Player
         else
             @report = @this.report;
 
-        report.addCell( "Finish:" );
+        report.addCell( "End:" );
         report.addCell( RACE_TimeToString( this.finishTime ) );
         report.addCell( "Personal:" );
         report.addCell( RACE_TimeDiffString( this.finishTime, this.bestFinishTime, false ) );
@@ -1592,7 +1592,7 @@ class Player
                 worstDiff = diff;
             }
 
-            table.addCell( "Finish:" );
+            table.addCell( "End:" );
             table.addCell( RACE_TimeToString( time ) );
             table.addCell( "Server:" );
             table.addCell( RACE_TimeDiffString( time, best, false ) );
