@@ -1500,7 +1500,7 @@ class Player
         return true;
     }
 
-    bool showCPs()
+    bool showCPs( String pattern )
     {
         Entity@ ent = this.client.getEnt();
         if ( this.bestFinishTime == 0 )
@@ -1508,6 +1508,8 @@ class Player
             G_PrintMsg( ent, "You haven't finished yet.\n" );
             return false;
         }
+
+        pattern = pattern.removeColorTokens().tolower();
 
         int worst = -1;
         uint worstDiff = 0;
@@ -1526,25 +1528,28 @@ class Player
             bool missing = false;
             for ( int j = 0; j < DISPLAY_RECORDS && levelRecords[j].saved; j++ )
             {
-                uint other = levelRecords[j].sectorTimes[this.bestSectorOrder[i]];
-                if ( !missing && other == 0 )
+                if( pattern == "" || PatternMatch( levelRecords[j].playerName.removeColorTokens().tolower(), pattern ) )
                 {
-                    G_PrintMsg( ent, S_COLOR_ORANGE + "CP" + ( i + 1 ) + " is missing for " + S_COLOR_WHITE + levelRecords[j].playerName + "\n" );
-                    missing = true;
-                }
-                uint previous = 0;
-                if ( i > 0 )
-                {
-                    previous = levelRecords[j].sectorTimes[this.bestSectorOrder[i - 1]];
-                    other -= previous;
-                }
-                if ( other != 0 && ( i == 0 || previous != 0 ) )
-                {
-                    if ( !bestSet || other < best )
+                    uint other = levelRecords[j].sectorTimes[this.bestSectorOrder[i]];
+                    if ( !missing && other == 0 )
                     {
-                        bestSet = true;
-                        best = other;
-                        bestName = levelRecords[j].playerName;
+                        G_PrintMsg( ent, S_COLOR_ORANGE + "CP" + ( i + 1 ) + " is missing for " + S_COLOR_WHITE + levelRecords[j].playerName + "\n" );
+                        missing = true;
+                    }
+                    uint previous = 0;
+                    if ( i > 0 )
+                    {
+                        previous = levelRecords[j].sectorTimes[this.bestSectorOrder[i - 1]];
+                        other -= previous;
+                    }
+                    if ( other != 0 && ( i == 0 || previous != 0 ) )
+                    {
+                        if ( !bestSet || other < best )
+                        {
+                            bestSet = true;
+                            best = other;
+                            bestName = levelRecords[j].playerName;
+                        }
                     }
                 }
             }
@@ -1559,7 +1564,10 @@ class Player
                 }
                 table.addCell( "CP" + ( i + 1 ) + ":" );
                 table.addCell( RACE_TimeToString( time ) );
-                table.addCell( "Server:" );
+                if ( pattern == "" )
+                    table.addCell( "Server:" );
+                else
+                    table.addCell( "Reference:" );
                 table.addCell( RACE_TimeDiffString( time, best, false ) );
                 table.addCell( "from" );
                 table.addCell( bestName );
@@ -1574,20 +1582,23 @@ class Player
         String bestName;
         for ( int j = 0; j < DISPLAY_RECORDS && levelRecords[j].saved; j++ )
         {
-            uint other = levelRecords[j].finishTime;
-            uint previous = 0;
-            if ( i > 0 )
+            if( pattern == "" || PatternMatch( levelRecords[j].playerName.removeColorTokens().tolower(), pattern ) )
             {
-                previous = levelRecords[j].sectorTimes[this.bestSectorOrder[i - 1]];
-                other -= previous;
-            }
-            if ( i == 0 || previous != 0 )
-            {
-                if ( !bestSet || other < best )
+                uint other = levelRecords[j].finishTime;
+                uint previous = 0;
+                if ( i > 0 )
                 {
-                    bestSet = true;
-                    best = other;
-                    bestName = levelRecords[j].playerName;
+                    previous = levelRecords[j].sectorTimes[this.bestSectorOrder[i - 1]];
+                    other -= previous;
+                }
+                if ( i == 0 || previous != 0 )
+                {
+                    if ( !bestSet || other < best )
+                    {
+                        bestSet = true;
+                        best = other;
+                        bestName = levelRecords[j].playerName;
+                    }
                 }
             }
         }
@@ -1603,7 +1614,10 @@ class Player
 
             table.addCell( "End:" );
             table.addCell( RACE_TimeToString( time ) );
-            table.addCell( "Server:" );
+            if ( pattern == "" )
+                table.addCell( "Server:" );
+            else
+                table.addCell( "Reference:" );
             table.addCell( RACE_TimeDiffString( time, best, false ) );
             table.addCell( "by" );
             table.addCell( bestName );

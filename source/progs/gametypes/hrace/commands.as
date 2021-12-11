@@ -338,7 +338,7 @@ bool Cmd_Top( Client@ client, const String &cmdString, const String &argsString,
 
 bool Cmd_CPs( Client@ client, const String &cmdString, const String &argsString, int argc )
 {
-    return RACE_GetPlayer( client ).showCPs();
+    return RACE_GetPlayer( client ).showCPs( argsString.getToken( 0 ) );
 }
 
 const uint MAPS_PER_PAGE = 30;
@@ -564,8 +564,8 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
     }
     else if ( command == "cps" )
     {
-        client.printMessage( S_COLOR_YELLOW + "/cps" + "\n" );
-        client.printMessage( S_COLOR_WHITE + "- Shows your times between checkpoints on the current map and compares to the best recorded times." + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/cps [pattern]" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Shows your times between checkpoints on the current map and compares to the best recorded times of players matching pattern." + "\n" );
     }
     else if ( command == "maplist" )
     {
