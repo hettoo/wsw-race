@@ -1529,7 +1529,7 @@ class Player
                 uint other = levelRecords[j].sectorTimes[this.bestSectorOrder[i]];
                 if ( !missing && other == 0 )
                 {
-                    G_PrintMsg( ent, S_COLOR_ORANGE + "CP" + ( i + 1 ) + " is missing for " + levelRecords[j].playerName + "\n" );
+                    G_PrintMsg( ent, S_COLOR_ORANGE + "CP" + ( i + 1 ) + " is missing for " + S_COLOR_WHITE + levelRecords[j].playerName + "\n" );
                     missing = true;
                 }
                 uint previous = 0;
