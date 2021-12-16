@@ -8,7 +8,7 @@ RecordTime[] topRequestRecords( MAX_RECORDS );
 class RecordTime
 {
     bool saved;
-    uint[] sectorTimes;
+    uint[] cpTimes;
     uint finishTime;
     String playerName;
     String login;
@@ -16,10 +16,10 @@ class RecordTime
 
     void setupArrays( int size )
     {
-        this.sectorTimes.resize( size );
+        this.cpTimes.resize( size );
 
         for ( int i = 0; i < size; i++ )
-            this.sectorTimes[i] = 0;
+            this.cpTimes[i] = 0;
 
         this.arraysSetUp = true;
     }
@@ -40,8 +40,8 @@ class RecordTime
         this.login = "";
         this.finishTime = 0;
 
-        for ( uint i = 0; i < sectorTimes.length(); i++ )
-            this.sectorTimes[i] = 0;
+        for ( uint i = 0; i < cpTimes.length(); i++ )
+            this.cpTimes[i] = 0;
     }
 
     void Copy( RecordTime &other )
@@ -53,8 +53,8 @@ class RecordTime
         this.finishTime = other.finishTime;
         this.playerName = other.playerName;
         this.login = other.login;
-        for ( uint i = 0; i < sectorTimes.length(); i++ )
-            this.sectorTimes[i] = other.sectorTimes[i];
+        for ( uint i = 0; i < cpTimes.length(); i++ )
+            this.cpTimes[i] = other.cpTimes[i];
     }
 
     void Store( Client@ client )
@@ -65,11 +65,11 @@ class RecordTime
         Player@ player = RACE_GetPlayer( client );
 
         this.saved = true;
-        this.finishTime = player.finishTime;
+        this.finishTime = player.run.finishTime;
         this.playerName = client.name;
         this.login = client.getMMLogin();
-        for ( uint i = 0; i < sectorTimes.length(); i++ )
-            this.sectorTimes[i] = player.sectorTimes[i];
+        for ( uint i = 0; i < cpTimes.length(); i++ )
+            this.cpTimes[i] = player.run.cpTimes[i];
     }
 }
 
@@ -87,7 +87,7 @@ void RACE_LoadTopScores( RecordTime[]@ records, String mapName, int checkpoints 
 
     if ( topScores.length() > 0 )
     {
-        String timeToken, loginToken, nameToken, sectorToken;
+        String timeToken, loginToken, nameToken, cpToken;
         int count = 0;
         uint sep;
 
@@ -113,21 +113,21 @@ void RACE_LoadTopScores( RecordTime[]@ records, String mapName, int checkpoints 
             if ( nameToken.length() == 0 )
                 break;
 
-            sectorToken = topScores.getToken( count++ );
-            if ( sectorToken.length() == 0 )
+            cpToken = topScores.getToken( count++ );
+            if ( cpToken.length() == 0 )
                 break;
 
-            int numSectors = sectorToken.toInt();
+            int numCPs = cpToken.toInt();
 
             // store this one
-            for ( int j = 0; j < numSectors; j++ )
+            for ( int j = 0; j < numCPs; j++ )
             {
-                sectorToken = topScores.getToken( count++ );
-                if ( sectorToken.length() == 0 )
+                cpToken = topScores.getToken( count++ );
+                if ( cpToken.length() == 0 )
                     break;
 
                 if ( j < checkpoints )
-                    records[i].sectorTimes[j] = uint( sectorToken.toInt() );
+                    records[i].cpTimes[j] = uint( cpToken.toInt() );
             }
 
             // check if he already has a score
@@ -185,11 +185,11 @@ void RACE_WriteTopScores()
                 topScores += "|" + levelRecords[i].login; // optionally storing it in a token with another value provides backwards compatibility
             topScores += "\" \"" + levelRecords[i].playerName + "\" ";
 
-            // add the sectors
+            // add the CPs
             topScores += "\"" + numCheckpoints+ "\" ";
 
             for ( int j = 0; j < numCheckpoints; j++ )
-                topScores += "\"" + int( levelRecords[i].sectorTimes[j] ) + "\" ";
+                topScores += "\"" + int( levelRecords[i].cpTimes[j] ) + "\" ";
 
             topScores += "\n";
         }

@@ -180,13 +180,13 @@ bool Cmd_RaceRestart( Client@ client, const String &cmdString, const String &arg
 
     player.cancelRace();
 
-    if ( player.practicing && client.team != TEAM_SPECTATOR )
+    Entity@ ent = client.getEnt();
+    if ( player.practicing && ent.health > 0 && client.team != TEAM_SPECTATOR )
     {
-        Entity@ ent = client.getEnt();
         if ( ent.moveType == MOVETYPE_NONE )
             player.toggleNoclip();
 
-        if ( ent.health > 0 && player.loadPosition( Verbosity_Silent ) )
+        if ( player.loadPosition( Verbosity_Silent ) )
         {
             player.noclipWeapon = player.savedPosition().weapon;
             if ( player.recalled )

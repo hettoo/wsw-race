@@ -23,6 +23,7 @@ hrace/entities/xonotic.as;
 hrace/utils.as;
 hrace/commands.as;
 hrace/player.as;
+hrace/run.as;
 hrace/math.as;
 hrace/position.as;
 hrace/quickmenu.as;

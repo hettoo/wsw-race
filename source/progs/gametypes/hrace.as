@@ -218,8 +218,8 @@ String@ GT_ScoreboardMessage( uint maxlen )
             @player = RACE_GetPlayer( team.ent( i ).client );
 
             if ( player.hasTime &&
-                    ( player.bestFinishTime > minTime || ( player.bestFinishTime == minTime && player.pos >= minPos ) ) &&
-                    ( @best == null || player.bestFinishTime < best.bestFinishTime || ( player.bestFinishTime == best.bestFinishTime && player.pos < best.pos ) ) )
+                    ( player.bestRun.finishTime > minTime || ( player.bestRun.finishTime == minTime && player.pos >= minPos ) ) &&
+                    ( @best == null || player.bestRun.finishTime < best.bestRun.finishTime || ( player.bestRun.finishTime == best.bestRun.finishTime && player.pos < best.pos ) ) )
                 @best = player;
         }
         if ( @best != null )
@@ -227,7 +227,7 @@ String@ GT_ScoreboardMessage( uint maxlen )
             entry = best.scoreboardEntry();
             if ( scoreboardMessage.length() + entry.length() < maxlen )
                 scoreboardMessage += entry;
-            minTime = best.bestFinishTime;
+            minTime = best.bestRun.finishTime;
             minPos = best.pos + 1;
         }
     }
@@ -300,12 +300,13 @@ void GT_ScoreEvent( Client@ client, const String &score_event, const String &arg
                     if ( !levelRecords[i].saved )
                         break;
                     if ( levelRecords[i].login == login
-                            && ( !player.hasTime || levelRecords[i].finishTime < player.bestFinishTime ) )
+                            && ( !player.hasTime || levelRecords[i].finishTime < player.bestRun.finishTime ) )
                     {
-                        player.setBestTime( levelRecords[i].finishTime, 0 );
-                        player.updatePos();
+                        player.bestRun.finishTime = levelRecords[i].finishTime;
+                        player.bestRun.maxSpeed = 0;
                         for ( int j = 0; j < numCheckpoints; j++ )
-                            player.bestSectorTimes[j] = levelRecords[i].sectorTimes[j];
+                            player.bestRun.cpTimes[j] = levelRecords[i].cpTimes[j];
+                        player.updatePos();
                         break;
                     }
                 }
@@ -379,7 +380,7 @@ void GT_PlayerRespawn( Entity@ ent, int old_team, int new_team )
         if ( player.practicing )
         {
             ent.moveType = MOVETYPE_NOCLIP;
-            ent.velocity = Vec3(0,0,0);
+            ent.velocity = Vec3();
             player.noclipWeapon = ent.client.pendingWeapon;
         }
         player.noclipSpawn = false;
@@ -456,7 +457,7 @@ void GT_ThinkRules()
                 client.setHUDStat( STAT_TIME_SELF, player.raceTime() / 100 );
         }
 
-        client.setHUDStat( STAT_TIME_BEST, player.bestFinishTime / 100 );
+        client.setHUDStat( STAT_TIME_BEST, player.bestRun.finishTime / 100 );
         client.setHUDStat( STAT_TIME_RECORD, levelRecords[0].finishTime / 100 );
 
         client.setHUDStat( STAT_TIME_ALPHA, -9999 );
@@ -662,7 +663,7 @@ void GT_SpawnGametype()
 
     // setup the checkpoints arrays sizes adjusted to numCheckPoints
     for ( int i = 0; i < maxClients; i++ )
-        players[i].setupArrays( numCheckpoints );
+        players[i].resizeCPs( numCheckpoints );
 
     Cvar mapNameVar( "mapname", "", 0 );
     RACE_LoadTopScores( levelRecords, mapNameVar.string.tolower(), numCheckpoints );
