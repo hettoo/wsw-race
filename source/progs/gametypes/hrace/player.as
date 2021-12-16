@@ -826,75 +826,17 @@ class Player
             }
         }
 
-        Entity@ ent = this.client.getEnt();
-
-        G_CenterPrintMsg( ent, str + "\n" + RACE_TimeDiffString( this.run.finishTime, this.bestRun.finishTime, true ) );
+        G_CenterPrintMsg( this.client.getEnt(), str + "\n" + RACE_TimeDiffString( this.run.finishTime, this.bestRun.finishTime, true ) );
 
         Client@[] specs = RACE_GetSpectators( this.client );
         for ( uint i = 0; i < specs.length; i++ )
         {
-            Player@ spec_player = @RACE_GetPlayer( specs[i] );
-            String line1 = "";
-            String line2 = "";
-
-            if ( this.hasTime )
-            {
-                line1 += "\u00A0   Current: " + RACE_TimeToString( this.run.finishTime ) + "   \u00A0";
-                line2 += "\u00A0           " + RACE_TimeDiffString(this.run.finishTime, this.bestRun.finishTime, true) + "           \u00A0";
-            }
-            else
-            {
-                line1 += "\u00A0   Current: " + RACE_TimeToString( this.run.finishTime ) + "   \u00A0";
-                line2 += "\u00A0           " + "                    " + "           \u00A0";
-            }
-
-            if ( spec_player.hasTime )
-            {
-                line1 = "\u00A0  Personal:    " + "          " + line1;
-                line2 = RACE_TimeDiffString(this.run.finishTime, spec_player.bestRun.finishTime, true) + "          " + line2;
-            }
-            else if ( levelRecords[0].finishTime != 0 )
-            {
-                line1 = "\u00A0                                " + line1;
-                line2 = "\u00A0                                " + line2;
-            }
-
-            if ( levelRecords[0].finishTime != 0 )
-            {
-                line1 += "\u00A0          " + "Server:     \u00A0";
-                line2 += "\u00A0      " + RACE_TimeDiffString(this.run.finishTime, levelRecords[0].finishTime, true) + "\u00A0";
-            }
-
-            G_CenterPrintMsg(specs[i].getEnt(), line1 + "\n" + line2);
+            Player@ specPlayer = @RACE_GetPlayer( specs[i] );
+            specPlayer.showChaseeTime( this.run.finishTime, this.bestRun.finishTime, specPlayer.bestRun.finishTime, levelRecords[0].finishTime );
         }
 
-        Table@ report;
-        if ( this.practicing )
-            @report = @this.practiceReport;
-        else
-            @report = @this.report;
-
-        report.addCell( "End:" );
-        report.addCell( RACE_TimeToString( this.run.finishTime ) );
-        report.addCell( "Personal:" );
-        report.addCell( RACE_TimeDiffString( this.run.finishTime, this.bestRun.finishTime, false ) );
-        report.addCell( "Server:" );
-        report.addCell( RACE_TimeDiffString( this.run.finishTime, levelRecords[0].finishTime, false ) );
-        report.addCell( "Speed:" );
-        report.addCell( this.getSpeed() + "" );
-        if ( this.practicing )
-        {
-            report.addCell( "" );
-            report.addCell( "" );
-        }
-        else
-        {
-            report.addCell( ", max" );
-            report.addCell( S_COLOR_WHITE + this.run.maxSpeed );
-        }
-        uint rows = report.numRows();
-        for ( uint i = 0; i < rows; i++ )
-            G_PrintMsg( ent, report.getRow( i ) + "\n" );
+        this.reportTime( "End", this.run.finishTime, this.bestRun.finishTime, levelRecords[0].finishTime );
+        this.showReport();
 
         if ( !this.practicing )
         {
@@ -907,93 +849,102 @@ class Player
             }
 
             // see if the player improved one of the top scores
-            for ( int top = 0; top < MAX_RECORDS; top++ )
-            {
-                if ( !levelRecords[top].saved || this.run.finishTime < levelRecords[top].finishTime )
-                {
-                    String cleanName = this.client.name.removeColorTokens().tolower();
-                    String login = this.client.getMMLogin();
-
-                    if ( top == 0 )
-                    {
-                        this.client.addAward( S_COLOR_GREEN + "Server record!" );
-
-                        uint prevTime = 0;
-
-                        if ( levelRecords[0].finishTime != 0 )
-                            prevTime = levelRecords[0].finishTime;
-
-                        if ( levelRecords[0].finishTime == 0 )
-                        {
-                          G_PrintMsg( null, this.client.name + S_COLOR_YELLOW + " set a new " + S_COLOR_GREEN + race_servername.string + " " + S_COLOR_YELLOW + "record: "
-                                  + S_COLOR_GREEN + RACE_TimeToString( this.run.finishTime ) + "\n" );
-                        }
-                        else
-                        {
-                          G_PrintMsg( null, this.client.name + S_COLOR_YELLOW + " set a new " + S_COLOR_GREEN + race_servername.string + " " + S_COLOR_YELLOW + "record: "
-                                  + S_COLOR_GREEN + RACE_TimeToString( this.run.finishTime ) + " " + S_COLOR_YELLOW + "[-" + RACE_TimeToString( levelRecords[0].finishTime - this.run.finishTime ) + "]\n" );
-                        }
-                    }
-
-                    int remove = MAX_RECORDS - 1;
-                    for ( int i = 0; i < MAX_RECORDS; i++ )
-                    {
-                        if ( ( login == "" && levelRecords[i].login == "" && levelRecords[i].playerName.removeColorTokens().tolower() == cleanName )
-                                || ( login != "" && levelRecords[i].login == login ) )
-                        {
-                            if ( i < top )
-                                remove = -1; // he already has a better time, don't save it
-                            else
-                                remove = i;
-                            break;
-                        }
-                        if ( login == "" && levelRecords[i].login != "" && levelRecords[i].playerName.removeColorTokens().tolower() == cleanName && i < top )
-                        {
-                            remove = -1; // he already has a better time, don't save it
-                            break;
-                        }
-                    }
-
-                    if ( remove != -1 )
-                    {
-                        // move the other records down
-                        for ( int i = remove; i > top; i-- )
-                            levelRecords[i].Copy( levelRecords[i - 1] );
-
-                        levelRecords[top].Store( this.client );
-
-                        if ( login != "" )
-                        {
-                            // there may be authed and unauthed records for a
-                            // player; remove the unauthed if it is worse than the
-                            // authed one
-                            bool found = false;
-                            for ( int i = top + 1; i < MAX_RECORDS; i++ )
-                            {
-                                if ( levelRecords[i].login == "" && levelRecords[i].playerName.removeColorTokens().tolower() == cleanName )
-                                    found = true;
-                                if ( found && i < MAX_RECORDS - 1 )
-                                    levelRecords[i].Copy( levelRecords[i + 1] );
-                            }
-                            if ( found )
-                                levelRecords[MAX_RECORDS - 1].clear();
-                        }
-
-                        RACE_WriteTopScores();
-                        RACE_UpdateHUDTopScores();
-                        RACE_UpdatePosValues();
-                    }
-
-                    break;
-                }
-            }
+            this.updateTop();
 
             // set up for respawning the player with a delay
-            Entity@ respawner = G_SpawnEntity( "race_respawner" );
-            respawner.nextThink = levelTime + 5000;
-            @respawner.think = race_respawner_think;
-            respawner.count = this.client.playerNum;
+            this.scheduleRespawn();
         }
+    }
+
+    void updateTop()
+    {
+        for ( int top = 0; top < MAX_RECORDS; top++ )
+        {
+            if ( !levelRecords[top].saved || this.run.finishTime < levelRecords[top].finishTime )
+            {
+                String cleanName = this.client.name.removeColorTokens().tolower();
+                String login = this.client.getMMLogin();
+
+                if ( top == 0 )
+                {
+                    this.client.addAward( S_COLOR_GREEN + "Server record!" );
+
+                    uint prevTime = 0;
+
+                    if ( levelRecords[0].finishTime != 0 )
+                        prevTime = levelRecords[0].finishTime;
+
+                    if ( levelRecords[0].finishTime == 0 )
+                    {
+                      G_PrintMsg( null, this.client.name + S_COLOR_YELLOW + " set a new " + S_COLOR_GREEN + race_servername.string + " " + S_COLOR_YELLOW + "record: "
+                              + S_COLOR_GREEN + RACE_TimeToString( this.run.finishTime ) + "\n" );
+                    }
+                    else
+                    {
+                      G_PrintMsg( null, this.client.name + S_COLOR_YELLOW + " set a new " + S_COLOR_GREEN + race_servername.string + " " + S_COLOR_YELLOW + "record: "
+                              + S_COLOR_GREEN + RACE_TimeToString( this.run.finishTime ) + " " + S_COLOR_YELLOW + "[-" + RACE_TimeToString( levelRecords[0].finishTime - this.run.finishTime ) + "]\n" );
+                    }
+                }
+
+                int remove = MAX_RECORDS - 1;
+                for ( int i = 0; i < MAX_RECORDS; i++ )
+                {
+                    if ( ( login == "" && levelRecords[i].login == "" && levelRecords[i].playerName.removeColorTokens().tolower() == cleanName )
+                            || ( login != "" && levelRecords[i].login == login ) )
+                    {
+                        if ( i < top )
+                            remove = -1; // he already has a better time, don't save it
+                        else
+                            remove = i;
+                        break;
+                    }
+                    if ( login == "" && levelRecords[i].login != "" && levelRecords[i].playerName.removeColorTokens().tolower() == cleanName && i < top )
+                    {
+                        remove = -1; // he already has a better time, don't save it
+                        break;
+                    }
+                }
+
+                if ( remove != -1 )
+                {
+                    // move the other records down
+                    for ( int i = remove; i > top; i-- )
+                        levelRecords[i].Copy( levelRecords[i - 1] );
+
+                    levelRecords[top].Store( this.client );
+
+                    if ( login != "" )
+                    {
+                        // there may be authed and unauthed records for a player;
+                        // remove the unauthed if it is worse than the authed one
+                        bool found = false;
+                        for ( int i = top + 1; i < MAX_RECORDS; i++ )
+                        {
+                            if ( levelRecords[i].login == "" && levelRecords[i].playerName.removeColorTokens().tolower() == cleanName )
+                                found = true;
+                            if ( found && i < MAX_RECORDS - 1 )
+                                levelRecords[i].Copy( levelRecords[i + 1] );
+                        }
+                        if ( found )
+                            levelRecords[MAX_RECORDS - 1].clear();
+                    }
+
+                    RACE_WriteTopScores();
+                    RACE_UpdateHUDTopScores();
+                    RACE_UpdatePosValues();
+                }
+
+                break;
+            }
+        }
+    }
+
+    void scheduleRespawn()
+    {
+        Entity@ respawner = G_SpawnEntity( "race_respawner" );
+        respawner.nextThink = levelTime + 5000;
+        @respawner.think = race_respawner_think;
+        respawner.count = this.client.playerNum;
     }
 
     void updateMaxSpeed()
@@ -1020,13 +971,15 @@ class Player
             return false;
 
         uint time = this.raceTime();
-        this.run.setCP( id, time, this.currentSector );
+        this.run.setCP( id, time, this.currentSector++ );
 
         if ( !this.practicing )
         {
             // send this checkpoint to MM
             this.client.setRaceTime( id, time );
         }
+
+        this.updateMaxSpeed();
 
         // print some output and give awards if earned
 
@@ -1045,64 +998,78 @@ class Player
             }
         }
 
-        Entity@ ent = this.client.getEnt();
-
-        G_CenterPrintMsg( ent, str + "\n" + RACE_TimeDiffString( time, this.bestRun.cpTimes[id], true ) );
-
-        this.updateMaxSpeed();
+        G_CenterPrintMsg( this.client.getEnt(), str + "\n" + RACE_TimeDiffString( time, this.bestRun.cpTimes[id], true ) );
 
         Client@[] specs = RACE_GetSpectators( this.client );
         for ( uint i = 0; i < specs.length; i++ )
         {
-            Player@ spec_player = @RACE_GetPlayer( specs[i] );
-            String line1 = "";
-            String line2 = "";
-
-            if ( this.hasTime && time != 0 )
-            {
-                line1 += "\u00A0   Current: " + RACE_TimeToString( time ) + "   \u00A0";
-                line2 += "\u00A0           " + RACE_TimeDiffString(time, this.bestRun.cpTimes[id], true) + "           \u00A0";
-            }
-            else
-            {
-                line1 += "\u00A0   Current: " + RACE_TimeToString( time ) + "   \u00A0";
-                line2 += "\u00A0           " + "                    " + "           \u00A0";
-            }
-
-            if ( spec_player.hasTime && spec_player.bestRun.cpTimes[id] != 0 )
-            {
-                line1 = "\u00A0  Personal:    " + "          " + line1;
-                line2 = RACE_TimeDiffString(time, spec_player.bestRun.cpTimes[id], true) + "          " + line2;
-            }
-            else if ( levelRecords[0].finishTime != 0 )
-            {
-                line1 = "\u00A0                                " + line1;
-                line2 = "\u00A0                                " + line2;
-            }
-
-            if ( levelRecords[0].finishTime != 0 && levelRecords[0].cpTimes[id] != 0 )
-            {
-                line1 += "\u00A0          " + "Server:     \u00A0";
-                line2 += "\u00A0      " + RACE_TimeDiffString(time, levelRecords[0].cpTimes[id], true) + "\u00A0";
-            }
-
-            G_CenterPrintMsg(specs[i].getEnt(), line1 + "\n" + line2);
+            Player@ specPlayer = @RACE_GetPlayer( specs[i] );
+            specPlayer.showChaseeTime( time, this.bestRun.cpTimes[id], specPlayer.bestRun.cpTimes[id], levelRecords[0].cpTimes[id] );
         }
 
-        Table@ report;
-        if ( this.practicing )
-            @report = @this.practiceReport;
+        this.reportTime( "CP" + this.currentSector, time, this.bestRun.cpTimes[id], levelRecords[0].cpTimes[id] );
+
+        if ( !this.practicing )
+        {
+            if ( time < levelRecords[0].cpTimes[id] )
+                this.client.addAward( "Server record on CP" + this.currentSector + "!" );
+            else if ( time < this.bestRun.cpTimes[id] )
+                this.client.addAward( "Personal record on CP" + this.currentSector + "!" );
+        }
+
+        G_AnnouncerSound( this.client, G_SoundIndex( "sounds/misc/timer_bip_bip" ), GS_MAX_TEAMS, false, null );
+
+        return true;
+    }
+
+    void showChaseeTime( uint time, uint best, uint personal, uint server )
+    {
+        String line1 = "";
+        String line2 = "";
+
+        line1 += "\u00A0   Current: " + RACE_TimeToString( time ) + "   \u00A0";
+        if ( best != 0 )
+            line2 += "\u00A0           " + RACE_TimeDiffString( time, best, true ) + "           \u00A0";
         else
-            @report = @this.report;
+            line2 += "\u00A0           " + "                    " + "           \u00A0";
 
-        this.currentSector++;
+        if ( personal != 0 )
+        {
+            line1 = "\u00A0  Personal:    " + "          " + line1;
+            line2 = RACE_TimeDiffString( time, personal, true ) + "          " + line2;
+        }
+        else if ( server != 0 )
+        {
+            line1 = "\u00A0                                " + line1;
+            line2 = "\u00A0                                " + line2;
+        }
 
-        report.addCell( "CP" + this.currentSector + ":" );
+        if ( server != 0 )
+        {
+            line1 += "\u00A0          " + "Server:     \u00A0";
+            line2 += "\u00A0      " + RACE_TimeDiffString( time, server, true ) + "\u00A0";
+        }
+
+        G_CenterPrintMsg( this.client.getEnt(), line1 + "\n" + line2 );
+    }
+
+    Table@ activeReport()
+    {
+        if ( this.practicing )
+            return this.practiceReport;
+        else
+            return this.report;
+    }
+
+    void reportTime( String name, uint time, uint bestTime, uint serverTime )
+    {
+        Table@ report = this.activeReport();
+        report.addCell( name + ":" );
         report.addCell( RACE_TimeToString( time ) );
         report.addCell( "Personal:" );
-        report.addCell( RACE_TimeDiffString( time, this.bestRun.cpTimes[id], false ) );
+        report.addCell( RACE_TimeDiffString( time, bestTime, false ) );
         report.addCell( "Server:" );
-        report.addCell( RACE_TimeDiffString( time, levelRecords[0].cpTimes[id], false ) );
+        report.addCell( RACE_TimeDiffString( time, serverTime, false ) );
         report.addCell( "Speed:" );
         report.addCell( this.getSpeed() + "" );
         if ( this.practicing )
@@ -1115,25 +1082,15 @@ class Player
             report.addCell( ", max" );
             report.addCell( S_COLOR_WHITE + this.run.maxSpeed );
         }
+    }
 
-        if ( !this.practicing )
-        {
-            // if beating the level record on this sector give an award
-            if ( time < levelRecords[0].cpTimes[id] )
-            {
-                this.client.addAward( "Server record on CP" + this.currentSector + "!" );
-            }
-            // if beating own record on this sector give an award
-            else if ( time < this.bestRun.cpTimes[id] )
-            {
-                // ch : does racesow apply sector records only if race is completed?
-                this.client.addAward( "Personal record on CP" + this.currentSector + "!" );
-            }
-        }
-
-        G_AnnouncerSound( this.client, G_SoundIndex( "sounds/misc/timer_bip_bip" ), GS_MAX_TEAMS, false, null );
-
-        return true;
+    void showReport()
+    {
+        Table@ report = this.activeReport();
+        Entity@ ent = this.client.getEnt();
+        uint rows = report.numRows();
+        for ( uint i = 0; i < rows; i++ )
+            G_PrintMsg( ent, report.getRow( i ) + "\n" );
     }
 
     void enterPracticeMode()
