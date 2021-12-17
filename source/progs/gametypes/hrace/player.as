@@ -262,9 +262,7 @@ class Player
                     this.lerpTo.saved = false;
                 }
                 else
-                {
                     this.applyPosition( this.savedPosition() );
-                }
                 this.autoRecallStart = this.positionCycle;
             }
             this.noclipBackup.saved = false;
@@ -338,9 +336,7 @@ class Player
         this.applyPosition( position );
 
         if ( this.preRace() )
-        {
             ent.set_velocity( Vec3() );
-        }
         else if ( this.practicing && position.recalled )
         {
             this.cancelRace();
@@ -350,9 +346,7 @@ class Player
             this.autoRecallStart = this.positionCycle;
         }
         else if ( this.practicing )
-        {
             this.recalled = false;
-        }
 
         this.updateHelpMessage();
 
@@ -779,19 +773,13 @@ class Player
         if ( ref.team == TEAM_SPECTATOR && ref.chaseActive && ref.chaseTarget != 0 )
             @ref = G_GetEntity( ref.chaseTarget ).client;
         Player@ refPlayer = RACE_GetPlayer( ref );
-        Entity@ refEnt = ref.getEnt();
         if ( refPlayer.practicing && ref.team != TEAM_SPECTATOR )
         {
             if ( refPlayer.recalled )
-            {
-                if ( refEnt.moveType == MOVETYPE_NONE )
-                    this.client.setHelpMessage( recallSelectMsg );
-                else
-                    this.client.setHelpMessage( recallModeMsg );
-            }
+                this.client.setHelpMessage( recallModeMsg );
             else
             {
-                if ( refEnt.moveType == MOVETYPE_NOCLIP )
+                if ( ref.getEnt().moveType == MOVETYPE_NOCLIP )
                     this.client.setHelpMessage( noclipModeMsg );
                 else
                     this.client.setHelpMessage( practiceModeMsg );
@@ -1160,11 +1148,11 @@ class Player
         if ( best != 0 )
             line2 += "\u00A0           " + RACE_TimeDiffString( time, best, true ) + "           \u00A0";
         else
-            line2 += "\u00A0           " + "                    " + "           \u00A0";
+            line2 += "\u00A0                                          \u00A0";
 
         if ( personal != 0 )
         {
-            line1 = "\u00A0  Personal:    " + "          " + line1;
+            line1 = "\u00A0  Personal:              " + line1;
             line2 = RACE_TimeDiffString( time, personal, true ) + "          " + line2;
         }
         else if ( server != 0 )
@@ -1234,13 +1222,6 @@ class Player
         this.cancelRace();
         this.setQuickMenu();
         this.updateHelpMessage();
-
-        // msc: practicemode message
-        client.setHelpMessage( practiceModeMsg );
-
-        Client@[] specs = RACE_GetSpectators( this.client );
-        for ( uint i = 0; i < specs.length; i++ )
-            specs[i].setHelpMessage( practiceModeMsg );
     }
 
     void leavePracticeMode()
@@ -1259,13 +1240,6 @@ class Player
             this.client.respawn( false );
         this.setQuickMenu();
         this.updateHelpMessage();
-
-        // msc: practicemode message
-        client.setHelpMessage(defaultMsg);
-
-        Client@[] specs = RACE_GetSpectators( this.client );
-        for ( uint i = 0; i < specs.length; i++ )
-            specs[i].setHelpMessage(defaultMsg);
     }
 
     void togglePracticeMode()

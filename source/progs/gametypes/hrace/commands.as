@@ -170,7 +170,9 @@ bool Cmd_RaceRestart( Client@ client, const String &cmdString, const String &arg
             return true;
     }
 
+    bool recalled = player.recalled;
     player.cancelRace();
+    player.recalled = recalled;
 
     Entity@ ent = client.getEnt();
     if ( player.practicing && ent.health > 0 && client.team != TEAM_SPECTATOR )
@@ -184,9 +186,11 @@ bool Cmd_RaceRestart( Client@ client, const String &cmdString, const String &arg
             if ( player.recalled )
             {
                 ent.moveType = MOVETYPE_NONE;
+                player.updateHelpMessage();
                 player.release = 2;
                 return true;
             }
+            player.updateHelpMessage();
         }
         else
             client.respawn( false );
