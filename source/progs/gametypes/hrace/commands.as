@@ -190,7 +190,6 @@ bool Cmd_RaceRestart( Client@ client, const String &cmdString, const String &arg
                 player.release = 2;
                 return true;
             }
-            player.updateHelpMessage();
         }
         else
             client.respawn( false );
