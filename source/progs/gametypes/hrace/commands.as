@@ -109,17 +109,9 @@ bool Cmd_PrivateMessage( Client@ client, const String &cmdString, const String &
     }
 
     String pattern = argsString.getToken( 0 );
-    Player@[] matches = RACE_MatchPlayers( pattern );
-    if ( matches.length() == 0 )
-    {
-        G_PrintMsg( client.getEnt(), "No players matched.\n" );
+    Player@ match = player.oneMatchingPlayer( pattern );
+    if ( @match == null )
         return false;
-    }
-    else if ( matches.length() > 1 )
-    {
-        G_PrintMsg( client.getEnt(), "Multiple players matched.\n" );
-        return false;
-    }
 
     String message = "";
     String token;
@@ -150,13 +142,13 @@ bool Cmd_PrivateMessage( Client@ client, const String &cmdString, const String &
         return false;
     }
 
-    G_PrintMsg( matches[0].client.getEnt(), client.name + S_COLOR_MAGENTA + " >>> " + message + "\n" );
-    if ( matches[0].firstMessage )
+    G_PrintMsg( match.client.getEnt(), client.name + S_COLOR_MAGENTA + " >>> " + message + "\n" );
+    if ( match.firstMessage )
     {
-        G_PrintMsg( matches[0].client.getEnt(), "Use /m with part of the player name to reply.\n" );
-        matches[0].firstMessage = false;
+        G_PrintMsg( match.client.getEnt(), "Use /m with part of the player name to reply.\n" );
+        match.firstMessage = false;
     }
-    G_PrintMsg( client.getEnt(), matches[0].client.name + S_COLOR_MAGENTA + " <<< " + message + "\n" );
+    G_PrintMsg( client.getEnt(), match.client.name + S_COLOR_MAGENTA + " <<< " + message + "\n" );
 
     for ( i = 0; i < MAX_FLOOD_MESSAGES - 1; i++ )
         player.messageTimes[i] = player.messageTimes[i + 1];

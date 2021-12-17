@@ -547,18 +547,15 @@ class Player
             return false;
         }
 
-        this.run.clear();
-
         this.currentSector = 0;
         this.inRace = true;
         this.startTime = this.timeStamp();
         this.positionCycle = 0;
         this.nextRunPositionTime = this.timeStamp() + this.positionInterval;
 
+        this.run.clear();
         this.report.reset();
-
         this.client.newRaceRun( numCheckpoints );
-
         this.setQuickMenu();
 
         return true;
@@ -653,16 +650,12 @@ class Player
                 G_CenterPrintMsg( ent, S_COLOR_CYAN + "Left recall mode" );
             }
             else
-            {
                 this.recallPosition( 0 );
-            }
         }
         else if ( keys & Key_Backward != 0 && this.noclipBackup.saved )
         {
             if ( this.positionCycle == 0 )
-            {
                 this.recallPosition( -1 );
-            }
             else
             {
                 this.lerpFrom.copy( this.savedPosition() );
@@ -838,11 +831,11 @@ class Player
         // msc: temporary MAX_ACCEL replacement
         if ( frameTime > 0 )
         {
-            float cgframeTime = float(frameTime)/1000;
-            int base_speed = int(client.pmoveMaxSpeed);
+            float cgframeTime = float( frameTime ) / 1000;
+            float base_speed = client.pmoveMaxSpeed;
             float base_accel = base_speed * cgframeTime;
             float speed = HorizontalSpeed( ent.velocity );
-            int max_accel = int( ( sqrt( speed*speed + base_accel * ( 2 * base_speed - base_accel ) ) - speed ) / cgframeTime );
+            int max_accel = int( ( sqrt( speed * speed + base_accel * ( 2 * base_speed - base_accel ) ) - speed ) / cgframeTime );
             client.setHUDStat( STAT_PROGRESS_SELF, max_accel );
         }
 
@@ -942,7 +935,6 @@ class Player
         else
             str = S_COLOR_WHITE;
         str += "Current: " + S_COLOR_WHITE + RACE_TimeToString( this.run.finishTime );
-
         for ( int i = 0; i < MAX_RECORDS; i++ )
         {
             if ( !levelRecords[i].saved )
@@ -953,8 +945,10 @@ class Player
                 break;
             }
         }
-
         G_CenterPrintMsg( this.client.getEnt(), str + "\n" + RACE_TimeDiffString( this.run.finishTime, this.bestRun.finishTime, true ) );
+
+        this.reportTime( "End", this.run.finishTime, this.bestRun.finishTime, levelRecords[0].finishTime );
+        this.showReport();
 
         Client@[] specs = RACE_GetSpectators( this.client );
         for ( uint i = 0; i < specs.length; i++ )
@@ -963,19 +957,16 @@ class Player
             specPlayer.showChaseeTime( this.run.finishTime, this.bestRun.finishTime, specPlayer.bestRun.finishTime, levelRecords[0].finishTime );
         }
 
-        this.reportTime( "End", this.run.finishTime, this.bestRun.finishTime, levelRecords[0].finishTime );
-        this.showReport();
+        if ( !this.practicing && ( !this.hasTime || this.run.finishTime < this.bestRun.finishTime ) )
+        {
+            this.client.addAward( S_COLOR_YELLOW + "Personal record!" );
+            this.hasTime = true;
+            this.bestRun.copy( this.run );
+            this.client.stats.setScore( this.bestRun.finishTime / 10 );
+        }
 
         if ( !this.practicing )
         {
-            if ( !this.hasTime || this.run.finishTime < this.bestRun.finishTime )
-            {
-                this.client.addAward( S_COLOR_YELLOW + "Personal record!" );
-                this.hasTime = true;
-                this.bestRun.copy( this.run );
-                this.client.stats.setScore( this.bestRun.finishTime / 10 );
-            }
-
             // see if the player improved one of the top scores
             this.updateTop();
 
@@ -1114,7 +1105,6 @@ class Player
         else
             str = S_COLOR_WHITE;
         str += "Current: " + S_COLOR_WHITE + RACE_TimeToString( time );
-
         for ( int i = 0; i < MAX_RECORDS; i++ )
         {
             if ( time < levelRecords[i].cpTimes[id] )
@@ -1123,15 +1113,7 @@ class Player
                 break;
             }
         }
-
         G_CenterPrintMsg( this.client.getEnt(), str + "\n" + RACE_TimeDiffString( time, this.bestRun.cpTimes[id], true ) );
-
-        Client@[] specs = RACE_GetSpectators( this.client );
-        for ( uint i = 0; i < specs.length; i++ )
-        {
-            Player@ specPlayer = @RACE_GetPlayer( specs[i] );
-            specPlayer.showChaseeTime( time, this.bestRun.cpTimes[id], specPlayer.bestRun.cpTimes[id], levelRecords[0].cpTimes[id] );
-        }
 
         this.reportTime( "CP" + this.currentSector, time, this.bestRun.cpTimes[id], levelRecords[0].cpTimes[id] );
 
@@ -1144,6 +1126,13 @@ class Player
         }
 
         G_AnnouncerSound( this.client, G_SoundIndex( "sounds/misc/timer_bip_bip" ), GS_MAX_TEAMS, false, null );
+
+        Client@[] specs = RACE_GetSpectators( this.client );
+        for ( uint i = 0; i < specs.length; i++ )
+        {
+            Player@ specPlayer = @RACE_GetPlayer( specs[i] );
+            specPlayer.showChaseeTime( time, this.bestRun.cpTimes[id], specPlayer.bestRun.cpTimes[id], levelRecords[0].cpTimes[id] );
+        }
 
         return true;
     }
@@ -1303,6 +1292,27 @@ class Player
         return true;
     }
 
+    Player@ oneMatchingPlayer( String pattern )
+    {
+        Player@[] matches = RACE_MatchPlayers( pattern );
+        Entity@ ent = this.client.getEnt();
+
+        if ( matches.length() == 0 )
+        {
+            G_PrintMsg( ent, "No players matched.\n" );
+            return null;
+        }
+        else if ( matches.length() > 1 )
+        {
+            G_PrintMsg( ent, "Multiple players matched:\n" );
+            for ( uint i = 0; i < matches.length(); i++ )
+                G_PrintMsg( ent, matches[i].client.name + S_COLOR_WHITE + "\n" );
+            return null;
+        }
+        else
+            return matches[0];
+    }
+
     bool recallBest( String pattern )
     {
         if ( this.inRace )
@@ -1315,23 +1325,10 @@ class Player
 
         if ( pattern != "" )
         {
-            Player@[] matches = RACE_MatchPlayers( pattern );
-            if ( matches.length() == 0 )
-            {
-                G_PrintMsg( this.client.getEnt(), "No players matched.\n" );
+            Player@ match = this.oneMatchingPlayer( pattern );
+            if ( @match == null )
                 return false;
-            }
-            else if ( matches.length() > 1 )
-            {
-                G_PrintMsg( this.client.getEnt(), "Multiple players matched:\n" );
-                for ( uint i = 0; i < matches.length(); i++ )
-                    G_PrintMsg( this.client.getEnt(), matches[i].client.name + S_COLOR_WHITE + "\n" );
-                return false;
-            }
-            else
-            {
-                @target = matches[0];
-            }
+            @target = match;
         }
 
         if ( target.bestRun.positionCount == 0 )
@@ -1470,21 +1467,11 @@ class Player
             return false;
         }
 
-        Player@[] matches = RACE_MatchPlayers( pattern );
-        if ( matches.length() == 0 )
-        {
-            G_PrintMsg( ent, "No players matched.\n" );
+        Player@ match = this.oneMatchingPlayer( pattern );
+        if ( @match == null )
             return false;
-        }
-        else if ( matches.length() > 1 )
-        {
-            G_PrintMsg( this.client.getEnt(), "Multiple players matched:\n" );
-            for ( uint i = 0; i < matches.length(); i++ )
-                G_PrintMsg( this.client.getEnt(), matches[i].client.name + S_COLOR_WHITE + "\n" );
-            return false;
-        }
 
-        this.applyPosition( matches[0].currentPosition() );
+        this.applyPosition( match.currentPosition() );
         ent.set_velocity( Vec3() );
 
         return true;
