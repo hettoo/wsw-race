@@ -241,13 +241,11 @@ class Player
             return false;
         }
 
-        String msg;
         if ( ent.moveType == MOVETYPE_PLAYER )
         {
             this.cancelRace();
             ent.moveType = MOVETYPE_NOCLIP;
             this.noclipWeapon = ent.weapon;
-            msg = "Noclip mode enabled.";
         }
         else
         {
@@ -270,12 +268,10 @@ class Player
                 this.autoRecallStart = this.positionCycle;
             }
             this.noclipBackup.saved = false;
-            msg = "Noclip mode disabled.";
         }
 
-        G_PrintMsg( ent, msg + "\n" );
-
         this.setQuickMenu();
+        this.updateHelpMessage();
 
         return true;
     }
@@ -358,6 +354,8 @@ class Player
             this.recalled = false;
         }
 
+        this.updateHelpMessage();
+
         return true;
     }
 
@@ -402,6 +400,7 @@ class Player
         this.startTime = this.timeStamp() - position.currentTime;
 
         this.setQuickMenu();
+        this.updateHelpMessage();
 
         return true;
     }
@@ -529,6 +528,7 @@ class Player
             this.positionCycle = 0;
             this.nextRunPositionTime = this.timeStamp() + this.positionInterval;
             this.autoRecallStart = -1;
+            this.updateHelpMessage();
             return true;
         }
 
@@ -648,6 +648,7 @@ class Player
                 this.noclipBackup.saved = false;
                 this.recalled = false;
                 G_CenterPrintMsg( ent, S_COLOR_CYAN + "Left recall mode" );
+                this.updateHelpMessage();
             }
             else
                 this.recallPosition( 0 );
@@ -728,6 +729,7 @@ class Player
         this.cancelRace();
 
         this.setQuickMenu();
+        this.updateHelpMessage();
         this.updateScore();
         if ( oldTeam != TEAM_PLAYERS && newTeam == TEAM_PLAYERS )
             this.updatePos();
@@ -767,14 +769,41 @@ class Player
             this.noclipSpawn = false;
         }
 
+        this.updateHelpMessage();
+    }
+
+    void updateHelpMessage()
+    {
         // msc: permanent practicemode message
         Client@ ref = this.client;
         if ( ref.team == TEAM_SPECTATOR && ref.chaseActive && ref.chaseTarget != 0 )
             @ref = G_GetEntity( ref.chaseTarget ).client;
-        if ( RACE_GetPlayer( ref ).practicing && ref.team != TEAM_SPECTATOR )
-            this.client.setHelpMessage( practiceModeMsg );
+        Player@ refPlayer = RACE_GetPlayer( ref );
+        Entity@ refEnt = ref.getEnt();
+        if ( refPlayer.practicing && ref.team != TEAM_SPECTATOR )
+        {
+            if ( refPlayer.recalled )
+            {
+                if ( refEnt.moveType == MOVETYPE_NONE )
+                    this.client.setHelpMessage( recallSelectMsg );
+                else
+                    this.client.setHelpMessage( recallModeMsg );
+            }
+            else
+            {
+                if ( refEnt.moveType == MOVETYPE_NOCLIP )
+                    this.client.setHelpMessage( noclipModeMsg );
+                else
+                    this.client.setHelpMessage( practiceModeMsg );
+            }
+        }
         else
-            this.client.setHelpMessage( defaultMsg );
+        {
+            if ( this.client.team == TEAM_SPECTATOR && this.client.getEnt().isGhosting() )
+                client.setHelpMessage( 0 );
+            else
+                this.client.setHelpMessage( defaultMsg );
+        }
     }
 
     void think()
@@ -811,22 +840,7 @@ class Player
 
         // hettoo: force practicemode message on spectators
         if ( client.team == TEAM_SPECTATOR )
-        {
-            Client@ ref = client;
-            if ( ref.chaseActive && ref.chaseTarget != 0 )
-                @ref = G_GetEntity( ref.chaseTarget ).client;
-            if ( RACE_GetPlayer( ref ).practicing && ref.team != TEAM_SPECTATOR )
-            {
-                client.setHelpMessage( practiceModeMsg );
-            }
-            else
-            {
-                if ( ent.isGhosting() )
-                    client.setHelpMessage( 0 );
-                else
-                    client.setHelpMessage( defaultMsg );
-            }
-        }
+            this.updateHelpMessage();
 
         // msc: temporary MAX_ACCEL replacement
         if ( frameTime > 0 )
@@ -1219,6 +1233,7 @@ class Player
 
         this.cancelRace();
         this.setQuickMenu();
+        this.updateHelpMessage();
 
         // msc: practicemode message
         client.setHelpMessage( practiceModeMsg );
@@ -1243,6 +1258,7 @@ class Player
         if ( this.client.team != TEAM_SPECTATOR )
             this.client.respawn( false );
         this.setQuickMenu();
+        this.updateHelpMessage();
 
         // msc: practicemode message
         client.setHelpMessage(defaultMsg);
@@ -1255,7 +1271,7 @@ class Player
     void togglePracticeMode()
     {
         if ( pending_endmatch )
-            this.client.printMessage("Can't join practicemode in overtime.\n");
+            this.client.printMessage( "Can't join practicemode in overtime.\n" );
         else if ( this.practicing )
             this.leavePracticeMode();
         else
@@ -1280,6 +1296,7 @@ class Player
         this.noclipBackup.saved = false;
         this.recalled = false;
         G_CenterPrintMsg( ent, S_COLOR_CYAN + "Left recall mode" );
+        this.updateHelpMessage();
         return true;
     }
 
