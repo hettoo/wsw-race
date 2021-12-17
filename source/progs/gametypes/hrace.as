@@ -289,29 +289,7 @@ void GT_ScoreEvent( Client@ client, const String &score_event, const String &arg
     else if ( score_event == "userinfochanged" )
     {
         if ( @client != null )
-        {
-            String login = client.getMMLogin();
-            if ( login != "" )
-            {
-                Player@ player = RACE_GetPlayer( client );
-                // find out if he holds a record better than his current time
-                for ( int i = 0; i < MAX_RECORDS; i++ )
-                {
-                    if ( !levelRecords[i].saved )
-                        break;
-                    if ( levelRecords[i].login == login
-                            && ( !player.hasTime || levelRecords[i].finishTime < player.bestRun.finishTime ) )
-                    {
-                        player.bestRun.finishTime = levelRecords[i].finishTime;
-                        player.bestRun.maxSpeed = 0;
-                        for ( int j = 0; j < numCheckpoints; j++ )
-                            player.bestRun.cpTimes[j] = levelRecords[i].cpTimes[j];
-                        player.updatePos();
-                        break;
-                    }
-                }
-            }
-        }
+            RACE_GetPlayer( client ).loadStoredTime();
     }
 }
 
@@ -323,68 +301,20 @@ void GT_PlayerRespawn( Entity@ ent, int old_team, int new_team )
     {
         if ( ent.client.team != TEAM_SPECTATOR )
         {
-          ent.client.team = TEAM_SPECTATOR;
-          ent.client.respawn(false);
+            ent.client.team = TEAM_SPECTATOR;
+            ent.client.respawn(false);
         }
 
         if ( !Pending_AnyRacing() )
         {
-          pending_endmatch = false;
-          match.launchState(MATCH_STATE_POSTMATCH);
+            pending_endmatch = false;
+            match.launchState(MATCH_STATE_POSTMATCH);
         }
 
         return;
     }
 
-    Player@ player = RACE_GetPlayer( ent.client );
-    player.cancelRace();
-
-    player.setQuickMenu();
-    player.updateScore();
-    if ( old_team != TEAM_PLAYERS && new_team == TEAM_PLAYERS )
-        player.updatePos();
-
-    if ( ent.isGhosting() )
-        return;
-
-    // set player movement to pass through other players
-    ent.client.pmoveFeatures = ent.client.pmoveFeatures | PMFEAT_GHOSTMOVE;
-
-    if ( gametype.isInstagib )
-        ent.client.inventoryGiveItem( WEAP_INSTAGUN );
-    else
-        ent.client.inventorySetCount( WEAP_GUNBLADE, 1 );
-
-    // select rocket launcher if available
-    if ( ent.client.canSelectWeapon( WEAP_ROCKETLAUNCHER ) )
-        ent.client.selectWeapon( WEAP_ROCKETLAUNCHER );
-    else
-        ent.client.selectWeapon( -1 ); // auto-select best weapon in the inventory
-
-    G_RemoveProjectiles( ent );
-    RS_ResetPjState( ent.client.playerNum );
-
-    player.loadPosition( Verbosity_Silent );
-
-    // msc: permanent practicemode message
-    Client@ ref = ent.client;
-    if ( ref.team == TEAM_SPECTATOR && ref.chaseActive && ref.chaseTarget != 0 )
-        @ref = G_GetEntity( ref.chaseTarget ).client;
-    if ( RACE_GetPlayer( ref ).practicing && ref.team != TEAM_SPECTATOR )
-        ent.client.setHelpMessage( practiceModeMsg );
-    else
-        ent.client.setHelpMessage( defaultMsg );
-
-    if ( player.noclipSpawn )
-    {
-        if ( player.practicing )
-        {
-            ent.moveType = MOVETYPE_NOCLIP;
-            ent.velocity = Vec3();
-            player.noclipWeapon = ent.client.pendingWeapon;
-        }
-        player.noclipSpawn = false;
-    }
+    RACE_GetPlayer( ent.client ).spawn( old_team, new_team );
 }
 
 // Thinking function. Called each frame
@@ -447,77 +377,7 @@ void GT_ThinkRules()
         client.setHUDStat( STAT_MESSAGE_ALPHA, 0 );
         client.setHUDStat( STAT_MESSAGE_BETA, 0 );
 
-        // all stats are set to 0 each frame, so it's only needed to set a stat if it's going to get a value
-        @player = RACE_GetPlayer( client );
-        if ( player.inRace || ( player.practicing && player.recalled && client.getEnt().health > 0 ) )
-        {
-            if ( client.getEnt().moveType == MOVETYPE_NONE )
-                client.setHUDStat( STAT_TIME_SELF, player.savedPosition().currentTime / 100 );
-            else
-                client.setHUDStat( STAT_TIME_SELF, player.raceTime() / 100 );
-        }
-
-        client.setHUDStat( STAT_TIME_BEST, player.bestRun.finishTime / 100 );
-        client.setHUDStat( STAT_TIME_RECORD, levelRecords[0].finishTime / 100 );
-
-        client.setHUDStat( STAT_TIME_ALPHA, -9999 );
-        client.setHUDStat( STAT_TIME_BETA, -9999 );
-
-        if ( levelRecords[0].playerName.length() > 0 )
-            client.setHUDStat( STAT_MESSAGE_OTHER, CS_GENERAL );
-        if ( levelRecords[1].playerName.length() > 0 )
-            client.setHUDStat( STAT_MESSAGE_ALPHA, CS_GENERAL + 1 );
-        if ( levelRecords[2].playerName.length() > 0 )
-            client.setHUDStat( STAT_MESSAGE_BETA, CS_GENERAL + 2 );
-
-        player.saveRunPosition();
-        player.checkNoclipAction();
-        player.updateMaxSpeed();
-        player.checkRelease();
-
-        // hettoo: force practicemode message on spectators
-        if ( client.team == TEAM_SPECTATOR )
-        {
-            Client@ ref = client;
-            if ( ref.chaseActive && ref.chaseTarget != 0 )
-                @ref = G_GetEntity( ref.chaseTarget ).client;
-            if ( RACE_GetPlayer( ref ).practicing && ref.team != TEAM_SPECTATOR )
-            {
-                client.setHelpMessage( practiceModeMsg );
-            }
-            else
-            {
-                if ( client.getEnt().isGhosting() )
-                    client.setHelpMessage( 0 );
-                else
-                    client.setHelpMessage( defaultMsg );
-            }
-        }
-
-        // msc: temporary MAX_ACCEL replacement
-        if ( frameTime > 0 )
-        {
-          float cgframeTime = float(frameTime)/1000;
-          int base_speed = int(client.pmoveMaxSpeed);
-          float base_accel = base_speed * cgframeTime;
-          float speed = HorizontalSpeed( client.getEnt().velocity );
-          int max_accel = int( ( sqrt( speed*speed + base_accel * ( 2 * base_speed - base_accel ) ) - speed ) / cgframeTime );
-          client.setHUDStat( STAT_PROGRESS_SELF, max_accel );
-        }
-
-        Entity@ ent = @client.getEnt();
-        if ( ent.client.state() >= CS_SPAWNED && ent.team != TEAM_SPECTATOR )
-        {
-            if ( ent.health > ent.maxHealth )
-            {
-                ent.health -= ( frameTime * 0.001f );
-                // fix possible rounding errors
-                if ( ent.health < ent.maxHealth )
-                {
-                    ent.health = ent.maxHealth;
-                }
-            }
-        }
+        RACE_GetPlayer( client ).think();
     }
 
     // ch : send intermediate results
@@ -552,15 +412,16 @@ bool GT_MatchStateFinished( int incomingMatchState )
     }
 
     if ( incomingMatchState == MATCH_STATE_POSTMATCH )
-    { // msc: check for overtime
-      G_CmdExecute("set g_inactivity_maxtime 5\n");
-      G_CmdExecute("set g_disable_vote_remove 0\n");
-      if ( Pending_AnyRacing(true) )
-      {
-        G_AnnouncerSound( null, G_SoundIndex( "sounds/announcer/overtime/overtime" ), GS_MAX_TEAMS, false, null );
-        pending_endmatch = true;
-        return false;
-      }
+    {
+        // msc: check for overtime
+        G_CmdExecute("set g_inactivity_maxtime 5\n");
+        G_CmdExecute("set g_disable_vote_remove 0\n");
+        if ( Pending_AnyRacing(true) )
+        {
+            G_AnnouncerSound( null, G_SoundIndex( "sounds/announcer/overtime/overtime" ), GS_MAX_TEAMS, false, null );
+            pending_endmatch = true;
+            return false;
+        }
     }
 
     return true;
@@ -577,9 +438,7 @@ bool Pending_AnyRacing(bool respawn = false)
 
         Player@ player = RACE_GetPlayer( client );
         if ( player.inRace && !player.postRace && client.team != TEAM_SPECTATOR )
-        {
             any_racing = true;
-        }
         else
         {
             if ( client.team != TEAM_SPECTATOR )
