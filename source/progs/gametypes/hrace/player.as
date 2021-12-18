@@ -335,12 +335,6 @@ class Player
             return false;
         }
 
-        if ( this.preRace() )
-        {
-            // for accuracy, reset scores.
-            target_score_init( client );
-        }
-
         this.applyPosition( position );
 
         if ( this.preRace() )
