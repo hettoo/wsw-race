@@ -335,6 +335,12 @@ class Player
             return false;
         }
 
+        if ( this.preRace() )
+        {
+            // for accuracy, reset scores.
+            target_score_init( client );
+        }
+
         this.applyPosition( position );
 
         if ( this.preRace() )
@@ -534,11 +540,7 @@ class Player
         if ( RS_QueryPjState( this.client.playerNum )  )
         {
             this.client.addAward( S_COLOR_RED + "Prejumped!" );
-
-            // for accuracy, reset scores.
-            target_score_init( this.client );
-
-            this.client.respawn( false );
+            this.respawn();
             RS_ResetPjState( this.client.playerNum );
             return false;
         }
@@ -857,10 +859,7 @@ class Player
         }
 
         if ( this.postRace && this.forceRespawn > 0 && this.forceRespawn < levelTime )
-        {
-            this.forceRespawn = 0;
-            client.respawn( false );
-        }
+            this.respawn();
     }
 
     void cancelRace()
@@ -1231,6 +1230,15 @@ class Player
         this.updateHelpMessage();
     }
 
+    void respawn()
+    {
+        // for accuracy, reset scores.
+        target_score_init( client );
+
+        this.forceRespawn = 0;
+        this.client.respawn( false );
+    }
+
     void leavePracticeMode()
     {
         if ( !this.practicing )
@@ -1244,7 +1252,7 @@ class Player
         this.release = 0;
         G_CenterPrintMsg( this.client.getEnt(), S_COLOR_CYAN + "Left practice mode" );
         if ( this.client.team != TEAM_SPECTATOR )
-            this.client.respawn( false );
+            this.respawn();
         this.setQuickMenu();
         this.updateHelpMessage();
     }

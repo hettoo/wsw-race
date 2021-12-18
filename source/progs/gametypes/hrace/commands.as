@@ -192,7 +192,7 @@ bool Cmd_RaceRestart( Client@ client, const String &cmdString, const String &arg
             }
         }
         else
-            client.respawn( false );
+            player.respawn();
 
         if ( ent.moveType == MOVETYPE_NOCLIP )
             ent.velocity = Vec3();
@@ -204,7 +204,7 @@ bool Cmd_RaceRestart( Client@ client, const String &cmdString, const String &arg
             client.team = TEAM_PLAYERS;
             G_PrintMsg( null, client.name + S_COLOR_WHITE + " joined the " + G_GetTeam( client.team ).name + S_COLOR_WHITE + " team.\n" );
         }
-        client.respawn( false );
+        player.respawn();
     }
 
     return true;
