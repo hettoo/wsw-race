@@ -19,6 +19,7 @@ class Player
 
     bool postRace;
     Run run;
+    uint forceRespawn;
 
     uint nextRunPositionTime;
     int positionCycle;
@@ -68,6 +69,7 @@ class Player
         this.currentSector = 0;
         this.inRace = false;
         this.postRace = false;
+        this.forceRespawn = 0;
         this.practicing = false;
         this.recalled = false;
         this.autoRecall = false;
@@ -720,6 +722,8 @@ class Player
 
     void spawn( int oldTeam, int newTeam )
     {
+        this.forceRespawn = 0;
+
         this.cancelRace();
 
         this.setQuickMenu();
@@ -850,6 +854,12 @@ class Player
                 if ( ent.health < ent.maxHealth )
                     ent.health = ent.maxHealth;
             }
+        }
+
+        if ( this.postRace && this.forceRespawn > 0 && this.forceRespawn < levelTime )
+        {
+            this.forceRespawn = 0;
+            client.respawn( false );
         }
     }
 
@@ -1062,10 +1072,7 @@ class Player
 
     void scheduleRespawn()
     {
-        Entity@ respawner = G_SpawnEntity( "race_respawner" );
-        respawner.nextThink = levelTime + 5000;
-        @respawner.think = race_respawner_think;
-        respawner.count = this.client.playerNum;
+        this.forceRespawn = levelTime + 5000;
     }
 
     void updateMaxSpeed()

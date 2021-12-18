@@ -41,21 +41,6 @@ bool hasFinish;
 Vec3 startPosition;
 Vec3 finishPosition;
 
-// the player has finished the race. This entity times his automatic respawning
-void race_respawner_think( Entity@ respawner )
-{
-    Client@ client = G_GetClient( respawner.count );
-
-    // for accuracy, reset scores.
-    target_score_init( client );
-
-    // the client may have respawned on their own, so check if they are in postRace
-    if ( RACE_GetPlayer( client ).postRace && client.team != TEAM_SPECTATOR )
-        client.respawn( false );
-
-    respawner.freeEntity(); // free the respawner
-}
-
 ///*****************************************************************
 /// LOCAL FUNCTIONS
 ///*****************************************************************
