@@ -1576,15 +1576,7 @@ class Player
                     worst = i;
                     worstDiff = diff;
                 }
-                table.addCell( "CP" + ( i + 1 ) + ":" );
-                table.addCell( RACE_TimeToString( time ) );
-                if ( pattern == "" )
-                    table.addCell( "Server:" );
-                else
-                    table.addCell( "Reference:" );
-                table.addCell( RACE_TimeDiffString( time, best, false ) );
-                table.addCell( "from" );
-                table.addCell( bestName );
+                this.reportDiff( table, "CP" + ( i + 1 ), time, best, bestName, pattern == "" );
             }
         }
 
@@ -1625,16 +1617,7 @@ class Player
                 worst = i;
                 worstDiff = diff;
             }
-
-            table.addCell( "End:" );
-            table.addCell( RACE_TimeToString( time ) );
-            if ( pattern == "" )
-                table.addCell( "Server:" );
-            else
-                table.addCell( "Reference:" );
-            table.addCell( RACE_TimeDiffString( time, best, false ) );
-            table.addCell( "from" );
-            table.addCell( bestName );
+            this.reportDiff( table, "End", time, best, bestName, pattern == "" );
         }
 
         uint rows = table.numRows();
@@ -1656,6 +1639,19 @@ class Player
         }
 
         return true;
+    }
+
+    void reportDiff( Table@ table, String name, uint time, uint best, String bestName, bool global )
+    {
+        table.addCell( name + ":" );
+        table.addCell( RACE_TimeToString( time ) );
+        if ( global )
+            table.addCell( "Server:" );
+        else
+            table.addCell( "Reference:" );
+        table.addCell( RACE_TimeDiffString( time, best, false ) );
+        table.addCell( "from" );
+        table.addCell( bestName );
     }
 
     void loadStoredTime()
