@@ -1544,15 +1544,15 @@ class Player
                         G_PrintMsg( ent, S_COLOR_ORANGE + "CP" + ( i + 1 ) + " is missing for " + S_COLOR_WHITE + levelRecords[j].playerName + "\n" );
                         missing = true;
                     }
-                    uint previous = 0;
-                    if ( i > 0 )
+                    if ( other != 0 )
                     {
-                        previous = levelRecords[j].cpTimes[this.bestRun.cpOrder[i - 1]];
-                        other -= previous;
-                    }
-                    if ( other != 0 && ( i == 0 || previous != 0 ) )
-                    {
-                        if ( !bestSet || other < best )
+                        uint previous = 0;
+                        if ( i > 0 )
+                        {
+                            previous = levelRecords[j].cpTimes[this.bestRun.cpOrder[i - 1]];
+                            other -= previous;
+                        }
+                        if ( ( i == 0 || previous != 0 ) && ( !bestSet || other < best ) )
                         {
                             bestSet = true;
                             best = other;
