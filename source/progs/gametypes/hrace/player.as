@@ -991,7 +991,7 @@ class Player
 
                 if ( top == 0 )
                 {
-                    this.client.addAward( S_COLOR_GREEN + "Server record!" );
+                    this.client.addAward( S_COLOR_GREEN + race_servername.string + " record!" );
 
                     uint prevTime = 0;
 
