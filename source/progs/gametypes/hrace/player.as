@@ -1056,6 +1056,9 @@ class Player
                     RACE_WriteTopScores();
                     RACE_UpdateHUDTopScores();
                     RACE_UpdatePosValues();
+
+                    if ( top == 0 )
+                        lastRecords.toFile();
                 }
 
                 break;

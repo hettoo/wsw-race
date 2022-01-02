@@ -12,7 +12,8 @@ class LastRecords
     LastRecords( String fileName )
     {
         this.fileName = fileName;
-        recs.resize( LAST_RECORDS );
+        this.recs.resize( LAST_RECORDS );
+        this.lastRec = 0;
         this.clear();
     }
 
@@ -29,19 +30,20 @@ class LastRecords
         String input = G_LoadFile( this.fileName );
 
         String mapToken, playerToken, timeToken, refToken;
-        int i = 0;
+        this.count = 0;
         int tokens = 0;
-        while ( i < LAST_RECORDS )
+        while ( this.count < LAST_RECORDS )
         {
-            mapToken = input.getToken( tokens++ );
-            if ( mapToken.length() == 0 )
-                break;
-            playerToken = input.getToken( tokens++ );
             timeToken = input.getToken( tokens++ );
+            if ( timeToken.length() == 0 )
+                break;
             refToken = input.getToken( tokens++ );
+            mapToken = input.getToken( tokens++ );
+            playerToken = input.getToken( tokens++ );
 
-            this.recs[i++] = LastRecord( uint( timeToken.toInt() ), uint( refToken.toInt() ),  mapToken, playerToken );
+            this.recs[this.count++] = LastRecord( uint( timeToken.toInt() ), uint( refToken.toInt() ), mapToken, playerToken );
         }
+        this.lastRec = levelRecords[0].finishTime;
     }
 
     void toFile()
@@ -63,16 +65,21 @@ class LastRecords
 
     bool show( Entity@ ent )
     {
-        Table table( S_COLOR_ORANGE + "r " + S_COLOR_WHITE + "l" + S_COLOR_WHITE + "r" + S_COLOR_WHITE + "r" + S_COLOR_YELLOW + " [l] " + S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "l" );
+        if ( this.count == 0 )
+        {
+            G_PrintMsg( ent, "No recent records found.\n" );
+            return false;
+        }
+
+        Table table( S_COLOR_ORANGE + "r " + S_COLOR_WHITE + "l " + S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "l" + S_COLOR_ORANGE + ": " + S_COLOR_WHITE + "r" + S_COLOR_YELLOW + " [l] " );
         for ( uint i = 0; i < this.count; i++ )
         {
             table.addCell( ( i + 1 ) + "." );
             table.addCell( this.recs[i].player );
-            table.addCell( "set" );
-            table.addCell( RACE_TimeToString( this.recs[i].time ) );
-            table.addCell( RACE_TimeDiffString( this.recs[i].time, this.recs[i].ref, false ) );
             table.addCell( "on" );
             table.addCell( this.recs[i].map );
+            table.addCell( RACE_TimeToString( this.recs[i].time ) );
+            table.addCell( RACE_TimeDiffString( this.recs[i].time, this.recs[i].ref, false ).removeColorTokens() );
         }
 
         G_PrintMsg( ent, S_COLOR_ORANGE + "Most recent " + S_COLOR_GREEN + race_servername.string + S_COLOR_ORANGE + " records:\n" );

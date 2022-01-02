@@ -635,6 +635,8 @@ bool RACE_HandleCommand( Client@ client, const String &cmdString, const String &
         return Cmd_Top( client, cmdString, argsString, argc );
     else if ( cmdString == "cps" )
         return Cmd_CPs( client, cmdString, argsString, argc );
+    else if ( cmdString == "lastrecs" )
+        return Cmd_LastRecs( client, cmdString, argsString, argc );
     else if ( cmdString == "maplist" )
         return Cmd_Maplist( client, cmdString, argsString, argc );
     else if ( cmdString == "help" )
@@ -660,6 +662,7 @@ void RACE_RegisterCommands()
     G_RegisterCommand( "position" );
     G_RegisterCommand( "top" );
     G_RegisterCommand( "cps" );
+    G_RegisterCommand( "lastrecs" );
     G_RegisterCommand( "maplist" );
     G_RegisterCommand( "help" );
     G_RegisterCommand( "rules" );
