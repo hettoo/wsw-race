@@ -28,6 +28,7 @@ hrace/math.as;
 hrace/position.as;
 hrace/quickmenu.as;
 hrace/recordtime.as;
+hrace/lastrecords.as;
 hrace/table.as;
 
 hrace.as;

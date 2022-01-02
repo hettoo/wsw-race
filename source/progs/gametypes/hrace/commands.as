@@ -336,6 +336,11 @@ bool Cmd_CPs( Client@ client, const String &cmdString, const String &argsString,
     return RACE_GetPlayer( client ).showCPs( argsString.getToken( 0 ), argsString.getToken( 1 ) );
 }
 
+bool Cmd_LastRecs( Client@ client, const String &cmdString, const String &argsString, int argc )
+{
+    return lastRecords.show( client.getEnt() );
+}
+
 const uint MAPS_PER_PAGE = 30;
 uint[] maplist_page( maxClients );
 
@@ -453,6 +458,9 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         cmdlist.addCell( "/cps" );
         cmdlist.addCell( "Shows your times between checkpoints for the current map." );
 
+        cmdlist.addCell( "/lastrecs" );
+        cmdlist.addCell( "Shows the last records made on previous recent maps." );
+
         cmdlist.addCell( "/m" );
         cmdlist.addCell( "Lets you send a private message." );
 
@@ -563,6 +571,11 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         client.printMessage( S_COLOR_WHITE + "- Shows your times between checkpoints on the current map and compares to the best recorded times." + "\n" );
         client.printMessage( S_COLOR_WHITE + "  of players matching target pattern. If a reference pattern is given, the result is shown relative" + "\n" );
         client.printMessage( S_COLOR_WHITE + "  to the matching player from the top list instead of you." + "\n" );
+    }
+    else if ( command == "lastrecs" )
+    {
+        client.printMessage( S_COLOR_YELLOW + "/lastrecs" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Shows a list of records made on previous recently played maps." + "\n" );
     }
     else if ( command == "maplist" )
     {

@@ -407,6 +407,8 @@ bool GT_MatchStateFinished( int incomingMatchState )
             pending_endmatch = true;
             return false;
         }
+
+        lastRecords.toFile();
     }
 
     return true;
@@ -513,6 +515,8 @@ void GT_SpawnGametype()
     RACE_LoadTopScores( levelRecords, mapNameVar.string.tolower(), numCheckpoints );
 
     RACE_UpdateHUDTopScores();
+
+    lastRecords.fromFile();
 }
 
 float GT_VotePower( Client@ client, String& votename, bool voted, bool yes )
