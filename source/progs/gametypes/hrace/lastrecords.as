@@ -65,13 +65,14 @@ class LastRecords
             return false;
         }
 
-        Table table( S_COLOR_ORANGE + "r " + S_COLOR_WHITE + "l " + S_COLOR_ORANGE + ": " + S_COLOR_WHITE + "r" + S_COLOR_YELLOW + " [l] " + S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "l" );
+        Table table( S_COLOR_ORANGE + "r " + S_COLOR_WHITE + "r" + S_COLOR_YELLOW + " [l] " + S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "l " + S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "l" );
         for ( uint i = 0; i < this.count; i++ )
         {
             table.addCell( ( i + 1 ) + "." );
-            table.addCell( this.recs[i].player );
             table.addCell( RACE_TimeToString( this.recs[i].time ) );
             table.addCell( RACE_TimeDiffString( this.recs[i].time, this.recs[i].ref, false ).removeColorTokens() );
+            table.addCell( "by" );
+            table.addCell( this.recs[i].player );
             table.addCell( "on" );
             table.addCell( this.recs[i].map );
         }
