@@ -437,6 +437,12 @@ class Player
             @ref = G_GetEntity( this.client.chaseTarget ).client;
         Entity@ ent = ref.getEnt();
 
+        if ( ent.health <= 0 )
+        {
+            G_PrintMsg( ent, "You can only save your position while alive.\n" );
+            return false;
+        }
+
         if ( this.preRace() )
         {
             Vec3 mins, maxs;
