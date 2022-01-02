@@ -9,6 +9,7 @@ class RecordTime
 {
     bool saved;
     uint[] cpTimes;
+    int[] cpOrder;
     uint finishTime;
     String playerName;
     String login;
@@ -17,6 +18,7 @@ class RecordTime
     void setupArrays( int size )
     {
         this.cpTimes.resize( size );
+        this.cpOrder.resize( size );
 
         for ( int i = 0; i < size; i++ )
             this.cpTimes[i] = 0;
@@ -42,6 +44,36 @@ class RecordTime
 
         for ( uint i = 0; i < cpTimes.length(); i++ )
             this.cpTimes[i] = 0;
+    }
+
+    void deduceCPOrder()
+    {
+        uint num = 0;
+        uint minTime = 0;
+        for ( uint i = 0; i < this.cpOrder.length(); i++ )
+        {
+            int id = -1;
+            uint maxTime = 0;
+            for ( uint j = 0; j < this.cpTimes.length(); j++ )
+            {
+                if ( this.cpTimes[j] == 0 )
+                    continue;
+                uint cpTime = this.cpTimes[j];
+                if ( cpTime > minTime && ( id < 0 || cpTime < maxTime ) )
+                {
+                    maxTime = cpTime;
+                    id = j;
+                }
+            }
+            if ( id < 0 )
+            {
+                for ( uint j = i; j < this.cpOrder.length(); j++ )
+                    this.cpOrder[j] = -1;
+                break;
+            }
+            minTime = this.cpTimes[id];
+            this.cpOrder[i] = id;
+        }
     }
 
     void Copy( RecordTime &other )

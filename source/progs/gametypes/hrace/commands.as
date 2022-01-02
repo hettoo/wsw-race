@@ -333,7 +333,7 @@ bool Cmd_Top( Client@ client, const String &cmdString, const String &argsString,
 
 bool Cmd_CPs( Client@ client, const String &cmdString, const String &argsString, int argc )
 {
-    return RACE_GetPlayer( client ).showCPs( argsString.getToken( 0 ) );
+    return RACE_GetPlayer( client ).showCPs( argsString.getToken( 0 ), argsString.getToken( 1 ) );
 }
 
 const uint MAPS_PER_PAGE = 30;
@@ -559,8 +559,10 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
     }
     else if ( command == "cps" )
     {
-        client.printMessage( S_COLOR_YELLOW + "/cps [pattern]" + "\n" );
-        client.printMessage( S_COLOR_WHITE + "- Shows your times between checkpoints on the current map and compares to the best recorded times of players matching pattern." + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/cps [target pattern] [reference pattern]" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Shows your times between checkpoints on the current map and compares to the best recorded times." + "\n" );
+        client.printMessage( S_COLOR_WHITE + "  of players matching target pattern. If a reference pattern is given, the result is shown relative" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "  to the matching player from the top list instead of you." + "\n" );
     }
     else if ( command == "maplist" )
     {
