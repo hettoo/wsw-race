@@ -517,10 +517,10 @@ void GT_SpawnGametype()
                 origin.x += 1;
                 origin.y += 1;
                 Vec3 start = origin;
-                start.z += 64;
+                start.z += 48;
                 if ( tr.doTrace( start, playerMins, playerMaxs, origin, ent.entNum, MASK_PLAYERSOLID ) )
                 {
-                    if ( !tr.allSolid )
+                    if ( !tr.startSolid )
                         ent.set_origin( tr.get_endPos() );
                 }
                 else
