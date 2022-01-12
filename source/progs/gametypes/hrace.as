@@ -17,6 +17,9 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+Vec3 playerMins( -16.0, -16.0, -24.0 );
+Vec3 playerMaxs( 16.0, 16.0, 40.0 );
+
 Cvar race_servername( "race_servername", "server", CVAR_ARCHIVE );
 Cvar race_rulesFile( "race_rulesfile", "", CVAR_ARCHIVE );
 Cvar race_forceFiles( "race_forcefiles", "", CVAR_ARCHIVE );
@@ -503,6 +506,25 @@ void GT_SpawnGametype()
                     ent.getSize( mins, maxs );
                     finishPosition = ent.origin + 0.5 * mins + 0.5 * maxs;
                 }
+            }
+        }
+        else if ( ent.classname == "info_player_deathmatch" )
+        {
+            Vec3 origin = ent.origin;
+            Trace tr;
+            if ( tr.doTrace( origin, playerMins, playerMaxs, origin, ent.entNum, MASK_PLAYERSOLID ) )
+            {
+                origin.x += 1;
+                origin.y += 1;
+                Vec3 start = origin;
+                start.z += 64;
+                if ( tr.doTrace( start, playerMins, playerMaxs, origin, ent.entNum, MASK_PLAYERSOLID ) )
+                {
+                    if ( !tr.allSolid )
+                        ent.set_origin( tr.get_endPos() );
+                }
+                else
+                    ent.set_origin( origin );
             }
         }
     }
