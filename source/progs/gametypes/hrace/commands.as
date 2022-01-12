@@ -182,14 +182,19 @@ bool Cmd_RaceRestart( Client@ client, const String &cmdString, const String &arg
 
         if ( player.loadPosition( Verbosity_Silent ) )
         {
-            player.noclipWeapon = player.savedPosition().weapon;
-            if ( player.recalled )
+            if ( player.recalled || ent.moveType == MOVETYPE_NOCLIP )
             {
-                ent.moveType = MOVETYPE_NONE;
-                player.updateHelpMessage();
-                player.release = 2;
-                return true;
+                player.noclipWeapon = player.savedPosition().weapon;
+                if ( player.recalled )
+                {
+                    ent.moveType = MOVETYPE_NONE;
+                    player.updateHelpMessage();
+                    player.release = 2;
+                    return true;
+                }
             }
+            else
+                player.respawn();
         }
         else
             player.respawn();
