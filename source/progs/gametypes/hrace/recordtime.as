@@ -5,6 +5,8 @@ const int HUD_RECORDS = 3;
 RecordTime[] levelRecords( MAX_RECORDS );
 RecordTime[] topRequestRecords( MAX_RECORDS );
 
+RecordTime[] otherVersionRecords( MAX_RECORDS );
+
 class RecordTime
 {
     bool saved;
@@ -13,6 +15,7 @@ class RecordTime
     uint finishTime;
     String playerName;
     String login;
+    String version;
     bool arraysSetUp;
 
     void setupArrays( int size )
@@ -40,6 +43,7 @@ class RecordTime
         this.saved = false;
         this.playerName = "";
         this.login = "";
+        this.version = "";
         this.finishTime = 0;
 
         for ( uint i = 0; i < cpTimes.length(); i++ )
@@ -85,6 +89,7 @@ class RecordTime
         this.finishTime = other.finishTime;
         this.playerName = other.playerName;
         this.login = other.login;
+        this.version = other.version;
         for ( uint i = 0; i < cpTimes.length(); i++ )
             this.cpTimes[i] = other.cpTimes[i];
     }
@@ -100,28 +105,63 @@ class RecordTime
         this.finishTime = player.run.finishTime;
         this.playerName = client.name;
         this.login = client.getMMLogin();
+        this.version = "";
         for ( uint i = 0; i < cpTimes.length(); i++ )
             this.cpTimes[i] = player.run.cpTimes[i];
     }
 }
 
-void RACE_LoadTopScores( RecordTime[]@ records, String mapName, int checkpoints )
+void RACE_AddTopScore( RecordTime[]@ records, RecordTime@ additional )
+{
+    int i;
+    for ( i = 0; i < MAX_RECORDS; i++ )
+    {
+        if ( !records[i].saved || additional.finishTime < records[i].finishTime )
+            break;
+    }
+    if ( i == MAX_RECORDS )
+        return;
+
+    String cleanName = additional.playerName.removeColorTokens().tolower();
+    for ( int j = 0; j < i; j++ )
+    {
+        if ( ( additional.login != "" && records[j].login == additional.login )
+                || ( additional.login == "" && records[j].playerName.removeColorTokens().tolower() == cleanName ) )
+            return;
+    }
+
+    for ( int j = MAX_RECORDS - 1; j > i; j-- )
+        records[j] = records[j - 1];
+    records[i] = additional;
+}
+
+void RACE_LoadTopScores( RecordTime[]@ records, String mapName, int checkpoints, String version )
 {
     String topScores;
+    bool reset = version == "";
 
-    topScores = G_LoadFile( "topscores/race/" + mapName + ".txt" );
-
-    for ( int i = 0; i < MAX_RECORDS; i++ )
+    if ( reset )
     {
-        records[i].setupArrays( checkpoints );
-        records[i].saved = false;
+        for ( int i = 0; i < MAX_RECORDS; i++ )
+        {
+            records[i].setupArrays( checkpoints );
+            records[i].saved = false;
+        }
+        topScores = G_LoadFile( "topscores/race/" + mapName + ".txt" );
+    }
+    else
+    {
+        topScores = G_LoadFile( "topscores/race-" + version + "/" + mapName + ".txt" );
     }
 
     if ( topScores.length() > 0 )
     {
+        RecordTime current;
         String timeToken, loginToken, nameToken, cpToken;
         int count = 0;
         uint sep;
+
+        current.setupArrays( checkpoints );
 
         int i = 0;
         while ( i < MAX_RECORDS )
@@ -159,31 +199,43 @@ void RACE_LoadTopScores( RecordTime[]@ records, String mapName, int checkpoints 
                     break;
 
                 if ( j < checkpoints )
-                    records[i].cpTimes[j] = uint( cpToken.toInt() );
+                    current.cpTimes[j] = uint( cpToken.toInt() );
             }
 
-            // check if he already has a score
-            String cleanName = nameToken.removeColorTokens().tolower();
-            bool exists = false;
-            for ( int j = 0; j < i; j++ )
+            current.saved = true;
+            current.version = version;
+            current.finishTime = uint( timeToken.toInt() );
+            current.playerName = nameToken;
+            current.login = loginToken;
+
+            if ( reset )
             {
-                if ( ( loginToken != "" && records[j].login == loginToken )
-                        || ( loginToken == "" && records[j].playerName.removeColorTokens().tolower() == cleanName ) )
+                // check if he already has a score
+                String cleanName = nameToken.removeColorTokens().tolower();
+                bool exists = false;
+                for ( int j = 0; j < i; j++ )
                 {
-                    exists = true;
-                    break;
+                    if ( ( loginToken != "" && records[j].login == loginToken )
+                            || ( loginToken == "" && records[j].playerName.removeColorTokens().tolower() == cleanName ) )
+                    {
+                        exists = true;
+                        break;
+                    }
                 }
+                if ( exists )
+                {
+                    current.clear();
+                    continue;
+                }
+
+                records[i] = current;
             }
-            if ( exists )
+            else
             {
-                records[i].clear();
-                continue;
+                RACE_AddTopScore( records, current );
             }
 
-            records[i].saved = true;
-            records[i].finishTime = uint( timeToken.toInt() );
-            records[i].playerName = nameToken;
-            records[i].login = loginToken;
+            current.clear();
 
             i++;
         }

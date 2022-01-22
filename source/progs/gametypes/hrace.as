@@ -23,6 +23,7 @@ Vec3 playerMaxs( 16.0, 16.0, 40.0 );
 Cvar race_servername( "race_servername", "server", CVAR_ARCHIVE );
 Cvar race_rulesFile( "race_rulesfile", "", CVAR_ARCHIVE );
 Cvar race_forceFiles( "race_forcefiles", "", CVAR_ARCHIVE );
+Cvar race_otherVersions( "race_otherversions", "", CVAR_ARCHIVE );
 
 enum Verbosity {
     Verbosity_Silent,
@@ -542,7 +543,17 @@ void GT_SpawnGametype()
         players[i].resizeCPs( numCheckpoints );
 
     Cvar mapNameVar( "mapname", "", 0 );
-    RACE_LoadTopScores( levelRecords, mapNameVar.string.tolower(), numCheckpoints );
+    RACE_LoadTopScores( levelRecords, mapNameVar.string.tolower(), numCheckpoints, "" );
+
+    for ( int i = 0; i < MAX_RECORDS; i++ )
+        otherVersionRecords[i].setupArrays( numCheckpoints );
+
+    String version = race_otherVersions.string.getToken( 0 );
+    for ( int i = 1; version != ""; i++ )
+    {
+        RACE_LoadTopScores( otherVersionRecords, mapNameVar.string.tolower(), numCheckpoints, version );
+        version = race_otherVersions.string.getToken( i );
+    }
 
     RACE_UpdateHUDTopScores();
 

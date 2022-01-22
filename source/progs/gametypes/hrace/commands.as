@@ -292,17 +292,26 @@ bool Cmd_Position( Client@ client, const String &cmdString, const String &argsSt
     }
 }
 
-bool Cmd_Top( Client@ client, const String &cmdString, const String &argsString, int argc )
+void showTop( Client@ client, const String &mapName, bool full )
 {
-    String mapName = argsString.getToken( 0 ).tolower().replace( "/", "" );
-
     RecordTime[]@ records;
     if ( mapName == "" )
-        @records = levelRecords;
+    {
+        if ( full )
+        {
+            topRequestRecords = levelRecords;
+            @records = topRequestRecords;
+
+            for ( int i = 0; i < MAX_RECORDS && otherVersionRecords[i].saved; i++ )
+                RACE_AddTopScore( records, otherVersionRecords[i] );
+        }
+        else
+            @records = levelRecords;
+    }
     else
     {
         @records = topRequestRecords;
-        RACE_LoadTopScores( records, mapName, 0 );
+        RACE_LoadTopScores( records, mapName, 0, "" );
     }
 
     RecordTime@ top = records[0];
@@ -312,12 +321,16 @@ bool Cmd_Top( Client@ client, const String &cmdString, const String &argsString,
     }
     else
     {
-        Table table( "r r r l l" );
+        Table table( "lr r r l l" );
         for ( int i = 0; i < DISPLAY_RECORDS; i++ )
         {
             RecordTime@ record = records[i];
             if ( record.saved )
             {
+                if ( full )
+                    table.addCell( record.version + " " );
+                else
+                    table.addCell( "" );
                 table.addCell( ( i + 1 ) + "." );
                 table.addCell( S_COLOR_GREEN + RACE_TimeToString( record.finishTime ) );
                 table.addCell( S_COLOR_YELLOW + "[+" + RACE_TimeToString( record.finishTime - top.finishTime ) + "]" );
@@ -332,7 +345,18 @@ bool Cmd_Top( Client@ client, const String &cmdString, const String &argsString,
         for ( uint i = 0; i < rows; i++ )
             client.printMessage( table.getRow( i ) + "\n" );
     }
+}
 
+bool Cmd_Top( Client@ client, const String &cmdString, const String &argsString, int argc )
+{
+    String mapName = argsString.getToken( 0 ).tolower().replace( "/", "" );
+    showTop( client, mapName, false );
+    return true;
+}
+
+bool Cmd_FullTop( Client@ client, const String &cmdString, const String &argsString, int argc )
+{
+    showTop( client, "", true );
     return true;
 }
 
@@ -570,6 +594,12 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         if ( race_toplists.string != "" )
             client.printMessage( S_COLOR_WHITE + "  To see all lists visit: " + race_toplists.string + "." + "\n" );
     }
+    else if ( command == "fulltop" )
+    {
+        client.printMessage( S_COLOR_YELLOW + "/fulltop" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Shows a list of the top record times for the current map along with the names and time" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "  difference compared to the number 1 time, including times from other game versions." + "\n" );
+    }
     else if ( command == "cps" )
     {
         client.printMessage( S_COLOR_YELLOW + "/cps [target pattern] [reference pattern]" + "\n" );
@@ -638,6 +668,8 @@ bool RACE_HandleCommand( Client@ client, const String &cmdString, const String &
         return Cmd_Position( client, cmdString, argsString, argc );
     else if ( cmdString == "top" )
         return Cmd_Top( client, cmdString, argsString, argc );
+    else if ( cmdString == "fulltop" )
+        return Cmd_FullTop( client, cmdString, argsString, argc );
     else if ( cmdString == "cps" )
         return Cmd_CPs( client, cmdString, argsString, argc );
     else if ( cmdString == "lastrecs" )
@@ -666,6 +698,7 @@ void RACE_RegisterCommands()
     G_RegisterCommand( "noclip" );
     G_RegisterCommand( "position" );
     G_RegisterCommand( "top" );
+    G_RegisterCommand( "fulltop" );
     G_RegisterCommand( "cps" );
     G_RegisterCommand( "lastrecs" );
     G_RegisterCommand( "maplist" );
