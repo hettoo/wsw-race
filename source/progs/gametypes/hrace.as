@@ -32,6 +32,8 @@ enum Verbosity {
 int numCheckpoints = 0;
 bool demoRecording = false;
 
+const float HITBOX_EPSILON = 0.01f;
+
 // ch : MM
 const uint RECORD_SEND_INTERVAL = 5 * 60 * 1000; // 5 minutes
 uint lastRecordSent = 0;
@@ -510,21 +512,27 @@ void GT_SpawnGametype()
         }
         else if ( ent.classname == "info_player_deathmatch" )
         {
-            Vec3 origin = ent.origin;
+            Vec3 start = ent.origin;
+            Vec3 end = ent.origin;
+            Vec3 mins = playerMins;
+            Vec3 maxs = playerMaxs;
+            mins.x += HITBOX_EPSILON;
+            mins.y += HITBOX_EPSILON;
+            maxs.x -= HITBOX_EPSILON;
+            maxs.y -= HITBOX_EPSILON;
             Trace tr;
-            if ( tr.doTrace( origin, playerMins, playerMaxs, origin, ent.entNum, MASK_PLAYERSOLID ) )
+            if ( tr.doTrace( start, mins, maxs, end, ent.entNum, MASK_PLAYERSOLID ) )
             {
-                origin.x += 1;
-                origin.y += 1;
-                Vec3 start = origin;
-                start.z += 48;
-                if ( tr.doTrace( start, playerMins, playerMaxs, origin, ent.entNum, MASK_PLAYERSOLID ) )
+                mins.z = 0;
+                maxs.z = 0;
+                start.z += playerMaxs.z;
+                end.z += playerMins.z;
+                if ( tr.doTrace( start, mins, maxs, end, ent.entNum, MASK_PLAYERSOLID ) && !tr.startSolid )
                 {
-                    if ( !tr.startSolid )
-                        ent.set_origin( tr.get_endPos() );
-                }
-                else
+                    Vec3 origin = tr.get_endPos();
+                    origin.z -= playerMins.z;
                     ent.set_origin( origin );
+                }
             }
         }
     }
