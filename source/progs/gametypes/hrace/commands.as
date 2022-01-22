@@ -321,22 +321,22 @@ void showTop( Client@ client, const String &mapName, bool full )
     }
     else
     {
-        Table table( "lr r r l l" );
+        Table table( "r r r l ll" );
         for ( int i = 0; i < DISPLAY_RECORDS; i++ )
         {
             RecordTime@ record = records[i];
             if ( record.saved )
             {
-                if ( full )
-                    table.addCell( record.version + " " );
-                else
-                    table.addCell( "" );
                 table.addCell( ( i + 1 ) + "." );
                 table.addCell( S_COLOR_GREEN + RACE_TimeToString( record.finishTime ) );
                 table.addCell( S_COLOR_YELLOW + "[+" + RACE_TimeToString( record.finishTime - top.finishTime ) + "]" );
                 table.addCell( S_COLOR_WHITE + record.playerName );
                 if ( record.login != "" )
                     table.addCell( "(" + S_COLOR_YELLOW + record.login + S_COLOR_WHITE + ")" );
+                else
+                    table.addCell( "" );
+                if ( full )
+                    table.addCell( " " + record.version );
                 else
                     table.addCell( "" );
             }
