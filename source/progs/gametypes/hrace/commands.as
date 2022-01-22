@@ -484,6 +484,9 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         cmdlist.addCell( "/top" );
         cmdlist.addCell( "Shows the top record times for the current map." );
 
+        cmdlist.addCell( "/fulltop" );
+        cmdlist.addCell( "Shows the top record times for the current map, including records from previous versions." );
+
         cmdlist.addCell( "/cps" );
         cmdlist.addCell( "Shows your times between checkpoints for the current map." );
 
