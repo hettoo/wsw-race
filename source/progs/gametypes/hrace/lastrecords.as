@@ -80,7 +80,8 @@ class LastRecords
             Cvar mapNameVar( "mapname", "", 0 );
             table.addCell( mapNameVar.string.tolower() );
             add++;
-            bound--;
+            if ( LAST_RECORDS - 1 < bound )
+                bound--;
         }
 
         for ( uint i = 0; i < bound; i++ )
