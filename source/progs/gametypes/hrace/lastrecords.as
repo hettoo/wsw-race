@@ -42,11 +42,11 @@ class LastRecords
 
     void toFile()
     {
-        if ( levelRecords[0].finishTime == 0 || ( lastRec > 0 && levelRecords[0].finishTime >= lastRec ) )
+        if ( levelRecords[0].finishTime == 0 || ( this.lastRec > 0 && levelRecords[0].finishTime >= this.lastRec ) )
             return;
 
         Cvar mapNameVar( "mapname", "", 0 );
-        LastRecord newRecord = LastRecord( levelRecords[0].finishTime, lastRec, mapNameVar.string.tolower(), levelRecords[0].playerName );
+        LastRecord newRecord = LastRecord( levelRecords[0].finishTime, this.lastRec, mapNameVar.string.tolower(), levelRecords[0].playerName );
         String result = newRecord.format();
         uint bound = this.count;
         if ( LAST_RECORDS - 1 < bound )
@@ -65,10 +65,27 @@ class LastRecords
             return false;
         }
 
+        uint bound = this.count;
+        uint add = 1;
         Table table( S_COLOR_ORANGE + "r " + S_COLOR_WHITE + "r" + S_COLOR_YELLOW + " [r] " + S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "l " + S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "l" );
-        for ( uint i = 0; i < this.count; i++ )
+
+        if ( levelRecords[0].finishTime != 0 && ( this.lastRec == 0 || levelRecords[0].finishTime < this.lastRec ) )
         {
-            table.addCell( ( i + 1 ) + "." );
+            table.addCell( add + "." );
+            table.addCell( RACE_TimeToString( levelRecords[0].finishTime ) );
+            table.addCell( RACE_TimeDiffString( levelRecords[0].finishTime, this.lastRec, false ).removeColorTokens() );
+            table.addCell( "by" );
+            table.addCell( levelRecords[0].playerName );
+            table.addCell( "on" );
+            Cvar mapNameVar( "mapname", "", 0 );
+            table.addCell( mapNameVar.string.tolower() );
+            add++;
+            bound--;
+        }
+
+        for ( uint i = 0; i < bound; i++ )
+        {
+            table.addCell( ( i + add ) + "." );
             table.addCell( RACE_TimeToString( this.recs[i].time ) );
             table.addCell( RACE_TimeDiffString( this.recs[i].time, this.recs[i].ref, false ).removeColorTokens() );
             table.addCell( "by" );
