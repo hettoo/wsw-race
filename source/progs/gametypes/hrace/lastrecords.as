@@ -81,7 +81,7 @@ class LastRecords
             table.addCell( mapNameVar.string.tolower() );
             add++;
             if ( LAST_RECORDS - 1 < bound )
-                bound--;
+                bound = LAST_RECORDS - 1;
         }
 
         for ( uint i = 0; i < bound; i++ )
