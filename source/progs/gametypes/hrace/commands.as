@@ -336,7 +336,7 @@ void showTop( Client@ client, const String &mapName, bool full )
                 else
                     table.addCell( "" );
                 if ( full )
-                    table.addCell( " " + record.version );
+                    table.addCell( " " + S_COLOR_WHITE + record.version );
                 else
                     table.addCell( "" );
             }
