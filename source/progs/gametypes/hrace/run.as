@@ -81,9 +81,14 @@ class Run
         this.positions[this.positionCount++] = position;
     }
 
-    void setCP( int id, uint time, int order )
+    void setCP( int id, uint time )
     {
         this.cpTimes[id] = time;
+    }
+
+    void setCP( int id, uint time, int order )
+    {
+        this.setCP( id, time );
         this.cpOrder[order] = id;
     }
 

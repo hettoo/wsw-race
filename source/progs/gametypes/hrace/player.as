@@ -1101,7 +1101,11 @@ class Player
             return false;
 
         uint time = this.raceTime();
-        this.run.setCP( id, time, this.currentSector++ );
+        if ( this.practicing )
+            this.run.setCP( id, time );
+        else
+            this.run.setCP( id, time, this.currentSector );
+        this.currentSector++;
 
         // send this checkpoint to MM
         if ( !this.practicing && this.client.getMMLogin() != "" )
