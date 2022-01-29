@@ -1014,6 +1014,10 @@ class Player
                         G_PrintMsg( null, this.client.name + S_COLOR_YELLOW + " set a new " + S_COLOR_GREEN + race_servername.string + " " + S_COLOR_YELLOW + "record: "
                             + S_COLOR_GREEN + RACE_TimeToString( this.run.finishTime ) + " " + S_COLOR_YELLOW + "[-" + RACE_TimeToString( levelRecords[0].finishTime - this.run.finishTime ) + "]\n" );
                     }
+                    if ( otherVersionRecords[0].saved && otherVersionRecords[0].finishTime <= this.run.finishTime )
+                    {
+                        G_PrintMsg( null, S_COLOR_YELLOW + "Note overall top is " + RACE_TimeToString( otherVersionRecords[0].finishTime ) + " [" + RACE_TimeDiffString( otherVersionRecords[0].finishTime, this.run.finishTime, false ).removeColorTokens() + "]" + S_COLOR_YELLOW + " by " + S_COLOR_WHITE + otherVersionRecords[0].playerName + S_COLOR_YELLOW + " in " + otherVersionRecords[0].version + "\n" );
+                    }
                 }
 
                 int remove = MAX_RECORDS - 1;
