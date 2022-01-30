@@ -1104,6 +1104,9 @@ class Player
         if ( !this.validTime() ) // something is very wrong here
             return false;
 
+        if ( this.client.getEnt().moveType == MOVETYPE_NONE )
+            return false;
+
         uint time = this.raceTime();
         if ( this.practicing )
             this.run.setCP( id, time );
