@@ -40,7 +40,7 @@ const uint RECORD_SEND_INTERVAL = 5 * 60 * 1000; // 5 minutes
 uint lastRecordSent = 0;
 
 // msc: practicemode message
-uint practiceModeMsg, noclipModeMsg, recallModeMsg, defaultMsg;
+uint practiceModeMsg, noclipModeMsg, recallModeMsg, prejumpMsg, defaultMsg;
 
 bool hasStart;
 bool hasFinish;
@@ -669,6 +669,7 @@ void GT_InitGametype()
     practiceModeMsg = G_RegisterHelpMessage(S_COLOR_CYAN + "Practicing");
     noclipModeMsg = G_RegisterHelpMessage(S_COLOR_CYAN + "Practicing - Noclip");
     recallModeMsg = G_RegisterHelpMessage(S_COLOR_CYAN + "Practicing - Recall Mode");
+    prejumpMsg = G_RegisterHelpMessage(S_COLOR_RED + "Prejumping!");
     defaultMsg = G_RegisterHelpMessage(" ");
 
     RACE_ForceFiles();

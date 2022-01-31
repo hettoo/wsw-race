@@ -795,6 +795,8 @@ class Player
         {
             if ( this.client.team == TEAM_SPECTATOR && this.client.getEnt().isGhosting() )
                 client.setHelpMessage( 0 );
+            else if ( this.preRace() && RS_QueryPjState( this.client.playerNum ) )
+                client.setHelpMessage( prejumpMsg );
             else
                 this.client.setHelpMessage( defaultMsg );
         }
@@ -832,9 +834,7 @@ class Player
         this.updateMaxSpeed();
         this.checkRelease();
 
-        // hettoo: force practicemode message on spectators
-        if ( client.team == TEAM_SPECTATOR )
-            this.updateHelpMessage();
+        this.updateHelpMessage();
 
         // msc: temporary MAX_ACCEL replacement
         if ( frameTime > 0 )
