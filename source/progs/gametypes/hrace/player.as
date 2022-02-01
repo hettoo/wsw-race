@@ -183,7 +183,7 @@ class Player
 
     bool preRace()
     {
-        return !this.inRace && !this.practicing && !this.postRace && this.client.team != TEAM_SPECTATOR;
+        return !this.inRace && !this.practicing && !this.postRace && this.client.team != TEAM_SPECTATOR && this.client.getEnt().health > 0;
     }
 
     void setQuickMenu()
@@ -795,7 +795,7 @@ class Player
         {
             if ( this.client.team == TEAM_SPECTATOR && this.client.getEnt().isGhosting() )
                 client.setHelpMessage( 0 );
-            else if ( this.preRace() && RS_QueryPjState( this.client.playerNum ) )
+            else if ( refPlayer.preRace() && RS_QueryPjState( refPlayer.client.playerNum ) )
                 client.setHelpMessage( prejumpMsg );
             else
                 this.client.setHelpMessage( defaultMsg );
