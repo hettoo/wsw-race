@@ -1562,6 +1562,7 @@ class Player
 
         int worst = -1;
         uint worstDiff = 0;
+        uint potential = 0;
 
         Table table( S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "r" + S_COLOR_ORANGE + " / l r " + S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "l" );
         int i;
@@ -1626,10 +1627,14 @@ class Player
             if ( bestSet )
             {
                 uint diff = time - best;
-                if ( best < time && ( worst < 0 || diff > worstDiff ) )
+                if ( best < time )
                 {
-                    worst = i;
-                    worstDiff = diff;
+                    if ( worst < 0 || diff > worstDiff )
+                    {
+                        worst = i;
+                        worstDiff = diff;
+                    }
+                    potential += diff;
                 }
                 this.reportDiff( table, "CP" + ( i + 1 ), time, best, bestName, targetPattern == "" );
             }
@@ -1637,9 +1642,11 @@ class Player
 
         uint time;
         int previousId;
+        uint finishTime;
         if ( ref < 0 )
         {
-            time = this.bestRun.finishTime;
+            finishTime = this.bestRun.finishTime;
+            time = finishTime;
             if ( i > 0 )
             {
                 previousId = this.bestRun.cpOrder[i - 1];
@@ -1648,7 +1655,8 @@ class Player
         }
         else
         {
-            time = levelRecords[ref].finishTime;
+            finishTime = levelRecords[ref].finishTime;
+            time = finishTime;
             if ( i > 0 )
             {
                 previousId = levelRecords[ref].cpOrder[i - 1];
@@ -1684,10 +1692,14 @@ class Player
         if ( bestSet )
         {
             uint diff = time - best;
-            if ( best < time && ( worst < 0 || diff > worstDiff ) )
+            if ( best < time )
             {
-                worst = i;
-                worstDiff = diff;
+                if ( best < time && ( worst < 0 || diff > worstDiff ) )
+                {
+                    worst = i;
+                    worstDiff = diff;
+                }
+                potential += diff;
             }
             this.reportDiff( table, "End", time, best, bestName, targetPattern == "" );
         }
@@ -1697,7 +1709,7 @@ class Player
             G_PrintMsg( ent, table.getRow( j ) + "\n" );
         if ( worst >= 0 )
         {
-            String improve = S_COLOR_ORANGE + "Worst loss between ";
+            String improve = S_COLOR_ORANGE + "Potential " + RACE_TimeToString( finishTime - potential ) + ", worst loss between ";
             if ( worst == 0 )
                 improve += "START";
             else
