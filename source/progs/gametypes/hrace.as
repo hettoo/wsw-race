@@ -511,7 +511,7 @@ void GT_SpawnGametype()
                 }
             }
         }
-        else if ( ent.classname == "info_player_deathmatch" )
+        else if ( ent.classname == "info_player_deathmatch" || ent.classname == "info_player_start" )
         {
             Vec3 start = ent.origin;
             Vec3 end = ent.origin;
