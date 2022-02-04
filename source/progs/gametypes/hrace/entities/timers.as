@@ -1,3 +1,5 @@
+const int MAX_START_HEIGHT_CHECK = 2048;
+
 void target_checkpoint_use( Entity@ self, Entity@ other, Entity@ activator )
 {
     if ( @activator.client == null )
@@ -63,7 +65,16 @@ void target_starttimer_use( Entity@ self, Entity@ other, Entity@ activator )
 
         int speed = int( HorizontalSpeed( activator.velocity ) );
         activator.client.setHUDStat( STAT_PROGRESS_OTHER, speed );
-        activator.client.printMessage( S_COLOR_ORANGE + "Starting speed: " + S_COLOR_WHITE + speed + "\n" );
+        String msg = S_COLOR_ORANGE + "Starting speed: " + S_COLOR_WHITE + speed;
+
+        Vec3 mins, maxs;
+        activator.getSize( mins, maxs );
+        Vec3 down = activator.origin;
+        down.z -= MAX_START_HEIGHT_CHECK;
+        Trace tr;
+        if ( tr.doTrace( activator.origin, mins, maxs, down, activator.entNum, MASK_PLAYERSOLID ) )
+            msg += S_COLOR_ORANGE + ", height: " + S_COLOR_WHITE + int( tr.fraction * MAX_START_HEIGHT_CHECK );
+        activator.client.printMessage( msg + "\n" );
     }
 }
 
