@@ -1766,12 +1766,18 @@ class Player
     {
         String quick = "";
         if ( numRLs + numGLs + numPGs == 0 )
-            quick = S_COLOR_RED + "no " + S_COLOR_WHITE;
-        quick += "weapons, ";
-        if ( numTeles == 0 )
-            quick += S_COLOR_RED + "no " + S_COLOR_WHITE;
-        quick += "teleporter destinations";
-        G_PrintMsg( this.client.getEnt(), S_COLOR_GREEN + "Map stats: " + S_COLOR_WHITE + quick + "\n    " + numRLs + " rocket launchers, " + numGLs + " grenade launchers, " + numPGs + " plasma guns, " + numTeles + " teleporter destinations\n" );
+            quick = "strafe";
+        else
+            quick += "weapons";
+        if ( numCheckpoints > 0 )
+            quick += ", cps";
+        if ( numPushes > 0 )
+            quick += ", pushes";
+        if ( numDoors > 0 )
+            quick += ", doors";
+        if ( numTeles > 0 )
+            quick += ", teles";
+        G_PrintMsg( this.client.getEnt(), S_COLOR_GREEN + "Map stats: " + S_COLOR_WHITE + quick + "\n    " + numRLs + " rocket launchers, " + numGLs + " grenade launchers, " + numPGs + " plasma guns, " + numCheckpoints + " checkpoints, " + numPushes + " push triggers, " + numDoors + " doors, " + numTeles + " teleporter destinations\n" );
     }
 }
 

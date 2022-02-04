@@ -50,6 +50,8 @@ Vec3 finishPosition;
 int numRLs = 0;
 int numPGs = 0;
 int numGLs = 0;
+int numPushes = 0;
+int numDoors = 0;
 int numTeles = 0;
 
 ///*****************************************************************
@@ -549,6 +551,10 @@ void GT_SpawnGametype()
             numGLs++;
         else if ( ent.classname == "weapon_plasmagun" )
             numPGs++;
+        else if ( ent.classname == "trigger_push" )
+            numPushes++;
+        else if ( ent.classname == "func_door" )
+            numDoors++;
         else if ( ent.classname == "misc_teleporter_dest" )
             numTeles++;
     }
