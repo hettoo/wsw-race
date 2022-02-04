@@ -53,6 +53,7 @@ int numGLs = 0;
 int numPushes = 0;
 int numDoors = 0;
 int numTeles = 0;
+bool hasSlick = false;
 
 ///*****************************************************************
 /// LOCAL FUNCTIONS
@@ -497,6 +498,15 @@ void GT_SpawnGametype()
     for ( int i = 0; i < numEntities; i++ )
     {
         Entity@ ent = G_GetEntity(i);
+        Trace slick;
+        Vec3 slick_above = ent.origin;
+        slick_above.z += 16;
+        Vec3 slick_below = ent.origin;
+        slick_below.z -= 512;
+        if ( slick.doTrace( slick_above, playerMins, playerMaxs, slick_below, ent.entNum, MASK_PLAYERSOLID ) && ( slick.surfFlags & SURF_SLICK ) > 0 )
+        {
+            hasSlick = true;
+        }
         if ( ent.classname == "trigger_multiple" )
         {
             Entity@[] targets = ent.findTargets();

@@ -1769,6 +1769,8 @@ class Player
             quick = "strafe";
         else
             quick += "weapons";
+        if ( hasSlick )
+            quick += ", slick";
         if ( numCheckpoints > 0 )
             quick += ", cps";
         if ( numPushes > 0 )
