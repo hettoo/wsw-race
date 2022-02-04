@@ -1761,6 +1761,18 @@ class Player
             }
         }
     }
+
+    void showMapStats()
+    {
+        String quick = "";
+        if ( numRLs + numGLs + numPGs == 0 )
+            quick = S_COLOR_RED + "no " + S_COLOR_WHITE;
+        quick += "weapons, ";
+        if ( numTeles == 0 )
+            quick += S_COLOR_RED + "no " + S_COLOR_WHITE;
+        quick += "teleporter destinations";
+        G_PrintMsg( this.client.getEnt(), S_COLOR_GREEN + "Map stats: " + S_COLOR_WHITE + quick + "\n    " + numRLs + " rocket launchers, " + numGLs + " grenade launchers, " + numPGs + " plasma guns, " + numTeles + " teleporter destinations\n" );
+    }
 }
 
 Player@ RACE_GetPlayer( Client@ client )

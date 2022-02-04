@@ -47,6 +47,11 @@ bool hasFinish;
 Vec3 startPosition;
 Vec3 finishPosition;
 
+int numRLs = 0;
+int numPGs = 0;
+int numGLs = 0;
+int numTeles = 0;
+
 ///*****************************************************************
 /// LOCAL FUNCTIONS
 ///*****************************************************************
@@ -276,6 +281,8 @@ void GT_ScoreEvent( Client@ client, const String &score_event, const String &arg
 
         // ch : begin fetching records over interweb
         // MM_FetchRaceRecords( client.getEnt() );
+
+        RACE_GetPlayer( client ).showMapStats();
     }
     else if ( score_event == "userinfochanged" )
     {
@@ -536,6 +543,14 @@ void GT_SpawnGametype()
                 }
             }
         }
+        else if ( ent.classname == "weapon_rocketlauncher" )
+            numRLs++;
+        else if ( ent.classname == "weapon_grenadelauncher" )
+            numGLs++;
+        else if ( ent.classname == "weapon_plasmagun" )
+            numPGs++;
+        else if ( ent.classname == "misc_teleporter_dest" )
+            numTeles++;
     }
 
     // setup the checkpoints arrays sizes adjusted to numCheckPoints
