@@ -1,3 +1,5 @@
+const Vec3 NO_POSITION( -99.99, -1337.99, -99.42 );
+
 class EntityFinder
 {
     PositionList@ starts;
@@ -81,7 +83,7 @@ class EntityFinder
         else if ( type == "slick" )
             @target = this.slicks;
         else
-            return Vec3();
+            return NO_POSITION;
 
         return target.get( index );
     }
@@ -114,7 +116,7 @@ class Nil : PositionList
 
     Vec3 get( uint index )
     {
-        return Vec3();
+        return NO_POSITION;
     }
 
     ~Nil() {}

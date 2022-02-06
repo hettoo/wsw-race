@@ -1457,7 +1457,7 @@ class Player
         else
             this.findIndex = 0;
         Vec3 origin = entityFinder.find( entity, this.findIndex );
-        if ( origin.x == 0 && origin.y == 0 && origin.z == 0 )
+        if ( origin == NO_POSITION )
         {
             G_PrintMsg( ent, "No matching entity found.\n" );
             return false;
