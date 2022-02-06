@@ -1779,6 +1779,10 @@ class Player
             quick += ", doors";
         if ( numTeles > 0 )
             quick += ", teles";
+        if ( !hasStart )
+            quick += ", " + S_COLOR_RED + "no start" + S_COLOR_WHITE;
+        if ( !hasFinish )
+            quick += ", " + S_COLOR_RED + "no finish" + S_COLOR_WHITE;
         G_PrintMsg( this.client.getEnt(), S_COLOR_GREEN + "Map stats: " + S_COLOR_WHITE + quick + "\n    " + numRLs + " rocket launchers, " + numGLs + " grenade launchers, " + numPGs + " plasma guns, " + numCheckpoints + " checkpoints, " + numPushes + " push triggers, " + numDoors + " doors, " + numTeles + " teleporter destinations\n" );
     }
 }
