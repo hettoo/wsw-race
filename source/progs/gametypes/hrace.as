@@ -493,23 +493,26 @@ void GT_SpawnGametype()
         Vec3 entMins, entMaxs;
         ent.getSize( entMins, entMaxs );
         Vec3 middle = ent.origin + 0.5 * entMins + 0.5 * entMaxs;
-        Trace slick;
-        Vec3 slick_above = ent.origin;
-        slick_above.z += SLICK_ABOVE;
-        Vec3 slick_below = ent.origin;
-        slick_below.z -= SLICK_BELOW;
-        if ( slick.doTrace( slick_above, playerMins, playerMaxs, slick_below, ent.entNum, MASK_PLAYERSOLID ) && ( slick.surfFlags & SURF_SLICK ) > 0 )
+        if ( entityFinder.slicks.length() < 1 )
         {
-            entityFinder.add( "slick", ent.origin );
-        }
-        else
-        {
-            slick_above = middle;
+            Trace slick;
+            Vec3 slick_above = ent.origin;
             slick_above.z += SLICK_ABOVE;
-            slick_below = middle;
+            Vec3 slick_below = ent.origin;
             slick_below.z -= SLICK_BELOW;
             if ( slick.doTrace( slick_above, playerMins, playerMaxs, slick_below, ent.entNum, MASK_PLAYERSOLID ) && ( slick.surfFlags & SURF_SLICK ) > 0 )
-                entityFinder.add( "slick", middle );
+            {
+                entityFinder.add( "slick", ent.origin );
+            }
+            else
+            {
+                slick_above = middle;
+                slick_above.z += SLICK_ABOVE;
+                slick_below = middle;
+                slick_below.z -= SLICK_BELOW;
+                if ( slick.doTrace( slick_above, playerMins, playerMaxs, slick_below, ent.entNum, MASK_PLAYERSOLID ) && ( slick.surfFlags & SURF_SLICK ) > 0 )
+                    entityFinder.add( "slick", middle );
+            }
         }
         if ( ent.classname == "trigger_multiple" )
         {
