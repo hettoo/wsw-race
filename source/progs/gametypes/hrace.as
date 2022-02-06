@@ -47,6 +47,9 @@ bool hasFinish;
 Vec3 startPosition;
 Vec3 finishPosition;
 
+const uint SLICK_ABOVE = 32;
+const uint SLICK_BELOW = 2048;
+
 int numRLs = 0;
 int numPGs = 0;
 int numGLs = 0;
@@ -500,13 +503,22 @@ void GT_SpawnGametype()
         Entity@ ent = G_GetEntity(i);
         Trace slick;
         Vec3 slick_above = ent.origin;
-        slick_above.z += 16;
+        slick_above.z += SLICK_ABOVE;
         Vec3 slick_below = ent.origin;
-        slick_below.z -= 512;
+        slick_below.z -= SLICK_BELOW;
         if ( slick.doTrace( slick_above, playerMins, playerMaxs, slick_below, ent.entNum, MASK_PLAYERSOLID ) && ( slick.surfFlags & SURF_SLICK ) > 0 )
-        {
             hasSlick = true;
-        }
+        Vec3 entMins, entMaxs;
+        ent.getSize( entMins, entMaxs );
+        if ( slick.doTrace( slick_above, entMins, entMaxs, slick_below, ent.entNum, MASK_PLAYERSOLID ) && ( slick.surfFlags & SURF_SLICK ) > 0 )
+            hasSlick = true;
+        Vec3 middle = ent.origin + 0.5 * entMins + 0.5 * entMaxs;
+        slick_above = middle;
+        slick_above.z += SLICK_ABOVE;
+        slick_below = middle;
+        slick_below.z -= SLICK_BELOW;
+        if ( slick.doTrace( slick_above, playerMins, playerMaxs, slick_below, ent.entNum, MASK_PLAYERSOLID ) && ( slick.surfFlags & SURF_SLICK ) > 0 )
+            hasSlick = true;
         if ( ent.classname == "trigger_multiple" )
         {
             Entity@[] targets = ent.findTargets();
@@ -517,16 +529,12 @@ void GT_SpawnGametype()
                 {
                     ent.wait = 0;
                     hasStart = true;
-                    Vec3 mins, maxs;
-                    ent.getSize( mins, maxs );
-                    startPosition = ent.origin + 0.5 * mins + 0.5 * maxs;
+                    startPosition = middle;
                 }
                 else if ( target.classname == "target_stoptimer" )
                 {
                     hasFinish = true;
-                    Vec3 mins, maxs;
-                    ent.getSize( mins, maxs );
-                    finishPosition = ent.origin + 0.5 * mins + 0.5 * maxs;
+                    finishPosition = middle;
                 }
             }
         }
