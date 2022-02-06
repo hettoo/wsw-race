@@ -30,5 +30,6 @@ hrace/quickmenu.as;
 hrace/recordtime.as;
 hrace/lastrecords.as;
 hrace/table.as;
+hrace/entityfinder.as;
 
 hrace.as;

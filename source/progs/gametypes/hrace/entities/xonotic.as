@@ -28,6 +28,7 @@ void trigger_race_checkpoint( Entity@ self )
 
   @self.use = target_checkpoint_use;
   numCheckpoints++;
+  entityFinder.add( "cp", self.origin );
 }
 
 void trigger_race_checkpoint_touch( Entity@ ent, Entity@ other, const Vec3 planeNormal, int surfFlags )

@@ -42,21 +42,10 @@ uint lastRecordSent = 0;
 // msc: practicemode message
 uint practiceModeMsg, noclipModeMsg, recallModeMsg, prejumpMsg, defaultMsg;
 
-bool hasStart;
-bool hasFinish;
-Vec3 startPosition;
-Vec3 finishPosition;
+EntityFinder entityFinder;
 
 const uint SLICK_ABOVE = 32;
 const uint SLICK_BELOW = 2048;
-
-int numRLs = 0;
-int numPGs = 0;
-int numGLs = 0;
-int numPushes = 0;
-int numDoors = 0;
-int numTeles = 0;
-bool hasSlick = false;
 
 ///*****************************************************************
 /// LOCAL FUNCTIONS
@@ -501,24 +490,27 @@ void GT_SpawnGametype()
     for ( int i = 0; i < numEntities; i++ )
     {
         Entity@ ent = G_GetEntity(i);
+        Vec3 entMins, entMaxs;
+        ent.getSize( entMins, entMaxs );
+        Vec3 middle = ent.origin + 0.5 * entMins + 0.5 * entMaxs;
         Trace slick;
         Vec3 slick_above = ent.origin;
         slick_above.z += SLICK_ABOVE;
         Vec3 slick_below = ent.origin;
         slick_below.z -= SLICK_BELOW;
         if ( slick.doTrace( slick_above, playerMins, playerMaxs, slick_below, ent.entNum, MASK_PLAYERSOLID ) && ( slick.surfFlags & SURF_SLICK ) > 0 )
-            hasSlick = true;
-        Vec3 entMins, entMaxs;
-        ent.getSize( entMins, entMaxs );
-        if ( slick.doTrace( slick_above, entMins, entMaxs, slick_below, ent.entNum, MASK_PLAYERSOLID ) && ( slick.surfFlags & SURF_SLICK ) > 0 )
-            hasSlick = true;
-        Vec3 middle = ent.origin + 0.5 * entMins + 0.5 * entMaxs;
-        slick_above = middle;
-        slick_above.z += SLICK_ABOVE;
-        slick_below = middle;
-        slick_below.z -= SLICK_BELOW;
-        if ( slick.doTrace( slick_above, playerMins, playerMaxs, slick_below, ent.entNum, MASK_PLAYERSOLID ) && ( slick.surfFlags & SURF_SLICK ) > 0 )
-            hasSlick = true;
+        {
+            entityFinder.add( "slick", ent.origin );
+        }
+        else
+        {
+            slick_above = middle;
+            slick_above.z += SLICK_ABOVE;
+            slick_below = middle;
+            slick_below.z -= SLICK_BELOW;
+            if ( slick.doTrace( slick_above, playerMins, playerMaxs, slick_below, ent.entNum, MASK_PLAYERSOLID ) && ( slick.surfFlags & SURF_SLICK ) > 0 )
+                entityFinder.add( "slick", middle );
+        }
         if ( ent.classname == "trigger_multiple" )
         {
             Entity@[] targets = ent.findTargets();
@@ -528,13 +520,11 @@ void GT_SpawnGametype()
                 if ( target.classname == "target_starttimer" )
                 {
                     ent.wait = 0;
-                    hasStart = true;
-                    startPosition = middle;
+                    entityFinder.add( "start", middle );
                 }
                 else if ( target.classname == "target_stoptimer" )
                 {
-                    hasFinish = true;
-                    finishPosition = middle;
+                    entityFinder.add( "finish", middle );
                 }
             }
         }
@@ -564,17 +554,17 @@ void GT_SpawnGametype()
             }
         }
         else if ( ent.classname == "weapon_rocketlauncher" )
-            numRLs++;
+            entityFinder.add( "rl", middle );
         else if ( ent.classname == "weapon_grenadelauncher" )
-            numGLs++;
+            entityFinder.add( "gl", middle );
         else if ( ent.classname == "weapon_plasmagun" )
-            numPGs++;
+            entityFinder.add( "pg", middle );
         else if ( ent.classname == "trigger_push" )
-            numPushes++;
+            entityFinder.add( "push", middle );
         else if ( ent.classname == "func_door" )
-            numDoors++;
+            entityFinder.add( "door", middle );
         else if ( ent.classname == "misc_teleporter_dest" )
-            numTeles++;
+            entityFinder.add( "tele", middle );
     }
 
     // setup the checkpoints arrays sizes adjusted to numCheckPoints

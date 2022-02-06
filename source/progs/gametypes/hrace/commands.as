@@ -467,7 +467,7 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         cmdlist.addCell( "Teleports you to your saved position." );
 
         cmdlist.addCell( "/position find" );
-        cmdlist.addCell( "Teleports you to the start or stop trigger." );
+        cmdlist.addCell( "Teleports you to a matching entity." );
 
         cmdlist.addCell( "/position join" );
         cmdlist.addCell( "Teleports you to a player." );
@@ -548,8 +548,8 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
     }
     else if ( command == "position" && subcommand == "find" )
     {
-        client.printMessage( S_COLOR_YELLOW + "/position find <start|finish>" + "\n" );
-        client.printMessage( S_COLOR_WHITE + "- Teleports you to the start or finish trigger." + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/position find <start|finish|rl|gl|pg|push|door|tele|slick>" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Teleports you to a matching entity." + "\n" );
         client.printMessage( S_COLOR_WHITE + "  Note: This command does not work during race." + "\n" );
     }
     else if ( command == "position" && subcommand == "join" )

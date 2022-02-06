@@ -54,6 +54,9 @@ class Player
 
     int positionInterval;
 
+    String lastFind;
+    uint findIndex;
+
     void resizeCPs( int size )
     {
         this.run.resizeCPs( size );
@@ -98,6 +101,9 @@ class Player
         this.messageLock = 0;
         for ( int i = 0; i < MAX_FLOOD_MESSAGES; i++ )
             this.messageTimes[i] = 0;
+
+        this.lastFind = "";
+        this.findIndex = 0;
     }
 
     Player()
@@ -1446,31 +1452,17 @@ class Player
             return false;
         }
 
-        Vec3 origin;
-
-        if ( entity == "start" )
-        {
-            if ( !hasStart )
-            {
-                G_PrintMsg( ent, "No trigger_multiple targetting a target_starttimer found.\n" );
-                return true;
-            }
-            origin = startPosition;
-        }
-        else if ( entity == "finish" )
-        {
-            if ( !hasFinish )
-            {
-                G_PrintMsg( ent, "No trigger_multiple targetting a target_stoptimer found.\n" );
-                return true;
-            }
-            origin = finishPosition;
-        }
+        if ( entity == this.lastFind )
+            this.findIndex++;
         else
+            this.findIndex = 0;
+        Vec3 origin = entityFinder.find( entity, this.findIndex );
+        if ( origin.x == 0 && origin.y == 0 && origin.z == 0 )
         {
-            G_PrintMsg( ent, "Usage: /position find <start|finish>.\n" );
+            G_PrintMsg( ent, "No matching entity found.\n" );
             return false;
         }
+        this.lastFind = entity;
 
         ent.origin = origin;
 
@@ -1765,6 +1757,9 @@ class Player
     void showMapStats()
     {
         String msg = "";
+        uint numRLs = entityFinder.rls.length();
+        uint numGLs = entityFinder.gls.length();
+        uint numPGs = entityFinder.pgs.length();
         if ( numRLs + numGLs + numPGs == 0 )
             msg = "strafe";
         else
@@ -1784,19 +1779,22 @@ class Player
             if ( numPGs > 0 )
                 msg += "pg(" + numPGs + ")";
         }
-        if ( hasSlick )
+        if ( entityFinder.slicks.length() > 0 )
             msg += ", slick";
         if ( numCheckpoints > 0 )
             msg += ", cps(" + numCheckpoints + ")";
+        uint numPushes = entityFinder.pushes.length();
+        uint numDoors = entityFinder.doors.length();
+        uint numTeles = entityFinder.teles.length();
         if ( numPushes > 0 )
             msg += ", push(" + numPushes + ")";
         if ( numDoors > 0 )
             msg += ", doors(" + numDoors + ")";
         if ( numTeles > 0 )
             msg += ", teles(" + numTeles + ")";
-        if ( !hasStart )
+        if ( entityFinder.starts.length() == 0 )
             msg += ", " + S_COLOR_RED + "no start" + S_COLOR_WHITE;
-        if ( !hasFinish )
+        if ( entityFinder.finishes.length() == 0 )
             msg += ", " + S_COLOR_RED + "no finish" + S_COLOR_WHITE;
         G_PrintMsg( this.client.getEnt(), S_COLOR_GREEN + "Map stats: " + S_COLOR_WHITE + msg + "\n" );
     }

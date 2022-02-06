@@ -16,6 +16,7 @@ void target_checkpoint( Entity@ self )
     self.count = numCheckpoints;
     @self.use = target_checkpoint_use;
     numCheckpoints++;
+    entityFinder.add( "cp", self.origin );
 }
 
 void target_stoptimer_use( Entity@ self, Entity@ other, Entity@ activator )
