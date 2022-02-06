@@ -1764,26 +1764,41 @@ class Player
 
     void showMapStats()
     {
-        String quick = "";
+        String msg = "";
         if ( numRLs + numGLs + numPGs == 0 )
-            quick = "strafe";
+            msg = "strafe";
         else
-            quick += "weapons";
+        {
+            if ( numRLs > 0 )
+            {
+                msg += "rl(" + numRLs + ")";
+                if ( numGLs + numPGs > 0 )
+                    msg += ", ";
+            }
+            if ( numGLs > 0 )
+            {
+                msg += "gl(" + numGLs + ")";
+                if ( numPGs > 0 )
+                    msg += ", ";
+            }
+            if ( numPGs > 0 )
+                msg += "pg(" + numPGs + ")";
+        }
         if ( hasSlick )
-            quick += ", slick";
+            msg += ", slick";
         if ( numCheckpoints > 0 )
-            quick += ", cps";
+            msg += ", cps(" + numCheckpoints + ")";
         if ( numPushes > 0 )
-            quick += ", pushes";
+            msg += ", push(" + numPushes + ")";
         if ( numDoors > 0 )
-            quick += ", doors";
+            msg += ", doors(" + numDoors + ")";
         if ( numTeles > 0 )
-            quick += ", teles";
+            msg += ", teles(" + numTeles + ")";
         if ( !hasStart )
-            quick += ", " + S_COLOR_RED + "no start" + S_COLOR_WHITE;
+            msg += ", " + S_COLOR_RED + "no start" + S_COLOR_WHITE;
         if ( !hasFinish )
-            quick += ", " + S_COLOR_RED + "no finish" + S_COLOR_WHITE;
-        G_PrintMsg( this.client.getEnt(), S_COLOR_GREEN + "Map stats: " + S_COLOR_WHITE + quick + "\n    " + numRLs + " rocket launchers, " + numGLs + " grenade launchers, " + numPGs + " plasma guns, " + numCheckpoints + " checkpoints, " + numPushes + " push triggers, " + numDoors + " doors, " + numTeles + " teleporter destinations\n" );
+            msg += ", " + S_COLOR_RED + "no finish" + S_COLOR_WHITE;
+        G_PrintMsg( this.client.getEnt(), S_COLOR_GREEN + "Map stats: " + S_COLOR_WHITE + msg + "\n" );
     }
 }
 
