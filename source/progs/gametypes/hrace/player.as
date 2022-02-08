@@ -1446,6 +1446,13 @@ class Player
     {
         Entity@ ent = this.client.getEnt();
 
+        if ( entity == "" )
+        {
+            this.showMapStats();
+            G_PrintMsg( ent, "Usage: /position find <start|finish|rl|gl|pg|push|door|tele|slick>\n" );
+            return false;
+        }
+
         if ( !this.practicing && this.client.team != TEAM_SPECTATOR )
         {
             G_PrintMsg( ent, "Position loading is not available during a race.\n" );
