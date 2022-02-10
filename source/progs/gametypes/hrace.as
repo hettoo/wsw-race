@@ -502,7 +502,7 @@ void GT_SpawnGametype()
             slick_below.z -= SLICK_BELOW;
             if ( slick.doTrace( slick_above, playerMins, playerMaxs, slick_below, ent.entNum, MASK_PLAYERSOLID ) && ( slick.surfFlags & SURF_SLICK ) > 0 )
             {
-                entityFinder.add( "slick", ent.origin );
+                entityFinder.add( "slick", slick.endPos );
             }
             else
             {
@@ -511,7 +511,7 @@ void GT_SpawnGametype()
                 slick_below = middle;
                 slick_below.z -= SLICK_BELOW;
                 if ( slick.doTrace( slick_above, playerMins, playerMaxs, slick_below, ent.entNum, MASK_PLAYERSOLID ) && ( slick.surfFlags & SURF_SLICK ) > 0 )
-                    entityFinder.add( "slick", middle );
+                    entityFinder.add( "slick", slick.endPos );
             }
         }
         if ( ent.classname == "trigger_multiple" )
