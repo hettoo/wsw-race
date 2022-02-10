@@ -562,7 +562,7 @@ void GT_SpawnGametype()
             entityFinder.add( "gl", middle );
         else if ( ent.classname == "weapon_plasmagun" )
             entityFinder.add( "pg", middle );
-        else if ( ent.classname == "trigger_push" )
+        else if ( ent.classname == "trigger_push" || ent.classname == "trigger_push_velocity" )
             entityFinder.add( "push", middle );
         else if ( ent.classname == "func_door" )
             entityFinder.add( "door", middle );
