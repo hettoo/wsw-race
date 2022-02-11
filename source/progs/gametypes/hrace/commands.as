@@ -292,7 +292,7 @@ bool Cmd_Position( Client@ client, const String &cmdString, const String &argsSt
         return player.clearPosition( argsString.getToken( 1 ) );
     else
     {
-        G_PrintMsg( client.getEnt(), "position <save | load | find | join | speed <value> | recall | clear>\n" );
+        G_PrintMsg( client.getEnt(), "position <save | load | list | find | join | speed <value> | recall | clear>\n" );
         return false;
     }
 }
@@ -471,6 +471,9 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         cmdlist.addCell( "/position load [name]" );
         cmdlist.addCell( "Teleports you to your saved position." );
 
+        cmdlist.addCell( "/position list" );
+        cmdlist.addCell( "Lists saved position names." );
+
         cmdlist.addCell( "/position find" );
         cmdlist.addCell( "Teleports you to a matching entity." );
 
@@ -550,6 +553,11 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         client.printMessage( S_COLOR_YELLOW + "/position load [name]" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Teleports you to your saved position depending on which mode you are in." + "\n" );
         client.printMessage( S_COLOR_WHITE + "  Note: This command does not work during race." + "\n" );
+    }
+    else if ( command == "position" && subcommand == "list" )
+    {
+        client.printMessage( S_COLOR_YELLOW + "/position list" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Lists your saved position names." + "\n" );
     }
     else if ( command == "position" && subcommand == "find" )
     {
