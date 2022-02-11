@@ -40,7 +40,7 @@ class PositionStore
                 this.positions[i] = position;
                 return true;
             }
-            else if ( !this.positions[i].saved )
+            else if ( i > 0 && !this.positions[i].saved )
                 free = i;
         }
         if ( this.count < this.positions.length() )
