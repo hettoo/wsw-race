@@ -30,8 +30,8 @@ class Player
 
     bool practicing;
 
-    Position preRacePosition;
-    Position practicePosition;
+    PositionStore preRacePositionStore;
+    PositionStore practicePositionStore;
 
     bool noclipSpawn;
     int noclipWeapon;
@@ -86,8 +86,8 @@ class Player
         this.pos = -1;
         this.noclipSpawn = false;
 
-        this.practicePosition.clear();
-        this.preRacePosition.clear();
+        this.practicePositionStore.clear();
+        this.preRacePositionStore.clear();
         this.noclipBackup.clear();
         this.lastNoclipAction = 0;
         this.lerpFrom.saved = false;
@@ -282,12 +282,17 @@ class Player
         return true;
     }
 
-    Position@ savedPosition()
+    PositionStore@ positionStore()
     {
         if ( this.preRace() )
-            return preRacePosition;
+            return preRacePositionStore;
         else
-            return practicePosition;
+            return practicePositionStore;
+    }
+
+    Position@ savedPosition()
+    {
+        return this.positionStore().positions[0];
     }
 
     void applyPosition( Position@ position )
@@ -320,7 +325,7 @@ class Player
         ent.teleported = true;
     }
 
-    bool loadPosition( Verbosity verbosity )
+    bool loadPosition( String name, Verbosity verbosity )
     {
         Entity@ ent = this.client.getEnt();
         if ( !this.practicing && this.client.team != TEAM_SPECTATOR && !this.preRace() )
@@ -332,9 +337,10 @@ class Player
 
         this.noclipBackup.saved = false;
 
-        Position@ position = this.savedPosition();
+        PositionStore@ store = this.positionStore();
+        Position@ position = store.get( name );
 
-        if ( !position.saved )
+        if ( @position == null || !position.saved )
         {
             if ( verbosity == Verbosity_Verbose )
                 G_PrintMsg( ent, "No position has been saved yet.\n" );
@@ -355,6 +361,9 @@ class Player
         }
         else if ( this.practicing )
             this.recalled = false;
+
+        if ( name != "" )
+            store.set( "", position );
 
         this.updateHelpMessage();
 
@@ -436,7 +445,7 @@ class Player
         return result;
     }
 
-    bool savePosition()
+    bool savePosition( String name )
     {
         Client@ ref = this.client;
         if ( this.client.team == TEAM_SPECTATOR && this.client.chaseActive && this.client.chaseTarget != 0 )
@@ -469,7 +478,10 @@ class Player
             }
         }
 
-        Position@ position = this.savedPosition();
+        PositionStore@ store = this.positionStore();
+        Position@ position = store.get( name );
+        if( @position == null )
+            @position = Position();
 
         position.velocity = HorizontalVelocity( position.velocity );
         float speed;
@@ -490,12 +502,34 @@ class Player
 
         position.skipWeapons = ref.team == TEAM_SPECTATOR;
 
+        if ( !store.set( name, position ) )
+        {
+            G_PrintMsg( this.client.getEnt(), "No free position slot available.\n" );
+            return false;
+        }
+
         this.setQuickMenu();
 
         return true;
     }
 
-    bool clearPosition()
+    void listPositions()
+    {
+        Entity@ ent = this.client.getEnt();
+        PositionStore@ store = this.positionStore();
+        for ( uint i = 0; i < store.positions.length; i++ )
+        {
+            if( store.positions[i].saved )
+            {
+                if ( store.names[i] == "" )
+                    G_PrintMsg( ent, "Main position saved\n" );
+                else
+                    G_PrintMsg( ent, "Additional position: '" + store.names[i] + "'\n" );
+            }
+        }
+    }
+
+    bool clearPosition( String name )
     {
         if ( !this.practicing && this.client.team != TEAM_SPECTATOR && !this.preRace() )
         {
@@ -503,7 +537,7 @@ class Player
             return false;
         }
 
-        this.savedPosition().clear();
+        this.positionStore().remove( name );
         this.setQuickMenu();
 
         return true;
@@ -521,7 +555,7 @@ class Player
         else if ( this.release == 1 )
         {
             this.client.getEnt().moveType = MOVETYPE_PLAYER;
-            this.loadPosition( Verbosity_Silent );
+            this.loadPosition( "", Verbosity_Silent );
             this.release = 0;
         }
     }
@@ -762,7 +796,7 @@ class Player
         G_RemoveProjectiles( ent );
         RS_ResetPjState( this.client.playerNum );
 
-        this.loadPosition( Verbosity_Silent );
+        this.loadPosition( "", Verbosity_Silent );
 
         if ( this.noclipSpawn )
         {
@@ -1496,9 +1530,14 @@ class Player
         return true;
     }
 
-    bool positionSpeed( String speedStr )
+    bool positionSpeed( String speedStr, String name )
     {
-        Position@ position = practicePosition;
+        Position@ position = this.practicePositionStore.get( name );
+        if ( @position == null )
+        {
+            G_PrintMsg( this.client.getEnt(), "No such position set.\n" );
+            return false;
+        }
         if ( !position.saved )
         {
             position.copy( this.currentPosition() );

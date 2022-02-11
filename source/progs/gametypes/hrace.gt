@@ -26,6 +26,7 @@ hrace/player.as;
 hrace/run.as;
 hrace/math.as;
 hrace/position.as;
+hrace/positionstore.as;
 hrace/quickmenu.as;
 hrace/recordtime.as;
 hrace/lastrecords.as;

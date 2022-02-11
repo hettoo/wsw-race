@@ -180,7 +180,7 @@ bool Cmd_RaceRestart( Client@ client, const String &cmdString, const String &arg
         if ( ent.moveType == MOVETYPE_NONE )
             player.toggleNoclip();
 
-        if ( player.loadPosition( Verbosity_Silent ) )
+        if ( player.loadPosition( "", Verbosity_Silent ) )
         {
             if ( player.recalled || ent.moveType == MOVETYPE_NOCLIP )
             {
@@ -232,9 +232,14 @@ bool Cmd_Position( Client@ client, const String &cmdString, const String &argsSt
     String action = argsString.getToken( 0 );
     Player@ player = RACE_GetPlayer ( client );
     if ( action == "save" )
-        return player.savePosition();
+        return player.savePosition( argsString.getToken( 1 ) );
     else if ( action == "load" )
-        return player.loadPosition( Verbosity_Verbose );
+        return player.loadPosition( argsString.getToken( 1 ), Verbosity_Verbose );
+    else if ( action == "list" )
+    {
+        player.listPositions();
+        return true;
+    }
     else if ( action == "find" )
         return player.findPosition( argsString.getToken( 1 ) );
     else if ( action == "join" )
@@ -281,13 +286,13 @@ bool Cmd_Position( Client@ client, const String &cmdString, const String &argsSt
     else if ( action == "speed" && argsString.getToken( 1 ) != "" )
     {
         String speedStr = argsString.getToken( 1 );
-        return player.positionSpeed( speedStr );
+        return player.positionSpeed( speedStr, argsString.getToken( 2 ) );
     }
     else if ( action == "clear" )
-        return player.clearPosition();
+        return player.clearPosition( argsString.getToken( 1 ) );
     else
     {
-        G_PrintMsg( client.getEnt(), "position <save | load | join | speed <value> | recall <offset> | clear>\n" );
+        G_PrintMsg( client.getEnt(), "position <save | load | find | join | speed <value> | recall | clear>\n" );
         return false;
     }
 }
@@ -460,10 +465,10 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         cmdlist.addCell( "/noclip" );
         cmdlist.addCell( "Lets you move freely through the world whilst in practicemode." );
 
-        cmdlist.addCell( "/position save" );
+        cmdlist.addCell( "/position save [name]" );
         cmdlist.addCell( "Saves your position including your weapons as the new spawn position." );
 
-        cmdlist.addCell( "/position load" );
+        cmdlist.addCell( "/position load [name]" );
         cmdlist.addCell( "Teleports you to your saved position." );
 
         cmdlist.addCell( "/position find" );
@@ -478,7 +483,7 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         cmdlist.addCell( "/position recall" );
         cmdlist.addCell( "Cycle through positions of your last run in practicemode." );
 
-        cmdlist.addCell( "/position clear" );
+        cmdlist.addCell( "/position clear [name]" );
         cmdlist.addCell( "Resets your weapons and spawn position to their defaults." );
 
         cmdlist.addCell( "/top" );
@@ -535,14 +540,14 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
     }
     else if ( command == "position" && subcommand == "save" )
     {
-        client.printMessage( S_COLOR_YELLOW + "/position save" + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/position save [name]" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Saves your position including your weapons as the new spawn position. You can save a separate" + "\n" );
         client.printMessage( S_COLOR_WHITE + "  position for prerace and practicemode, depending on which mode you are in when using the command." + "\n" );
         client.printMessage( S_COLOR_WHITE + "  Note: Using this command during race will save your position for practicemode." + "\n" );
     }
     else if ( command == "position" && subcommand == "load" )
     {
-        client.printMessage( S_COLOR_YELLOW + "/position load" + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/position load [name]" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Teleports you to your saved position depending on which mode you are in." + "\n" );
         client.printMessage( S_COLOR_WHITE + "  Note: This command does not work during race." + "\n" );
     }
@@ -560,14 +565,14 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
     }
     else if ( command == "position" && subcommand == "speed" )
     {
-        client.printMessage( S_COLOR_YELLOW + "/position speed <value>" + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/position speed <value> [name]" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Example: /position speed 1000 - Sets your spawn speed to 1000." + "\n" );
         client.printMessage( S_COLOR_WHITE + "  Sets the speed at which you spawn in practicemode. This does not affect prerace speed. Prefix with + or - to change the speed relative to the currently set one." + "\n" );
         client.printMessage( S_COLOR_WHITE + "  Use /position speed 0 to reset. Note: You don't get spawn speed while in noclip mode." + "\n" );
     }
     else if ( command == "position" && subcommand == "clear" )
     {
-        client.printMessage( S_COLOR_YELLOW + "/position clear" + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/position clear [name]" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Resets your weapons and spawn position to their defaults." + "\n" );
     }
     else if ( command == "position" && subcommand == "recall" )
