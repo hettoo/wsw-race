@@ -72,7 +72,7 @@ class EntityFinder
 
         bool result = false;
         array<Entity@>@ targeting = ent.findTargeting();
-        if( ent.classname == "trigger_multiple" || ( addUntargeted && targeting.length == 0 ) )
+        if( ent.classname == "trigger_multiple" || ent.classname == "info_player_deathmatch" || ( addUntargeted && targeting.length == 0 ) )
         {
             if( resetWait )
                 ent.wait = 0;
