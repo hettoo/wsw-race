@@ -59,6 +59,35 @@ class EntityFinder
         return true;
     }
 
+    bool addTriggering( String type, Entity@ ent, bool addUntargeted, bool resetWait, array<Entity@>@ ignore )
+    {
+        if( @ignore == null )
+            @ignore = array<Entity@>();
+
+        for( uint i = 0; i < ignore.length; i++ )
+        {
+            if( ignore[i].entNum == ent.entNum )
+                return false;
+        }
+
+        bool result = false;
+        array<Entity@>@ targeting = ent.findTargeting();
+        if( ent.classname == "trigger_multiple" || ( addUntargeted && targeting.length == 0 ) )
+        {
+            if( resetWait )
+                ent.wait = 0;
+            this.add( type, Centre( ent ) );
+            result = true;
+        }
+
+        ignore.push_back( ent );
+        for( uint i = 0; i < targeting.length; i++ )
+            result = result || this.addTriggering( type, targeting[i], false, resetWait, ignore );
+        ignore.pop_back();
+
+        return result;
+    }
+
     Vec3 find( String type, uint index )
     {
         PositionList@ target;

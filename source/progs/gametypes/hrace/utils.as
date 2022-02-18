@@ -20,6 +20,13 @@ bool PatternMatch( String str, String pattern, Wildcard wildcard = Wildcard_No )
     return str.locate( pattern, 0 ) < str.length();
 }
 
+Vec3 Centre( Entity@ ent )
+{
+    Vec3 mins, maxs;
+    ent.getSize( mins, maxs );
+    return ent.origin + 0.5 * mins + 0.5 * maxs;
+}
+
 String[] GetMapsByPattern( String@ pattern, String@ ignore = null )
 {
     String[] maps;

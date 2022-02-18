@@ -490,9 +490,7 @@ void GT_SpawnGametype()
     for ( int i = 0; i < numEntities; i++ )
     {
         Entity@ ent = G_GetEntity(i);
-        Vec3 entMins, entMaxs;
-        ent.getSize( entMins, entMaxs );
-        Vec3 middle = ent.origin + 0.5 * entMins + 0.5 * entMaxs;
+        Vec3 centre = Centre( ent );
         if ( entityFinder.slicks.length() < 1 )
         {
             Trace slick;
@@ -506,31 +504,18 @@ void GT_SpawnGametype()
             }
             else
             {
-                slick_above = middle;
+                slick_above = centre;
                 slick_above.z += SLICK_ABOVE;
-                slick_below = middle;
+                slick_below = centre;
                 slick_below.z -= SLICK_BELOW;
                 if ( slick.doTrace( slick_above, playerMins, playerMaxs, slick_below, ent.entNum, MASK_PLAYERSOLID ) && ( slick.surfFlags & SURF_SLICK ) > 0 )
                     entityFinder.add( "slick", slick.endPos );
             }
         }
-        if ( ent.classname == "trigger_multiple" )
-        {
-            Entity@[] targets = ent.findTargets();
-            for ( uint j = 0; j < targets.length; j++ )
-            {
-                Entity@ target = targets[j];
-                if ( target.classname == "target_starttimer" )
-                {
-                    ent.wait = 0;
-                    entityFinder.add( "start", middle );
-                }
-                else if ( target.classname == "target_stoptimer" )
-                {
-                    entityFinder.add( "finish", middle );
-                }
-            }
-        }
+        if ( ent.classname == "target_starttimer" )
+            entityFinder.addTriggering( "start", ent, false, true, null );
+        if ( ent.classname == "target_stoptimer" )
+            entityFinder.addTriggering( "finish", ent, false, false, null );
         else if ( ent.classname == "info_player_deathmatch" || ent.classname == "info_player_start" )
         {
             Vec3 start = ent.origin;
@@ -557,17 +542,19 @@ void GT_SpawnGametype()
             }
         }
         else if ( ent.classname == "weapon_rocketlauncher" )
-            entityFinder.add( "rl", middle );
+            entityFinder.addTriggering( "rl", ent, true, false, null );
         else if ( ent.classname == "weapon_grenadelauncher" )
-            entityFinder.add( "gl", middle );
+            entityFinder.addTriggering( "gl", ent, true, false, null );
         else if ( ent.classname == "weapon_plasmagun" )
-            entityFinder.add( "pg", middle );
+            entityFinder.addTriggering( "pg", ent, true, false, null );
         else if ( ent.classname == "trigger_push" || ent.classname == "trigger_push_velocity" )
-            entityFinder.add( "push", middle );
+            entityFinder.add( "push", centre );
+        else if ( ent.classname == "target_speed" )
+            entityFinder.addTriggering( "push", ent, false, false, null );
         else if ( ent.classname == "func_door" )
-            entityFinder.add( "door", middle );
+            entityFinder.add( "door", centre );
         else if ( ent.classname == "misc_teleporter_dest" )
-            entityFinder.add( "tele", middle );
+            entityFinder.add( "tele", centre );
     }
 
     // setup the checkpoints arrays sizes adjusted to numCheckPoints
