@@ -21,7 +21,7 @@ void target_init_use( Entity@ self, Entity@ other, Entity@ activator )
         activator.client.armor = 0;
 
     // health
-    if ( ( self.spawnFlags & 2 ) == 0 )
+    if ( ( self.spawnFlags & 2 ) == 0 && !activator.isGhosting() )
     {
         activator.health = activator.maxHealth;
     }
