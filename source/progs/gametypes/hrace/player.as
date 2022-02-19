@@ -1602,7 +1602,7 @@ class Player
         uint worstDiff = 0;
         uint potential = 0;
 
-        Table table( S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "r" + S_COLOR_ORANGE + " / l r " + S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "l" );
+        Table table( S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "r" + S_COLOR_ORANGE + " / l rr " + S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "l" );
         int i;
         for ( i = 0; i < numCheckpoints && ( ( ref < 0 && this.bestRun.cpOrder[i] >= 0 ) || ( ref >= 0 && levelRecords[ref].cpOrder[i] >= 0 ) ); i++ )
         {
@@ -1772,6 +1772,17 @@ class Player
         else
             table.addCell( "Reference:" );
         table.addCell( RACE_TimeDiffString( time, best, false ) );
+        int percent = 0;
+        if ( best != 0 && time != 0 )
+        {
+            if ( best > time )
+                percent = ( int( best - time ) * 100 ) / time;
+            else
+                percent = ( int( time - best ) * 100 ) / best;
+            table.addCell( " (" + percent + "%)" );
+        }
+        else
+            table.addCell( "" );
         table.addCell( "from" );
         table.addCell( bestName );
     }
