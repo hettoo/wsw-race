@@ -988,9 +988,7 @@ class Player
         str += "Current: " + S_COLOR_WHITE + RACE_TimeToString( this.run.finishTime );
         for ( int i = 0; i < MAX_RECORDS; i++ )
         {
-            if ( !levelRecords[i].saved )
-                break;
-            if ( this.run.finishTime < levelRecords[i].finishTime )
+            if ( !levelRecords[i].saved || this.run.finishTime < levelRecords[i].finishTime )
             {
                 str += " (" + S_COLOR_GREEN + "#" + ( i + 1 ) + S_COLOR_WHITE + ")"; // extra id when on server record beating time
                 break;
@@ -1169,7 +1167,7 @@ class Player
         str += "Current: " + S_COLOR_WHITE + RACE_TimeToString( time );
         for ( int i = 0; i < MAX_RECORDS; i++ )
         {
-            if ( time < levelRecords[i].cpTimes[id] )
+            if ( !levelRecords[i].saved || time < levelRecords[i].cpTimes[id] )
             {
                 str += " (" + S_COLOR_GREEN + "#" + ( i + 1 ) + S_COLOR_WHITE + ")"; // extra id when on server record beating time
                 break;
