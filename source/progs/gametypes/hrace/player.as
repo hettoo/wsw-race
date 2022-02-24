@@ -474,7 +474,7 @@ class Player
                 return false;
             }
 
-            if ( tr.doTrace( ent.origin, playerMins, playerMaxs, ent.origin, ent.entNum, MASK_PLAYERSOLID ) )
+            if ( tr.doTrace( ent.origin, playerMins, playerMaxs, ent.origin, ent.entNum, MASK_DEADSOLID ) )
             {
                 G_PrintMsg( this.client.getEnt(), "You can't save your prerace position where you cannot stand up.\n" );
                 return false;
