@@ -468,7 +468,7 @@ class Player
             Vec3 down = ent.origin;
             down.z -= 1;
             Trace tr;
-            if ( !tr.doTrace( ent.origin, mins, maxs, down, ent.entNum, MASK_PLAYERSOLID ) )
+            if ( !tr.doTrace( ent.origin, mins, maxs, down, ent.entNum, MASK_DEADSOLID ) )
             {
                 G_PrintMsg( this.client.getEnt(), "You can only save your prerace position on solid ground.\n" );
                 return false;
@@ -623,7 +623,7 @@ class Player
             Vec3 down = ent.origin;
             down.z -= POSITION_HEIGHT;
             Trace tr;
-            if ( tr.doTrace( ent.origin, mins, maxs, down, ent.entNum, MASK_PLAYERSOLID ) )
+            if ( tr.doTrace( ent.origin, mins, maxs, down, ent.entNum, MASK_DEADSOLID ) )
                 return;
         }
 

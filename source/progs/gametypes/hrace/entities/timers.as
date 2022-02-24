@@ -73,7 +73,7 @@ void target_starttimer_use( Entity@ self, Entity@ other, Entity@ activator )
         Vec3 down = activator.origin;
         down.z -= MAX_START_HEIGHT_CHECK;
         Trace tr;
-        if ( tr.doTrace( activator.origin, mins, maxs, down, activator.entNum, MASK_PLAYERSOLID ) )
+        if ( tr.doTrace( activator.origin, mins, maxs, down, activator.entNum, MASK_DEADSOLID ) )
             msg += S_COLOR_ORANGE + ", height: " + S_COLOR_WHITE + int( tr.fraction * MAX_START_HEIGHT_CHECK );
         activator.client.printMessage( msg + "\n" );
     }
