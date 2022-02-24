@@ -471,9 +471,9 @@ class Player
                 return false;
             }
 
-            if ( maxs.z < 40 )
+            if ( tr.doTrace( ent.origin, playerMins, playerMaxs, ent.origin, ent.entNum, MASK_PLAYERSOLID ) )
             {
-                G_PrintMsg( this.client.getEnt(), "You can't save your prerace position while crouched.\n" );
+                G_PrintMsg( this.client.getEnt(), "You can't save your prerace position where you cannot stand up.\n" );
                 return false;
             }
         }
