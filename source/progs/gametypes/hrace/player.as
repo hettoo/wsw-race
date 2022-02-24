@@ -5,6 +5,9 @@ const float POSITION_HEIGHT = 32;
 const int RECALL_ACTION_TIME = 200;
 const int RECALL_ACTION_JUMP = 5;
 
+const float POINT_DISTANCE = 65536.0f;
+const float POINT_PROGRESS = 0.0025f;
+
 Player[] players( maxClients );
 
 class Player
@@ -648,6 +651,20 @@ class Player
             return;
 
         uint keys = this.client.pressedKeys;
+
+        if ( keys & Key_Attack != 0 && keys & Key_Special != 0 && ent.moveType == MOVETYPE_NOCLIP )
+        {
+            Vec3 mins(-1, -1, -1);
+            Vec3 maxs(1, 1, 1);
+            Vec3 a, b, c;
+            ent.angles.angleVectors( a, b, c );
+            a.normalize();
+            Trace tr;
+            float progress = pow( 1.0f + POINT_PROGRESS, frameTime ) - 1.0f;
+            if ( tr.doTrace( ent.origin, mins, maxs, ent.origin + a * POINT_DISTANCE, ent.entNum, MASK_ALL ) )
+                ent.origin = ent.origin * ( 1.0 - progress ) + tr.endPos * progress;
+            return;
+        }
 
         if ( this.run.positionCount == 0 )
         {
