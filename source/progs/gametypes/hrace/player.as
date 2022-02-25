@@ -7,7 +7,7 @@ const int RECALL_ACTION_JUMP = 5;
 
 const float POINT_DISTANCE = 65536.0f;
 const float POINT_PULL = 0.004f;
-const float PULL_MARGIN = 0.1f;
+const float PULL_MARGIN = 16.0f;
 
 Player[] players( maxClients );
 
