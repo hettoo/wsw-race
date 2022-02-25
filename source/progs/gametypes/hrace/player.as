@@ -9,8 +9,6 @@ const float POINT_DISTANCE = 65536.0f;
 const float POINT_PULL = 0.004f;
 const float PULL_MARGIN = 0.1f;
 
-const float VIEWHEIGHT = 30.0f;
-
 Player[] players( maxClients );
 
 class Player
@@ -657,9 +655,9 @@ class Player
 
         if ( keys & Key_Attack != 0 && keys & Key_Special != 0 && ent.moveType == MOVETYPE_NOCLIP )
         {
-            Vec3 mins(-1, -1, -1);
-            Vec3 maxs(1, 1, 1);
-            Vec3 offset( 0, 0, VIEWHEIGHT );
+            Vec3 mins( 0 );
+            Vec3 maxs( 0 );
+            Vec3 offset( 0, 0, ent.viewHeight );
             Vec3 origin = ent.origin + offset;
             Vec3 a, b, c;
             ent.angles.angleVectors( a, b, c );
