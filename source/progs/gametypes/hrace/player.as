@@ -7,6 +7,9 @@ const int RECALL_ACTION_JUMP = 5;
 
 const float POINT_DISTANCE = 65536.0f;
 const float POINT_PULL = 0.004f;
+const float PULL_MARGIN = 0.1f;
+
+const float VIEWHEIGHT = 30.0f;
 
 Player[] players( maxClients );
 
@@ -656,13 +659,15 @@ class Player
         {
             Vec3 mins(-1, -1, -1);
             Vec3 maxs(1, 1, 1);
+            Vec3 offset( 0, 0, VIEWHEIGHT );
+            Vec3 origin = ent.origin + offset;
             Vec3 a, b, c;
             ent.angles.angleVectors( a, b, c );
             a.normalize();
             Trace tr;
             float pull = 1.0f - pow( 1.0f - POINT_PULL, frameTime );
-            if ( tr.doTrace( ent.origin, mins, maxs, ent.origin + a * POINT_DISTANCE, ent.entNum, MASK_PLAYERSOLID | MASK_WATER ) )
-                ent.origin = ent.origin * ( 1.0 - pull ) + tr.endPos * pull;
+            if ( tr.doTrace( origin, mins, maxs, origin + a * POINT_DISTANCE, ent.entNum, MASK_PLAYERSOLID | MASK_WATER ) && tr.fraction * POINT_DISTANCE > PULL_MARGIN )
+                ent.origin = origin * ( 1.0 - pull ) + tr.endPos * pull - offset;
             return;
         }
 
