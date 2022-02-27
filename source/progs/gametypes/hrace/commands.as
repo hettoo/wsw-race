@@ -252,12 +252,7 @@ bool Cmd_Position( Client@ client, const String &cmdString, const String &argsSt
         else if ( option == "best" )
             return player.recallBest( argsString.getToken( 2 ) );
         else if ( option == "interval" )
-        {
-            String number = argsString.getToken( 2 );
-            if ( number == "" )
-                return player.recallInterval( -1 );
-            return player.recallInterval( number.toInt() );
-        }
+            return player.recallInterval( argsString.getToken( 2 ) );
         else if ( option == "start" )
             return player.recallStart();
         else if ( option == "end" )

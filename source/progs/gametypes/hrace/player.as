@@ -1361,12 +1361,29 @@ class Player
         return true;
     }
 
-    bool recallInterval( int number )
+    bool recallInterval( String value )
     {
-        if ( number < 0 )
-            G_PrintMsg( this.client.getEnt(), this.positionInterval + "\n" );
+        Entity@ ent = this.client.getEnt();
+        if ( value == "auto" )
+        {
+            if ( this.bestRun.finishTime == 0 )
+            {
+                G_PrintMsg( ent, "You haven't finished yet.\n" );
+                return false;
+            }
+            this.positionInterval = this.bestRun.finishTime / MAX_POSITIONS;
+            G_PrintMsg( ent, "Setting the interval to " + this.positionInterval + "\n" );
+        }
         else
-            this.positionInterval = number;
+        {
+            int number = -1;
+            if ( value != "" )
+                number = value.toInt();
+            if ( number < 0 )
+                G_PrintMsg( ent, this.positionInterval + "\n" );
+            else
+                this.positionInterval = number;
+        }
         return true;
     }
 
