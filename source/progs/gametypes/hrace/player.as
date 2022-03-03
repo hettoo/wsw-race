@@ -9,6 +9,8 @@ const float POINT_DISTANCE = 65536.0f;
 const float POINT_PULL = 0.004f;
 const float PULL_MARGIN = 16.0f;
 
+const uint BIG_LIST = 25;
+
 Player[] players( maxClients );
 
 class Player
@@ -1527,16 +1529,27 @@ class Player
         if ( parameter == "info" )
         {
             EntityList@ list = entityFinder.allEntities( entity );
+            if ( list.isEmpty() )
+            {
+                G_PrintMsg( ent, "No matching entity found.\n" );
+                return false;
+            }
+            bool small = list.length() < BIG_LIST;
+            if ( !small )
+                G_PrintMsg( ent, "Omitting target info as this is a big list\n" );
             while ( !list.isEmpty() )
             {
                 Entity@ current = list.getEnt( 0 );
                 G_PrintMsg( ent, "entity " + current.entNum + ": " + current.classname + " at " + ent.origin.x + " " + ent.origin.y + " " + ent.origin.z + "\n" );
-                array<Entity@>@ targeting = current.findTargeting();
-                for( uint i = 0; i < targeting.length; i++ )
-                    G_PrintMsg( ent, "    targetted by " + targeting[i].entNum + ": " + targeting[i].classname + "\n" );
-                array<Entity@>@ targets = current.findTargets();
-                for( uint i = 0; i < targets.length; i++ )
-                    G_PrintMsg( ent, "    target " + targets[i].entNum + ": " + targets[i].classname + "\n" );
+                if ( small )
+                {
+                    array<Entity@>@ targeting = current.findTargeting();
+                    for ( uint i = 0; i < targeting.length; i++ )
+                        G_PrintMsg( ent, "    targetted by " + targeting[i].entNum + ": " + targeting[i].classname + "\n" );
+                    array<Entity@>@ targets = current.findTargets();
+                    for ( uint i = 0; i < targets.length; i++ )
+                        G_PrintMsg( ent, "    target " + targets[i].entNum + ": " + targets[i].classname + "\n" );
+                }
                 @list = list.drop( 1 );
             }
         }
