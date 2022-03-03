@@ -500,7 +500,7 @@ void GT_SpawnGametype()
             slick_below.z -= SLICK_BELOW;
             if ( slick.doTrace( slick_above, playerMins, playerMaxs, slick_below, ent.entNum, MASK_DEADSOLID ) && ( slick.surfFlags & SURF_SLICK ) > 0 )
             {
-                entityFinder.add( "slick", slick.endPos );
+                entityFinder.add( "slick", null, slick.endPos );
             }
             else
             {
@@ -509,7 +509,7 @@ void GT_SpawnGametype()
                 slick_below = centre;
                 slick_below.z -= SLICK_BELOW;
                 if ( slick.doTrace( slick_above, playerMins, playerMaxs, slick_below, ent.entNum, MASK_DEADSOLID ) && ( slick.surfFlags & SURF_SLICK ) > 0 )
-                    entityFinder.add( "slick", slick.endPos );
+                    entityFinder.add( "slick", null, slick.endPos );
             }
         }
         if ( ent.classname == "target_starttimer" )
@@ -548,13 +548,13 @@ void GT_SpawnGametype()
         else if ( ent.classname == "weapon_plasmagun" )
             entityFinder.addTriggering( "pg", ent, true, false, null );
         else if ( ent.classname == "trigger_push" || ent.classname == "trigger_push_velocity" )
-            entityFinder.add( "push", centre );
+            entityFinder.add( "push", ent, centre );
         else if ( ent.classname == "target_speed" )
             entityFinder.addTriggering( "push", ent, false, false, null );
         else if ( ent.classname == "func_door" )
-            entityFinder.add( "door", centre );
+            entityFinder.add( "door", ent, centre );
         else if ( ent.classname == "misc_teleporter_dest" )
-            entityFinder.add( "tele", centre );
+            entityFinder.add( "tele", ent, centre );
     }
 
     // setup the checkpoints arrays sizes adjusted to numCheckPoints

@@ -241,7 +241,7 @@ bool Cmd_Position( Client@ client, const String &cmdString, const String &argsSt
         return true;
     }
     else if ( action == "find" )
-        return player.findPosition( argsString.getToken( 1 ) );
+        return player.findPosition( argsString.getToken( 1 ), argsString.getToken( 2 ) );
     else if ( action == "join" )
         return player.joinPosition( argsString.getToken( 1 ) );
     else if ( action == "recall" )
@@ -556,7 +556,7 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
     }
     else if ( command == "position" && subcommand == "find" )
     {
-        client.printMessage( S_COLOR_YELLOW + "/position find <start|finish|rl|gl|pg|push|door|tele|slick>" + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/position find <start|finish|rl|gl|pg|push|door|tele|slick> [info]" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Teleports you to a matching entity." + "\n" );
         client.printMessage( S_COLOR_WHITE + "  Note: This command does not work during race." + "\n" );
     }

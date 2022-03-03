@@ -1513,36 +1513,55 @@ class Player
         }
     }
 
-    bool findPosition( String entity )
+    bool findPosition( String entity, String parameter )
     {
         Entity@ ent = this.client.getEnt();
 
         if ( entity == "" )
         {
             this.showMapStats();
-            G_PrintMsg( ent, "Usage: /position find <start|finish|rl|gl|pg|push|door|tele|slick>\n" );
+            G_PrintMsg( ent, "Usage: /position find <start|finish|rl|gl|pg|push|door|tele|slick> [info]\n" );
             return false;
         }
 
-        if ( !this.practicing && this.client.team != TEAM_SPECTATOR )
+        if ( parameter == "info" )
         {
-            G_PrintMsg( ent, "Position loading is not available during a race.\n" );
-            return false;
+            EntityList@ list = entityFinder.allEntities( entity );
+            while ( !list.isEmpty() )
+            {
+                Entity@ current = list.getEnt( 0 );
+                G_PrintMsg( ent, "entity " + current.entNum + ": " + current.classname + " at " + ent.origin.x + " " + ent.origin.y + " " + ent.origin.z + "\n" );
+                array<Entity@>@ targeting = current.findTargeting();
+                for( uint i = 0; i < targeting.length; i++ )
+                    G_PrintMsg( ent, "    targetted by " + targeting[i].entNum + ": " + targeting[i].classname + "\n" );
+                array<Entity@>@ targets = current.findTargets();
+                for( uint i = 0; i < targets.length; i++ )
+                    G_PrintMsg( ent, "    target " + targets[i].entNum + ": " + targets[i].classname + "\n" );
+                @list = list.drop( 1 );
+            }
         }
-
-        if ( entity == this.lastFind )
-            this.findIndex++;
         else
-            this.findIndex = 0;
-        Vec3 origin = entityFinder.find( entity, this.findIndex );
-        if ( origin == NO_POSITION )
         {
-            G_PrintMsg( ent, "No matching entity found.\n" );
-            return false;
-        }
-        this.lastFind = entity;
+            if ( !this.practicing && this.client.team != TEAM_SPECTATOR )
+            {
+                G_PrintMsg( ent, "Position loading is not available during a race.\n" );
+                return false;
+            }
 
-        ent.origin = origin;
+            if ( entity == this.lastFind )
+                this.findIndex++;
+            else
+                this.findIndex = 0;
+            Vec3 origin = entityFinder.find( entity, this.findIndex );
+            if ( origin == NO_POSITION )
+            {
+                G_PrintMsg( ent, "No matching entity found.\n" );
+                return false;
+            }
+            this.lastFind = entity;
+
+            ent.origin = origin;
+        }
 
         return true;
     }

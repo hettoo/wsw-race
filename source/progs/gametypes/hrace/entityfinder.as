@@ -2,16 +2,16 @@ const Vec3 NO_POSITION( -99.99, -1337.99, -99.42 );
 
 class EntityFinder
 {
-    PositionList@ starts;
-    PositionList@ finishes;
-    PositionList@ rls;
-    PositionList@ gls;
-    PositionList@ pgs;
-    PositionList@ pushes;
-    PositionList@ doors;
-    PositionList@ cps;
-    PositionList@ teles;
-    PositionList@ slicks;
+    EntityList@ starts;
+    EntityList@ finishes;
+    EntityList@ rls;
+    EntityList@ gls;
+    EntityList@ pgs;
+    EntityList@ pushes;
+    EntityList@ doors;
+    EntityList@ cps;
+    EntityList@ teles;
+    EntityList@ slicks;
 
     EntityFinder()
     {
@@ -32,28 +32,28 @@ class EntityFinder
         @this.slicks = Nil();
     }
 
-    bool add( String type, Vec3 position )
+    bool add( String type, Entity@ ent, Vec3 position )
     {
         if ( type == "start" )
-            @this.starts = Cons( position, this.starts );
+            @this.starts = Cons( ent, position, this.starts );
         else if ( type == "finish" )
-            @this.finishes = Cons( position, this.finishes );
+            @this.finishes = Cons( ent, position, this.finishes );
         else if ( type == "rl" )
-            @this.rls = Cons( position, this.rls );
+            @this.rls = Cons( ent, position, this.rls );
         else if ( type == "gl" )
-            @this.gls = Cons( position, this.gls );
+            @this.gls = Cons( ent, position, this.gls );
         else if ( type == "pg" )
-            @this.pgs = Cons( position, this.pgs );
+            @this.pgs = Cons( ent, position, this.pgs );
         else if ( type == "push" )
-            @this.pushes = Cons( position, this.pushes );
+            @this.pushes = Cons( ent, position, this.pushes );
         else if ( type == "door" )
-            @this.doors = Cons( position, this.doors );
+            @this.doors = Cons( ent, position, this.doors );
         else if ( type == "cp" )
-            @this.cps = Cons( position, this.cps );
+            @this.cps = Cons( ent, position, this.cps );
         else if ( type == "tele" )
-            @this.teles = Cons( position, this.teles );
+            @this.teles = Cons( ent, position, this.teles );
         else if ( type == "slick" )
-            @this.slicks = Cons( position, this.slicks );
+            @this.slicks = Cons( ent, position, this.slicks );
         else
             return false;
         return true;
@@ -76,7 +76,7 @@ class EntityFinder
         {
             if( resetWait )
                 ent.wait = 0;
-            this.add( type, Centre( ent ) );
+            this.add( type, ent, Centre( ent ) );
             result = true;
         }
 
@@ -88,49 +88,65 @@ class EntityFinder
         return result;
     }
 
+    EntityList@ allEntities( String type )
+    {
+        if ( type == "start" )
+            return this.starts;
+        else if ( type == "finish" )
+            return this.finishes;
+        else if ( type == "rl" )
+            return this.rls;
+        else if ( type == "gl" )
+            return this.gls;
+        else if ( type == "pg" )
+            return this.pgs;
+        else if ( type == "push" )
+            return this.pushes;
+        else if ( type == "door" )
+            return this.doors;
+        else if ( type == "cp" )
+            return this.cps;
+        else if ( type == "tele" )
+            return this.teles;
+        else if ( type == "slick" )
+            return this.slicks;
+        else if ( type == "" )
+            return Nil();
+        else
+        {
+            Entity@ ent = G_GetEntity( type.toInt() );
+            if ( @ent == null )
+                return Nil();
+            return Cons( ent, Centre( ent ), Nil() );
+        }
+    }
+
     Vec3 find( String type, uint index )
     {
-        PositionList@ target;
-        if ( type == "start" )
-            @target = this.starts;
-        else if ( type == "finish" )
-            @target = this.finishes;
-        else if ( type == "rl" )
-            @target = this.rls;
-        else if ( type == "gl" )
-            @target = this.gls;
-        else if ( type == "pg" )
-            @target = this.pgs;
-        else if ( type == "push" )
-            @target = this.pushes;
-        else if ( type == "door" )
-            @target = this.doors;
-        else if ( type == "cp" )
-            @target = this.cps;
-        else if ( type == "tele" )
-            @target = this.teles;
-        else if ( type == "slick" )
-            @target = this.slicks;
-        else
-            return NO_POSITION;
-
-        return target.get( index );
+        return this.allEntities( type ).getPosition( index );
     }
 
     ~EntityFinder() {}
 }
 
-interface PositionList
+interface EntityList
 {
+    bool isEmpty();
     uint length();
-    PositionList@ drop( uint n );
-    Vec3 get( uint index );
+    EntityList@ drop( uint n );
+    Entity@ getEnt( uint index );
+    Vec3 getPosition( uint index );
 }
 
-class Nil : PositionList
+class Nil : EntityList
 {
     Nil()
     {
+    }
+
+    bool isEmpty()
+    {
+        return true;
     }
 
     uint length()
@@ -138,12 +154,17 @@ class Nil : PositionList
         return 0;
     }
 
-    PositionList@ drop( uint n )
+    EntityList@ drop( uint n )
     {
         return this;
     }
 
-    Vec3 get( uint index )
+    Entity@ getEnt( uint index )
+    {
+        return null;
+    }
+
+    Vec3 getPosition( uint index )
     {
         return NO_POSITION;
     }
@@ -151,15 +172,22 @@ class Nil : PositionList
     ~Nil() {}
 }
 
-class Cons : PositionList
+class Cons : EntityList
 {
-    Vec3 head;
-    PositionList@ tail;
+    Entity@ ent;
+    Vec3 position;
+    EntityList@ tail;
 
-    Cons( Vec3 head, PositionList@ tail )
+    Cons( Entity@ ent, Vec3 position, EntityList@ tail )
     {
-        this.head = head;
+        @this.ent = ent;
+        this.position = position;
         @this.tail = tail;
+    }
+
+    bool isEmpty()
+    {
+        return false;
     }
 
     uint length()
@@ -167,18 +195,25 @@ class Cons : PositionList
         return 1 + this.tail.length();
     }
 
-    PositionList@ drop( uint n )
+    EntityList@ drop( uint n )
     {
         if ( n == 0 )
             return this;
         return this.tail.drop( n - 1 );
     }
 
-    Vec3 get( uint index )
+    Entity@ getEnt( uint index )
     {
         if ( index == 0 )
-            return this.head;
-        return this.drop( index % this.length() ).get( 0 );
+            return @this.ent;
+        return this.drop( index % this.length() ).getEnt( 0 );
+    }
+
+    Vec3 getPosition( uint index )
+    {
+        if ( index == 0 )
+            return this.position;
+        return this.drop( index % this.length() ).getPosition( 0 );
     }
 
     ~Cons() {}
