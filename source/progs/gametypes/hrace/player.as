@@ -237,11 +237,6 @@ class Player
     bool toggleNoclip()
     {
         Entity@ ent = this.client.getEnt();
-        if ( !this.practicing )
-        {
-            G_PrintMsg( ent, "Noclip mode is only available in practice mode.\n" );
-            return false;
-        }
         if ( this.client.team == TEAM_SPECTATOR )
         {
             G_PrintMsg( ent, "Noclip mode is not available for spectators.\n" );
@@ -252,6 +247,13 @@ class Player
             G_PrintMsg( ent, "Noclip mode is only available to alive players.\n" );
             return false;
         }
+        if ( pending_endmatch )
+        {
+            G_PrintMsg( ent, "Can't use noclip in overtime.\n" );
+            return false;
+        }
+        if ( !this.practicing )
+            this.enterPracticeMode();
 
         if ( ent.moveType == MOVETYPE_PLAYER )
         {
