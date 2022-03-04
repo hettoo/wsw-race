@@ -4,6 +4,7 @@ const float POSITION_HEIGHT = 32;
 
 const int RECALL_ACTION_TIME = 200;
 const int RECALL_ACTION_JUMP = 5;
+const int RECALL_HOLD = 20;
 
 const float POINT_DISTANCE = 65536.0f;
 const float POINT_PULL = 0.004f;
@@ -821,6 +822,12 @@ class Player
         RS_ResetPjState( this.client.playerNum );
 
         this.loadPosition( "", Verbosity_Silent );
+        if ( this.recalled )
+        {
+            ent.moveType = MOVETYPE_NONE;
+            this.updateHelpMessage();
+            this.release = RECALL_HOLD;
+        }
 
         if ( this.noclipSpawn )
         {

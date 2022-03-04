@@ -189,7 +189,7 @@ bool Cmd_RaceRestart( Client@ client, const String &cmdString, const String &arg
                 {
                     ent.moveType = MOVETYPE_NONE;
                     player.updateHelpMessage();
-                    player.release = 2;
+                    player.release = RECALL_HOLD;
                     return true;
                 }
             }
