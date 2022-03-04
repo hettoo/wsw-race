@@ -175,7 +175,7 @@ bool Cmd_RaceRestart( Client@ client, const String &cmdString, const String &arg
     player.recalled = recalled;
 
     Entity@ ent = client.getEnt();
-    if ( player.practicing && ent.health > 0 && client.team != TEAM_SPECTATOR )
+    if ( player.practicing && ent.health > 0 && !ent.isGhosting() && client.team != TEAM_SPECTATOR )
     {
         if ( ent.moveType == MOVETYPE_NONE )
             player.toggleNoclip();
