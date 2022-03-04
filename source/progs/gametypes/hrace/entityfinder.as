@@ -9,6 +9,7 @@ class EntityFinder
     EntityList@ pgs;
     EntityList@ pushes;
     EntityList@ doors;
+    EntityList@ buttons;
     EntityList@ cps;
     EntityList@ teles;
     EntityList@ slicks;
@@ -27,6 +28,7 @@ class EntityFinder
         @this.pgs = Nil();
         @this.pushes = Nil();
         @this.doors = Nil();
+        @this.buttons = Nil();
         @this.cps = Nil();
         @this.teles = Nil();
         @this.slicks = Nil();
@@ -48,6 +50,8 @@ class EntityFinder
             @this.pushes = Cons( ent, position, this.pushes );
         else if ( type == "door" )
             @this.doors = Cons( ent, position, this.doors );
+        else if ( type == "button" )
+            @this.buttons = Cons( ent, position, this.buttons );
         else if ( type == "cp" )
             @this.cps = Cons( ent, position, this.cps );
         else if ( type == "tele" )
@@ -72,7 +76,7 @@ class EntityFinder
 
         bool result = false;
         array<Entity@>@ targeting = ent.findTargeting();
-        if( ent.classname == "trigger_multiple" || ent.classname == "info_player_deathmatch" || ent.classname == "func_door" || ( addUntargeted && targeting.length == 0 ) )
+        if( ent.classname == "trigger_multiple" || ent.classname == "info_player_deathmatch" || ent.classname == "func_door" || ent.classname == "func_door_rotating" || ( addUntargeted && targeting.length == 0 ) )
         {
             if( resetWait )
                 ent.wait = 0;
@@ -104,6 +108,8 @@ class EntityFinder
             return this.pushes;
         else if ( type == "door" )
             return this.doors;
+        else if ( type == "button" )
+            return this.buttons;
         else if ( type == "cp" )
             return this.cps;
         else if ( type == "tele" )

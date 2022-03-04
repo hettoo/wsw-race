@@ -551,8 +551,10 @@ void GT_SpawnGametype()
             entityFinder.add( "push", ent, centre );
         else if ( ent.classname == "target_speed" )
             entityFinder.addTriggering( "push", ent, false, false, null );
-        else if ( ent.classname == "func_door" )
+        else if ( ent.classname == "func_door" || ent.classname == "func_door_rotating" )
             entityFinder.add( "door", ent, centre );
+        else if ( ent.classname == "func_button" )
+            entityFinder.add( "button", ent, centre );
         else if ( ent.classname == "misc_teleporter_dest" )
             entityFinder.add( "tele", ent, centre );
     }

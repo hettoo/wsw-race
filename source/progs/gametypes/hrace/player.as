@@ -1529,7 +1529,7 @@ class Player
         if ( entity == "" )
         {
             this.showMapStats();
-            G_PrintMsg( ent, "Usage: /position find <start|finish|rl|gl|pg|push|door|tele|slick> [info]\n" );
+            G_PrintMsg( ent, "Usage: /position find <start|finish|rl|gl|pg|push|door|button|tele|slick> [info]\n" );
             return false;
         }
 
@@ -1918,11 +1918,14 @@ class Player
             msg += ", cps(" + numCheckpoints + ")";
         uint numPushes = entityFinder.pushes.length();
         uint numDoors = entityFinder.doors.length();
+        uint numButtons = entityFinder.buttons.length();
         uint numTeles = entityFinder.teles.length();
         if ( numPushes > 0 )
             msg += ", push(" + numPushes + ")";
         if ( numDoors > 0 )
             msg += ", doors(" + numDoors + ")";
+        if ( numButtons > 0 )
+            msg += ", buttons(" + numButtons + ")";
         if ( numTeles > 0 )
             msg += ", teles(" + numTeles + ")";
         if ( entityFinder.starts.length() == 0 )
