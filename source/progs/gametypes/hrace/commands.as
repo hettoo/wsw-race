@@ -32,8 +32,8 @@ bool Cmd_CvarInfo( Client@ client, const String &cmdString, const String &argsSt
 
 String randmap;
 String randmap_passed = "";
-uint randmap_time = 0;
 uint randmap_matches;
+uint randmap_time = 0;
 const uint RANDMAP_DELAY_MIN = 80;
 const uint RANDMAP_DELAY_MAX = 1100;
 
@@ -45,20 +45,11 @@ bool Cmd_CallvoteValidate( Client@ client, const String &cmdString, const String
     {
         if ( levelTime - randmap_time > RANDMAP_DELAY_MAX )
         {
-            Cvar mapname( "mapname", "", 0 );
-            String current = mapname.string;
-            String pattern = argsString.getToken( 1 );
-
-            String[] maps = GetMapsByPattern( pattern, current );
-
-            if ( maps.length() == 0 )
-            {
-                client.printMessage( "No matching maps\n" );
+            Player@ player = RACE_GetPlayer( client );
+            randmap = player.randomMap( argsString.getToken( 1 ), false );
+            if ( randmap == "" )
                 return false;
-            }
-
-            randmap_matches = maps.length();
-            randmap = maps[randrange(randmap_matches)];
+            randmap_matches = player.randmapMatches;
         }
 
         if ( levelTime - randmap_time < RANDMAP_DELAY_MIN )
@@ -443,6 +434,24 @@ bool Cmd_Maplist( Client@ client, const String &cmdString, const String &argsStr
     return true;
 }
 
+bool Cmd_PreRandmap( Client@ client, const String &cmdString, const String &argsString, int argc )
+{
+    Player@ player = RACE_GetPlayer( client );
+    String pattern = argsString.getToken( 0 );
+    if ( pattern == "" )
+    {
+        client.printMessage( "Usage: /prerandmap <* | pattern>\n" );
+        return false;
+    }
+
+    String result = player.randomMap( pattern, true );
+    if ( result == "" )
+        return false;
+
+    client.printMessage( S_COLOR_YELLOW + "Chosen map: " + S_COLOR_WHITE + player.randmap + S_COLOR_YELLOW + " (out of " + S_COLOR_WHITE + player.randmapMatches + S_COLOR_YELLOW + " matches)\n" );
+    return true;
+}
+
 bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString, int argc )
 {
     String command = argsString.getToken( 0 ).tolower();
@@ -507,6 +516,9 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
 
         cmdlist.addCell( "/callvote randmap" );
         cmdlist.addCell( "Calls a vote for a random map in the current mappool." );
+
+        cmdlist.addCell( "/prerandmap" );
+        cmdlist.addCell( "Picks a map for your next randmap vote in advance." );
 
         for ( uint i = 0; i < cmdlist.numRows(); i++ )
             client.printMessage( cmdlist.getRow(i) + "\n" );
@@ -641,6 +653,11 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         client.printMessage( S_COLOR_WHITE + "- Calls a vote for a random map in the current mappool. Use wildcard '*' to match any map." + "\n" );
         client.printMessage( S_COLOR_WHITE + "  Alternatively, specify a pattern keyword for a map containing the pattern as a partial match." + "\n" );
     }
+    else if ( command == "prerandmap" )
+    {
+        client.printMessage( S_COLOR_YELLOW + "/prerandmap <* | pattern>" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Picks a random map for your next randmap vote." + "\n" );
+    }
     else
     {
         client.printMessage( S_COLOR_WHITE + "Command not found.\n");
@@ -687,6 +704,8 @@ bool RACE_HandleCommand( Client@ client, const String &cmdString, const String &
         return Cmd_LastRecs( client, cmdString, argsString, argc );
     else if ( cmdString == "maplist" )
         return Cmd_Maplist( client, cmdString, argsString, argc );
+    else if ( cmdString == "prerandmap" )
+        return Cmd_PreRandmap( client, cmdString, argsString, argc );
     else if ( cmdString == "help" )
         return Cmd_Help( client, cmdString, argsString, argc );
     else if ( cmdString == "rules")
@@ -713,6 +732,7 @@ void RACE_RegisterCommands()
     G_RegisterCommand( "cps" );
     G_RegisterCommand( "lastrecs" );
     G_RegisterCommand( "maplist" );
+    G_RegisterCommand( "prerandmap" );
     G_RegisterCommand( "help" );
     G_RegisterCommand( "rules" );
 }

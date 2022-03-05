@@ -64,6 +64,10 @@ class Player
     String lastFind;
     uint findIndex;
 
+    String randmap;
+    String randmapPattern;
+    uint randmapMatches;
+
     void resizeCPs( int size )
     {
         this.run.resizeCPs( size );
@@ -111,6 +115,10 @@ class Player
 
         this.lastFind = "";
         this.findIndex = 0;
+
+        this.randmap = "";
+        this.randmapPattern = "";
+        this.randmapMatches = 0;
     }
 
     Player()
@@ -1933,6 +1941,41 @@ class Player
         if ( entityFinder.finishes.length() == 0 )
             msg += ", " + S_COLOR_RED + "no finish" + S_COLOR_WHITE;
         G_PrintMsg( this.client.getEnt(), S_COLOR_GREEN + "Map stats: " + S_COLOR_WHITE + msg + "\n" );
+    }
+
+    String randomMap( String pattern, bool pre )
+    {
+        pattern = pattern.removeColorTokens().tolower();
+        if ( pattern == "*" )
+            pattern = "";
+
+        if ( !pre && this.randmap != "" && this.randmapPattern == pattern )
+            return this.randmap;
+
+        Cvar mapname( "mapname", "", 0 );
+        String current = mapname.string;
+
+        String[] maps = GetMapsByPattern( pattern, current );
+
+        if ( maps.length() == 0 )
+        {
+            this.client.printMessage( "No matching maps\n" );
+            return "";
+        }
+
+        uint matches = maps.length();
+        String result = maps[randrange(matches)];
+        if ( pre )
+        {
+            this.randmap = result;
+            this.randmapPattern = pattern;
+        }
+        else
+        {
+            this.randmap = "";
+        }
+        this.randmapMatches = matches;
+        return result;
     }
 }
 
