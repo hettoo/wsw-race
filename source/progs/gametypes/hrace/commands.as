@@ -448,8 +448,8 @@ bool Cmd_PreRandmap( Client@ client, const String &cmdString, const String &args
     if ( result == "" )
         return false;
 
-    client.printMessage( S_COLOR_YELLOW + "Showing fulltop for " + S_COLOR_WHITE + result + "\n" );
-    showTop( client, result, true );
+    client.printMessage( S_COLOR_YELLOW + "Showing top for " + S_COLOR_WHITE + result + "\n" );
+    showTop( client, result, false );
 
     client.printMessage( S_COLOR_YELLOW + "Chosen map: " + S_COLOR_WHITE + result + S_COLOR_YELLOW + " (out of " + S_COLOR_WHITE + player.randmapMatches + S_COLOR_YELLOW + " matches)\n" );
     return true;
