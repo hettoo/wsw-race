@@ -10,7 +10,7 @@ const float POINT_DISTANCE = 65536.0f;
 const float POINT_PULL = 0.004f;
 const float PULL_MARGIN = 16.0f;
 
-const uint BIG_LIST = 25;
+const uint BIG_LIST = 15;
 
 Player[] players( maxClients );
 
@@ -1568,15 +1568,31 @@ class Player
                 G_PrintMsg( ent, "No matching entity found.\n" );
                 return false;
             }
-            bool small = list.length() < BIG_LIST;
+            uint len = list.length();
+            bool small = len < BIG_LIST;
+            bool single = len == 1;
             if ( !small )
                 G_PrintMsg( ent, "Omitting target info as this is a big list\n" );
             while ( !list.isEmpty() )
             {
                 Entity@ current = list.getEnt( 0 );
-                G_PrintMsg( ent, "entity " + current.entNum + ": " + current.classname + " at " + ent.origin.x + " " + ent.origin.y + " " + ent.origin.z + "\n" );
+                G_PrintMsg( ent, "entity " + current.entNum + ": " + current.classname + " @ " + ent.origin.x + " " + ent.origin.y + " " + ent.origin.z + "\n" );
                 if ( small )
                 {
+                    if ( single )
+                    {
+                        G_PrintMsg( ent, "    type: " + current.type + "\n" );
+                        G_PrintMsg( ent, "    solid: " + current.solid + "\n" );
+                        G_PrintMsg( ent, "    svflags: " + current.svflags + "\n" );
+                        G_PrintMsg( ent, "    clipMask: " + current.clipMask + "\n" );
+                        G_PrintMsg( ent, "    spawnFlags: " + current.spawnFlags + "\n" );
+                        G_PrintMsg( ent, "    frame: " + current.frame + "\n" );
+                        G_PrintMsg( ent, "    count: " + current.count + "\n" );
+                        G_PrintMsg( ent, "    wait: " + current.wait + "\n" );
+                        G_PrintMsg( ent, "    delay: " + current.delay + "\n" );
+                        G_PrintMsg( ent, "    health: " + current.health + "\n" );
+                        G_PrintMsg( ent, "    maxHealth: " + current.maxHealth + "\n" );
+                    }
                     array<Entity@>@ targeting = current.findTargeting();
                     for ( uint i = 0; i < targeting.length; i++ )
                         G_PrintMsg( ent, "    targetted by " + targeting[i].entNum + ": " + targeting[i].classname + "\n" );
