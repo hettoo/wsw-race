@@ -60,6 +60,7 @@ class Player
     bool firstMessage;
 
     int positionInterval;
+    int recallHold;
 
     String lastFind;
     uint findIndex;
@@ -79,6 +80,7 @@ class Player
         @this.client = null;
 
         this.positionInterval = POSITION_INTERVAL;
+        this.recallHold = RECALL_HOLD;
 
         this.currentSector = 0;
         this.inRace = false;
@@ -834,7 +836,7 @@ class Player
         {
             ent.moveType = MOVETYPE_NONE;
             this.updateHelpMessage();
-            this.release = RECALL_HOLD;
+            this.release = this.recallHold;
         }
 
         if ( this.noclipSpawn )
@@ -1402,6 +1404,23 @@ class Player
                 G_PrintMsg( ent, this.positionInterval + "\n" );
             else
                 this.positionInterval = number;
+        }
+        return true;
+    }
+
+    bool recallDelay( String value )
+    {
+        Entity@ ent = this.client.getEnt();
+        int number = -1;
+        if ( value != "" )
+            number = value.toInt();
+        if ( number < 0 )
+            G_PrintMsg( ent, this.recallHold + "\n" );
+        else
+        {
+            if ( number < 2 )
+                number = 2;
+            this.recallHold = number;
         }
         return true;
     }

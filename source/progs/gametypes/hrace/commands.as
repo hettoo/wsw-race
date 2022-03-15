@@ -180,7 +180,7 @@ bool Cmd_RaceRestart( Client@ client, const String &cmdString, const String &arg
                 {
                     ent.moveType = MOVETYPE_NONE;
                     player.updateHelpMessage();
-                    player.release = RECALL_HOLD;
+                    player.release = player.recallHold;
                     return true;
                 }
             }
@@ -244,6 +244,8 @@ bool Cmd_Position( Client@ client, const String &cmdString, const String &argsSt
             return player.recallBest( argsString.getToken( 2 ) );
         else if ( option == "interval" )
             return player.recallInterval( argsString.getToken( 2 ) );
+        else if ( option == "delay" )
+            return player.recallDelay( argsString.getToken( 2 ) );
         else if ( option == "start" )
             return player.recallStart();
         else if ( option == "end" )
@@ -601,6 +603,8 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         client.printMessage( S_COLOR_WHITE + "- Loads positions from your best run, or a matching player." + "\n" );
         client.printMessage( S_COLOR_YELLOW + "/position recall interval [interval]" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Shows/sets the interval at which positions are recorded." + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/position recall delay [delay]" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Shows/sets the delay in frames before the start of a recall run." + "\n" );
         client.printMessage( S_COLOR_YELLOW + "/position recall <start|end>" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Moves to the first or last recalled position." + "\n" );
         client.printMessage( S_COLOR_YELLOW + "/position recall extend" + "\n" );
