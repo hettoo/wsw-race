@@ -1581,6 +1581,10 @@ class Player
                 {
                     if ( single )
                     {
+                        Vec3 mins, maxs;
+                        current.getSize( mins, maxs );
+                        G_PrintMsg( ent, "    mins: " + mins.x + " " + mins.y + " " + mins.z + "\n" );
+                        G_PrintMsg( ent, "    maxs: " + maxs.x + " " + maxs.y + " " + maxs.z + "\n" );
                         G_PrintMsg( ent, "    type: " + current.type + "\n" );
                         G_PrintMsg( ent, "    solid: " + current.solid + "\n" );
                         G_PrintMsg( ent, "    svflags: " + current.svflags + "\n" );
