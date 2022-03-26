@@ -325,7 +325,7 @@ void showTop( Client@ client, const String &mapName, bool full )
                 table.addCell( S_COLOR_YELLOW + "[+" + RACE_TimeToString( record.finishTime - top.finishTime ) + "]" );
                 table.addCell( S_COLOR_WHITE + record.playerName );
                 if ( record.login != "" )
-                    table.addCell( "(" + S_COLOR_YELLOW + record.login + S_COLOR_WHITE + ")" );
+                    table.addCell( S_COLOR_WHITE + "(" + S_COLOR_YELLOW + record.login + S_COLOR_WHITE + ")" );
                 else
                     table.addCell( "" );
                 if ( full )
