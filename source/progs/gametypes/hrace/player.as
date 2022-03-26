@@ -252,8 +252,12 @@ class Player
         Entity@ ent = this.client.getEnt();
         if ( this.client.team == TEAM_SPECTATOR )
         {
-            G_PrintMsg( ent, "Noclip mode is not available for spectators.\n" );
-            return false;
+            Vec3 origin = ent.origin;
+            this.client.team = TEAM_PLAYERS;
+            this.noclipSpawn = true;
+            this.respawn();
+            ent.origin = origin;
+            return true;
         }
         if ( ent.health <= 0 )
         {
@@ -841,12 +845,10 @@ class Player
 
         if ( this.noclipSpawn )
         {
-            if ( this.practicing )
-            {
-                ent.moveType = MOVETYPE_NOCLIP;
-                ent.velocity = Vec3();
-                this.noclipWeapon = this.client.pendingWeapon;
-            }
+            this.enterPracticeMode();
+            ent.moveType = MOVETYPE_NOCLIP;
+            ent.velocity = Vec3();
+            this.noclipWeapon = this.client.pendingWeapon;
             this.noclipSpawn = false;
         }
 
