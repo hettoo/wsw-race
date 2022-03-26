@@ -555,7 +555,7 @@ void GT_SpawnGametype()
             entityFinder.add( "door", ent, centre );
         else if ( ent.classname == "func_button" )
             entityFinder.add( "button", ent, centre );
-        else if ( ent.classname == "misc_teleporter_dest" )
+        else if ( ent.classname == "misc_teleporter_dest" || ent.classname == "target_teleporter" )
             entityFinder.add( "tele", ent, centre );
     }
 
