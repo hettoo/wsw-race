@@ -254,6 +254,7 @@ class Player
         {
             Vec3 origin = ent.origin;
             this.client.team = TEAM_PLAYERS;
+            G_PrintMsg( null, this.client.name + S_COLOR_WHITE + " joined the " + G_GetTeam( this.client.team ).name + S_COLOR_WHITE + " team.\n" );
             this.noclipSpawn = true;
             this.respawn();
             ent.origin = origin;
