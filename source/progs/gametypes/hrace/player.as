@@ -1515,6 +1515,27 @@ class Player
             return true;
     }
 
+    bool recallFake( uint time )
+    {
+        if ( !this.practicing )
+        {
+            G_PrintMsg( this.client.getEnt(), "Only available in practicemode.\n" );
+            return false;
+        }
+
+        Position@ position = this.savedPosition();
+
+        if ( !position.saved )
+        {
+            G_PrintMsg( this.client.getEnt(), "No position saved.\n" );
+            return false;
+        }
+        position.recalled = true;
+        position.currentTime = time;
+
+        return true;
+    }
+
     bool recallStart()
     {
         return this.recallPosition( -this.positionCycle );
