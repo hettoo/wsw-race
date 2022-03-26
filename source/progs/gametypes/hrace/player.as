@@ -1446,6 +1446,39 @@ class Player
             return matches[0];
     }
 
+    bool recallCurrent( String pattern )
+    {
+        if ( this.inRace )
+        {
+            G_PrintMsg( this.client.getEnt(), "Not possible during a race.\n" );
+            return false;
+        }
+
+        Player@ target = this;
+
+        Player@ match = this.oneMatchingPlayer( pattern );
+        if ( @match == null )
+        {
+            G_PrintMsg( this.client.getEnt(), "Failed to identify a single player.\n" );
+            return false;
+        }
+        @target = match;
+
+        if ( target.run.positionCount == 0 )
+        {
+            G_PrintMsg( this.client.getEnt(), "No run recorded.\n" );
+            return false;
+        }
+
+        this.run.copyPositions( target.run );
+        this.positionCycle = 0;
+
+        if ( this.practicing && this.client.team != TEAM_SPECTATOR )
+            return this.recallPosition( 0 );
+        else
+            return true;
+    }
+
     bool recallBest( String pattern )
     {
         if ( this.inRace )
