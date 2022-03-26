@@ -877,9 +877,9 @@ class Player
         else
         {
             if ( this.client.team == TEAM_SPECTATOR && this.client.getEnt().isGhosting() )
-                client.setHelpMessage( 0 );
+                this.client.setHelpMessage( 0 );
             else if ( refPlayer.preRace() && RS_QueryPjState( refPlayer.client.playerNum ) )
-                client.setHelpMessage( prejumpMsg );
+                this.client.setHelpMessage( prejumpMsg );
             else
                 this.client.setHelpMessage( defaultMsg );
         }
