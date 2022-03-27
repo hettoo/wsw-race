@@ -359,7 +359,12 @@ bool Cmd_FullTop( Client@ client, const String &cmdString, const String &argsStr
 
 bool Cmd_CPs( Client@ client, const String &cmdString, const String &argsString, int argc )
 {
-    return RACE_GetPlayer( client ).showCPs( argsString.getToken( 0 ), argsString.getToken( 1 ) );
+    return RACE_GetPlayer( client ).showCPs( argsString.getToken( 0 ), argsString.getToken( 1 ), false );
+}
+
+bool Cmd_CPsFull( Client@ client, const String &cmdString, const String &argsString, int argc )
+{
+    return RACE_GetPlayer( client ).showCPs( argsString.getToken( 0 ), argsString.getToken( 1 ), true );
 }
 
 bool Cmd_LastRecs( Client@ client, const String &cmdString, const String &argsString, int argc )
@@ -641,7 +646,14 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
     else if ( command == "cps" )
     {
         client.printMessage( S_COLOR_YELLOW + "/cps [target pattern] [reference pattern]" + "\n" );
-        client.printMessage( S_COLOR_WHITE + "- Shows your times between checkpoints on the current map and compares to the best recorded times." + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Shows your times between checkpoints on the current map and compares to the best recorded times" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "  of players matching target pattern. If a reference pattern is given, the result is shown relative" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "  to the matching player from the top list instead of you." + "\n" );
+    }
+    else if ( command == "fullcps" )
+    {
+        client.printMessage( S_COLOR_YELLOW + "/fullcps [target pattern] [reference pattern]" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Shows your times between checkpoints on the current map and compares to the best recorded times from /fulltop" + "\n" );
         client.printMessage( S_COLOR_WHITE + "  of players matching target pattern. If a reference pattern is given, the result is shown relative" + "\n" );
         client.printMessage( S_COLOR_WHITE + "  to the matching player from the top list instead of you." + "\n" );
     }
@@ -715,6 +727,8 @@ bool RACE_HandleCommand( Client@ client, const String &cmdString, const String &
         return Cmd_FullTop( client, cmdString, argsString, argc );
     else if ( cmdString == "cps" )
         return Cmd_CPs( client, cmdString, argsString, argc );
+    else if ( cmdString == "fullcps" )
+        return Cmd_CPsFull( client, cmdString, argsString, argc );
     else if ( cmdString == "lastrecs" )
         return Cmd_LastRecs( client, cmdString, argsString, argc );
     else if ( cmdString == "maplist" )
@@ -745,6 +759,7 @@ void RACE_RegisterCommands()
     G_RegisterCommand( "top" );
     G_RegisterCommand( "fulltop" );
     G_RegisterCommand( "cps" );
+    G_RegisterCommand( "fullcps" );
     G_RegisterCommand( "lastrecs" );
     G_RegisterCommand( "maplist" );
     G_RegisterCommand( "prerandmap" );

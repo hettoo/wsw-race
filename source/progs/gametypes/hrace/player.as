@@ -1746,8 +1746,20 @@ class Player
         return true;
     }
 
-    bool showCPs( String targetPattern, String refPattern )
+    bool showCPs( String targetPattern, String refPattern, bool full )
     {
+        RecordTime[]@ records;
+        if ( full )
+        {
+            topRequestRecords = levelRecords;
+            @records = topRequestRecords;
+
+            for ( int i = 0; i < MAX_RECORDS && otherVersionRecords[i].saved; i++ )
+                RACE_AddTopScore( records, otherVersionRecords[i] );
+        }
+        else
+            @records = levelRecords;
+
         Entity@ ent = this.client.getEnt();
         int ref = -1;
         if ( refPattern == "" )
@@ -1761,9 +1773,9 @@ class Player
         else
         {
             refPattern = refPattern.removeColorTokens().tolower();
-            for ( int j = 0; j < DISPLAY_RECORDS && levelRecords[j].saved && ref < 0; j++ )
+            for ( int j = 0; j < DISPLAY_RECORDS && records[j].saved && ref < 0; j++ )
             {
-                if( PatternMatch( levelRecords[j].playerName.removeColorTokens().tolower(), refPattern ) )
+                if( PatternMatch( records[j].playerName.removeColorTokens().tolower(), refPattern ) )
                     ref = j;
             }
             if ( ref < 0 )
@@ -1771,9 +1783,9 @@ class Player
                 G_PrintMsg( ent, "Reference player not found in top list.\n" );
                 return false;
             }
-            G_PrintMsg( ent, S_COLOR_ORANGE + "Comparing relative to " + S_COLOR_WHITE + levelRecords[ref].playerName + S_COLOR_ORANGE + " (#" + ( ref + 1 ) + ")\n" );
+            G_PrintMsg( ent, S_COLOR_ORANGE + "Comparing relative to " + S_COLOR_WHITE + records[ref].playerName + S_COLOR_ORANGE + " (#" + ( ref + 1 ) + ")\n" );
 
-            levelRecords[ref].deduceCPOrder();
+            records[ref].deduceCPOrder();
         }
 
         targetPattern = targetPattern.removeColorTokens().tolower();
@@ -1784,7 +1796,7 @@ class Player
 
         Table table( S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "r" + S_COLOR_ORANGE + " / l rr " + S_COLOR_ORANGE + "l " + S_COLOR_WHITE + "l" );
         int i;
-        for ( i = 0; i < numCheckpoints && ( ( ref < 0 && this.bestRun.cpOrder[i] >= 0 ) || ( ref >= 0 && levelRecords[ref].cpOrder[i] >= 0 ) ); i++ )
+        for ( i = 0; i < numCheckpoints && ( ( ref < 0 && this.bestRun.cpOrder[i] >= 0 ) || ( ref >= 0 && records[ref].cpOrder[i] >= 0 ) ); i++ )
         {
             uint time;
             int id;
@@ -1801,12 +1813,12 @@ class Player
             }
             else
             {
-                id = levelRecords[ref].cpOrder[i];
-                time = levelRecords[ref].cpTimes[id];
+                id = records[ref].cpOrder[i];
+                time = records[ref].cpTimes[id];
                 if ( i > 0 )
                 {
-                    previousId = levelRecords[ref].cpOrder[i - 1];
-                    time -= levelRecords[ref].cpTimes[previousId];
+                    previousId = records[ref].cpOrder[i - 1];
+                    time -= records[ref].cpTimes[previousId];
                 }
             }
 
@@ -1814,14 +1826,14 @@ class Player
             uint best = 0;
             String bestName;
             bool missing = false;
-            for ( int j = 0; j < DISPLAY_RECORDS && levelRecords[j].saved; j++ )
+            for ( int j = 0; j < DISPLAY_RECORDS && records[j].saved; j++ )
             {
-                if( targetPattern == "" || PatternMatch( levelRecords[j].playerName.removeColorTokens().tolower(), targetPattern ) )
+                if( targetPattern == "" || PatternMatch( records[j].playerName.removeColorTokens().tolower(), targetPattern ) )
                 {
-                    uint other = levelRecords[j].cpTimes[id];
+                    uint other = records[j].cpTimes[id];
                     if ( !missing && other == 0 )
                     {
-                        G_PrintMsg( ent, S_COLOR_ORANGE + "CP" + ( i + 1 ) + " is missing for " + S_COLOR_WHITE + levelRecords[j].playerName + "\n" );
+                        G_PrintMsg( ent, S_COLOR_ORANGE + "CP" + ( i + 1 ) + " is missing for " + S_COLOR_WHITE + records[j].playerName + "\n" );
                         missing = true;
                     }
                     if ( other != 0 )
@@ -1829,14 +1841,14 @@ class Player
                         uint previous = 0;
                         if ( i > 0 )
                         {
-                            previous = levelRecords[j].cpTimes[previousId];
+                            previous = records[j].cpTimes[previousId];
                             other -= previous;
                         }
                         if ( ( i == 0 || previous != 0 ) && ( !bestSet || other < best ) )
                         {
                             bestSet = true;
                             best = other;
-                            bestName = levelRecords[j].playerName;
+                            bestName = records[j].playerName;
                         }
                     }
                 }
@@ -1873,26 +1885,26 @@ class Player
         }
         else
         {
-            finishTime = levelRecords[ref].finishTime;
+            finishTime = records[ref].finishTime;
             time = finishTime;
             if ( i > 0 )
             {
-                previousId = levelRecords[ref].cpOrder[i - 1];
-                time -= levelRecords[ref].cpTimes[previousId];
+                previousId = records[ref].cpOrder[i - 1];
+                time -= records[ref].cpTimes[previousId];
             }
         }
         bool bestSet = false;
         uint best = 0;
         String bestName;
-        for ( int j = 0; j < DISPLAY_RECORDS && levelRecords[j].saved; j++ )
+        for ( int j = 0; j < DISPLAY_RECORDS && records[j].saved; j++ )
         {
-            if( targetPattern == "" || PatternMatch( levelRecords[j].playerName.removeColorTokens().tolower(), targetPattern ) )
+            if( targetPattern == "" || PatternMatch( records[j].playerName.removeColorTokens().tolower(), targetPattern ) )
             {
-                uint other = levelRecords[j].finishTime;
+                uint other = records[j].finishTime;
                 uint previous = 0;
                 if ( i > 0 )
                 {
-                    previous = levelRecords[j].cpTimes[previousId];
+                    previous = records[j].cpTimes[previousId];
                     other -= previous;
                 }
                 if ( i == 0 || previous != 0 )
@@ -1901,7 +1913,7 @@ class Player
                     {
                         bestSet = true;
                         best = other;
-                        bestName = levelRecords[j].playerName;
+                        bestName = records[j].playerName;
                     }
                 }
             }
