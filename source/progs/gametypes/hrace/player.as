@@ -258,11 +258,13 @@ class Player
                 return false;
             }
             Vec3 origin = ent.origin;
+            Vec3 angles = ent.angles;
             this.client.team = TEAM_PLAYERS;
             G_PrintMsg( null, this.client.name + S_COLOR_WHITE + " joined the " + G_GetTeam( this.client.team ).name + S_COLOR_WHITE + " team.\n" );
             this.noclipSpawn = true;
             this.respawn();
             ent.origin = origin;
+            ent.angles = angles;
             return true;
         }
         if ( ent.health <= 0 )
@@ -842,20 +844,22 @@ class Player
         RS_ResetPjState( this.client.playerNum );
 
         this.loadPosition( "", Verbosity_Silent );
+
+        if ( this.noclipSpawn )
+        {
+            this.enterPracticeMode();
+            this.recalled = false;
+            ent.moveType = MOVETYPE_NOCLIP;
+            ent.velocity = Vec3();
+            this.noclipWeapon = this.client.pendingWeapon;
+            this.noclipSpawn = false;
+        }
+
         if ( this.recalled )
         {
             ent.moveType = MOVETYPE_NONE;
             this.updateHelpMessage();
             this.release = this.recallHold;
-        }
-
-        if ( this.noclipSpawn )
-        {
-            this.enterPracticeMode();
-            ent.moveType = MOVETYPE_NOCLIP;
-            ent.velocity = Vec3();
-            this.noclipWeapon = this.client.pendingWeapon;
-            this.noclipSpawn = false;
         }
 
         this.updateHelpMessage();
