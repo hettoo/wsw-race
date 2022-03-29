@@ -510,7 +510,7 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         cmdlist.addCell( "/top" );
         cmdlist.addCell( "Shows the top record times for the current map." );
 
-        cmdlist.addCell( "/fulltop" );
+        cmdlist.addCell( "/topfull" );
         cmdlist.addCell( "Shows the top record times for the current map, including records from previous versions." );
 
         cmdlist.addCell( "/cps" );
@@ -637,9 +637,9 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         if ( race_toplists.string != "" )
             client.printMessage( S_COLOR_WHITE + "  To see all lists visit: " + race_toplists.string + "." + "\n" );
     }
-    else if ( command == "fulltop" )
+    else if ( command == "topfull" )
     {
-        client.printMessage( S_COLOR_YELLOW + "/fulltop" + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/topfull" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Shows a list of the top record times for the current map along with the names and time" + "\n" );
         client.printMessage( S_COLOR_WHITE + "  difference compared to the number 1 time, including times from other game versions." + "\n" );
     }
@@ -650,10 +650,10 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         client.printMessage( S_COLOR_WHITE + "  of players matching target pattern. If a reference pattern is given, the result is shown relative" + "\n" );
         client.printMessage( S_COLOR_WHITE + "  to the matching player from the top list instead of you." + "\n" );
     }
-    else if ( command == "fullcps" )
+    else if ( command == "cpsfull" )
     {
-        client.printMessage( S_COLOR_YELLOW + "/fullcps [target pattern] [reference pattern]" + "\n" );
-        client.printMessage( S_COLOR_WHITE + "- Shows your times between checkpoints on the current map and compares to the best recorded times from /fulltop" + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/cpsfull [target pattern] [reference pattern]" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Shows your times between checkpoints on the current map and compares to the best recorded times from /topfull" + "\n" );
         client.printMessage( S_COLOR_WHITE + "  of players matching target pattern. If a reference pattern is given, the result is shown relative" + "\n" );
         client.printMessage( S_COLOR_WHITE + "  to the matching player from the top list instead of you." + "\n" );
     }
@@ -723,11 +723,11 @@ bool RACE_HandleCommand( Client@ client, const String &cmdString, const String &
         return Cmd_Position( client, cmdString, argsString, argc );
     else if ( cmdString == "top" )
         return Cmd_Top( client, cmdString, argsString, argc );
-    else if ( cmdString == "fulltop" )
+    else if ( cmdString == "topfull" )
         return Cmd_FullTop( client, cmdString, argsString, argc );
     else if ( cmdString == "cps" )
         return Cmd_CPs( client, cmdString, argsString, argc );
-    else if ( cmdString == "fullcps" )
+    else if ( cmdString == "cpsfull" )
         return Cmd_CPsFull( client, cmdString, argsString, argc );
     else if ( cmdString == "lastrecs" )
         return Cmd_LastRecs( client, cmdString, argsString, argc );
@@ -757,9 +757,9 @@ void RACE_RegisterCommands()
     G_RegisterCommand( "noclip" );
     G_RegisterCommand( "position" );
     G_RegisterCommand( "top" );
-    G_RegisterCommand( "fulltop" );
+    G_RegisterCommand( "topfull" );
     G_RegisterCommand( "cps" );
-    G_RegisterCommand( "fullcps" );
+    G_RegisterCommand( "cpsfull" );
     G_RegisterCommand( "lastrecs" );
     G_RegisterCommand( "maplist" );
     G_RegisterCommand( "prerandmap" );
