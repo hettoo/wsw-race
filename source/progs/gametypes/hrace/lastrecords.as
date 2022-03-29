@@ -88,7 +88,7 @@ class LastRecords
             if ( this.lastRecPlayer == ";" )
                 table.addCell( "" );
             else
-                table.addCell( S_COLOR_ORANGE + " (previously " + this.lastRecPlayer + S_COLOR_ORANGE + ")" );
+                table.addCell( S_COLOR_ORANGE + " (previously " + S_COLOR_WHITE + this.lastRecPlayer + S_COLOR_ORANGE + ")" );
             add++;
             if ( LAST_RECORDS - 1 < bound )
                 bound = LAST_RECORDS - 1;
