@@ -106,7 +106,7 @@ class LastRecords
             if ( this.recs[i].refPlayer == ";" )
                 table.addCell( "" );
             else
-                table.addCell( S_COLOR_ORANGE + " (previously " + this.recs[i].refPlayer + S_COLOR_ORANGE + ")" );
+                table.addCell( S_COLOR_ORANGE + " (previously " + S_COLOR_WHITE + this.recs[i].refPlayer + S_COLOR_ORANGE + ")" );
         }
 
         G_PrintMsg( ent, S_COLOR_ORANGE + "Most recent " + S_COLOR_GREEN + race_servername.string + S_COLOR_ORANGE + " records:\n" );
