@@ -252,6 +252,11 @@ class Player
         Entity@ ent = this.client.getEnt();
         if ( this.client.team == TEAM_SPECTATOR )
         {
+            if ( pending_endmatch || match.getState() >= MATCH_STATE_POSTMATCH )
+            {
+                G_PrintMsg( ent, "Cannot join the end of the match.\n" );
+                return false;
+            }
             Vec3 origin = ent.origin;
             this.client.team = TEAM_PLAYERS;
             G_PrintMsg( null, this.client.name + S_COLOR_WHITE + " joined the " + G_GetTeam( this.client.team ).name + S_COLOR_WHITE + " team.\n" );
