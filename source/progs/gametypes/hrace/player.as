@@ -69,6 +69,8 @@ class Player
     String randmapPattern;
     uint randmapMatches;
 
+    Entity@ marker;
+
     void resizeCPs( int size )
     {
         this.run.resizeCPs( size );
@@ -121,6 +123,8 @@ class Player
         this.randmap = "";
         this.randmapPattern = "";
         this.randmapMatches = 0;
+
+        @this.marker = null;
     }
 
     Player()
@@ -1986,6 +1990,60 @@ class Player
             table.addCell( "" );
         table.addCell( "from" );
         table.addCell( bestName );
+    }
+
+    void setMarker()
+    {
+        if ( @this.marker != null )
+        {
+            this.marker.unlinkEntity();
+            this.marker.freeEntity();
+        }
+
+        Entity@ ent = this.client.getEnt();
+
+        Entity@ dummy = G_SpawnEntity( "dummy" );
+        //dummy.type = ET_PLAYER;
+        dummy.type = ET_GENERIC;
+        dummy.modelindex = G_ModelIndex( "models/players/bigvic/tris.iqm" );
+        //dummy.skinNum = G_SkinIndex( "models/players/bigvic/fullbright.skin" );
+        //dummy.colorRGBA = 255;
+        dummy.frame = 0;
+        //dummy.moveType = MOVETYPE_PLAYER;
+        dummy.moveType = MOVETYPE_NONE;
+        dummy.svflags |= SVF_ONLYOWNER;
+        dummy.svflags &= ~SVF_NOCLIENT;
+        dummy.ownerNum = ent.entNum;
+        dummy.solid = SOLID_NOT;
+        dummy.clipMask = 0;
+        //dummy.team = TEAM_PLAYERS;
+        dummy.origin = ent.origin;
+        dummy.health = 100;
+
+        Vec3 a, b, c;
+        ent.angles.angleVectors( a, b, c );
+        b = a;
+        a.z = 0;
+        dummy.angles = a.toAngles();
+
+        dummy.linkEntity();
+
+        @this.marker = dummy;
+
+        //Vec3 offset( 0, 0, ent.viewHeight );
+        //Vec3 origin = ent.origin + offset;
+        //b.normalize();
+
+        //Entity@ beam = G_SpawnEntity( "beam" );
+        //beam.moveType = MOVETYPE_NONE;
+        //beam.solid = SOLID_NOT;
+        //beam.modelindex = 255;
+        //beam.origin = origin;
+        //beam.origin2 = origin + b * POINT_DISTANCE;
+        //beam.type = ET_LASERBEAM;
+        //beam.svflags = SVF_TRANSMITORIGIN2 | SVF_BROADCAST | SVF_FORCEOWNER;
+        //beam.ownerNum = dummy.entNum;
+        //beam.linkEntity();
     }
 
     void loadStoredTime()

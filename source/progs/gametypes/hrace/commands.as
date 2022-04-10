@@ -522,6 +522,9 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         cmdlist.addCell( "/m" );
         cmdlist.addCell( "Lets you send a private message." );
 
+        cmdlist.addCell( "/mark" );
+        cmdlist.addCell( "Places a marker at your current position." );
+
         cmdlist.addCell( "/maplist" );
         cmdlist.addCell( "Lets you search available maps." );
 
@@ -685,6 +688,11 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
         client.printMessage( S_COLOR_YELLOW + "/prerandmap <* | pattern>" + "\n" );
         client.printMessage( S_COLOR_WHITE + "- Picks a random map for your next randmap vote." + "\n" );
     }
+    else if ( command == "mark" )
+    {
+        client.printMessage( S_COLOR_YELLOW + "/mark" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Spawn a dummy model at your current position, only visible to you." + "\n" );
+    }
     else
     {
         client.printMessage( S_COLOR_WHITE + "Command not found.\n");
@@ -696,6 +704,12 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
 bool Cmd_Rules( Client@ client, const String &cmdString, const String &argsString, int argc )
 {
     RACE_ShowRules(client, 0);
+    return true;
+}
+
+bool Cmd_Mark( Client@ client, const String &cmdString, const String &argsString, int argc )
+{
+    RACE_GetPlayer( client ).setMarker();
     return true;
 }
 
@@ -739,6 +753,8 @@ bool RACE_HandleCommand( Client@ client, const String &cmdString, const String &
         return Cmd_Help( client, cmdString, argsString, argc );
     else if ( cmdString == "rules")
         return Cmd_Rules( client, cmdString, argsString, argc );
+    else if ( cmdString == "mark" )
+        return Cmd_Mark( client, cmdString, argsString, argc );
 
     G_PrintMsg( null, "unknown: " + cmdString + "\n" );
 
@@ -765,4 +781,5 @@ void RACE_RegisterCommands()
     G_RegisterCommand( "prerandmap" );
     G_RegisterCommand( "help" );
     G_RegisterCommand( "rules" );
+    G_RegisterCommand( "mark" );
 }
