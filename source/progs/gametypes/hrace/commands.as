@@ -690,8 +690,8 @@ bool Cmd_Help( Client@ client, const String &cmdString, const String &argsString
     }
     else if ( command == "mark" )
     {
-        client.printMessage( S_COLOR_YELLOW + "/mark" + "\n" );
-        client.printMessage( S_COLOR_WHITE + "- Spawn a dummy model at your current position, only visible to you." + "\n" );
+        client.printMessage( S_COLOR_YELLOW + "/mark [player]" + "\n" );
+        client.printMessage( S_COLOR_WHITE + "- Spawn a dummy model at your current position, only visible to you. Copies from the player if provided." + "\n" );
     }
     else
     {
@@ -709,8 +709,7 @@ bool Cmd_Rules( Client@ client, const String &cmdString, const String &argsStrin
 
 bool Cmd_Mark( Client@ client, const String &cmdString, const String &argsString, int argc )
 {
-    RACE_GetPlayer( client ).setMarker();
-    return true;
+    return RACE_GetPlayer( client ).setMarker( argsString.getToken( 0 ) );
 }
 
 bool RACE_HandleCommand( Client@ client, const String &cmdString, const String &argsString, int argc )

@@ -1992,27 +1992,43 @@ class Player
         table.addCell( bestName );
     }
 
-    void setMarker()
+    bool setMarker( String copy )
     {
-        if ( @this.marker != null )
-        {
-            this.marker.unlinkEntity();
-            this.marker.freeEntity();
-        }
-
         Entity@ ent = this.client.getEnt();
+        Entity@ ref = ent;
+
+        if ( copy != "" )
+        {
+            Player@ match = this.oneMatchingPlayer( copy );
+            if ( @match == null )
+                return false;
+            @ref = match.marker;
+            if ( @ref == null )
+            {
+                this.client.printMessage( "Player does not have a marker set.\n" );
+                return false;
+            }
+        }
 
         Entity@ dummy = G_SpawnEntity( "dummy" );
         dummy.modelindex = G_ModelIndex( "models/players/bigvic/tris.iqm" );
         dummy.svflags |= SVF_ONLYOWNER;
         dummy.svflags &= ~SVF_NOCLIENT;
         dummy.ownerNum = ent.entNum;
-        dummy.origin = ent.origin;
-        dummy.angles = Vec3( 0, ent.angles.y, 0 );
+        dummy.origin = ref.origin;
+        dummy.angles = Vec3( 0, ref.angles.y, 0 );
+
+        if ( @this.marker != null )
+        {
+            this.marker.unlinkEntity();
+            this.marker.freeEntity();
+        }
 
         dummy.linkEntity();
 
         @this.marker = dummy;
+
+        return true;
     }
 
     void loadStoredTime()
