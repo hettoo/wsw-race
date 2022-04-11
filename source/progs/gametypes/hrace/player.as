@@ -2003,15 +2003,10 @@ class Player
         Entity@ ent = this.client.getEnt();
 
         Entity@ dummy = G_SpawnEntity( "dummy" );
-        dummy.type = ET_GENERIC;
         dummy.modelindex = G_ModelIndex( "models/players/bigvic/tris.iqm" );
-        dummy.frame = 0;
-        dummy.moveType = MOVETYPE_NONE;
         dummy.svflags |= SVF_ONLYOWNER;
         dummy.svflags &= ~SVF_NOCLIENT;
         dummy.ownerNum = ent.entNum;
-        dummy.solid = SOLID_NOT;
-        dummy.clipMask = 0;
         dummy.origin = ent.origin;
         dummy.angles = Vec3( 0, ent.angles.y, 0 );
 
