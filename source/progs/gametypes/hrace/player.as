@@ -2013,12 +2013,7 @@ class Player
         dummy.solid = SOLID_NOT;
         dummy.clipMask = 0;
         dummy.origin = ent.origin;
-
-        Vec3 a, b, c;
-        ent.angles.angleVectors( a, b, c );
-        b = a;
-        a.z = 0;
-        dummy.angles = a.toAngles();
+        dummy.angles = Vec3( 0, ent.angles.y, 0 );
 
         dummy.linkEntity();
 
