@@ -42,11 +42,11 @@ void target_speed( Entity @ent )
     @ent.use = target_speed_use;
 
     float speed_value = float(G_SpawnTempValue("speed"));
+    if ( speed_value == 0 )
+        speed_value = 100;
+
     ent.moveType = MOVETYPE_NONE;
     ent.svflags |= SVF_TRANSMITORIGIN2;
-
-    if ( ent.spawnFlags == 0 ) // defaults for compatibility
-        ent.spawnFlags = PLAYERDIR_XY | ADD_XY | PLAYERDIR_Z | ADD_Z;
 
     Vec3 speed = Vec3(0);
 
