@@ -254,32 +254,25 @@ class Player
     bool toggleNoclip()
     {
         Entity@ ent = this.client.getEnt();
-        if ( this.client.team == TEAM_SPECTATOR )
+        if ( pending_endmatch || match.getState() >= MATCH_STATE_POSTMATCH )
         {
-            if ( pending_endmatch || match.getState() >= MATCH_STATE_POSTMATCH )
-            {
-                G_PrintMsg( ent, "Cannot join the end of the match.\n" );
-                return false;
-            }
+            G_PrintMsg( ent, "Can't use noclip in overtime.\n" );
+            return false;
+        }
+        if ( this.client.team == TEAM_SPECTATOR || ent.health <= 0 )
+        {
             Vec3 origin = ent.origin;
             Vec3 angles = ent.angles;
-            this.client.team = TEAM_PLAYERS;
-            G_PrintMsg( null, this.client.name + S_COLOR_WHITE + " joined the " + G_GetTeam( this.client.team ).name + S_COLOR_WHITE + " team.\n" );
+            if ( this.client.team == TEAM_SPECTATOR )
+            {
+                this.client.team = TEAM_PLAYERS;
+                G_PrintMsg( null, this.client.name + S_COLOR_WHITE + " joined the " + G_GetTeam( this.client.team ).name + S_COLOR_WHITE + " team.\n" );
+            }
             this.noclipSpawn = true;
             this.respawn();
             ent.origin = origin;
             ent.angles = angles;
             return true;
-        }
-        if ( ent.health <= 0 )
-        {
-            G_PrintMsg( ent, "Noclip mode is only available to alive players.\n" );
-            return false;
-        }
-        if ( pending_endmatch )
-        {
-            G_PrintMsg( ent, "Can't use noclip in overtime.\n" );
-            return false;
         }
         if ( !this.practicing )
             this.enterPracticeMode();
