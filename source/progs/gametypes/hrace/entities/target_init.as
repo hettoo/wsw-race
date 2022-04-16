@@ -49,6 +49,8 @@ void target_init_use( Entity@ self, Entity@ other, Entity@ activator )
         for ( i = POWERUP_QUAD; i < POWERUP_TOTAL; i++ )
             activator.client.inventorySetCount( i, 0 );
     }
+
+    self.useTargets( activator );
 }
 
 // doesn't need to do anything at all, just sit there, waiting
