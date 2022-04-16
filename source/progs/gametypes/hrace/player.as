@@ -2001,7 +2001,12 @@ class Player
         {
             Player@ match = this.oneMatchingPlayer( copy );
             if ( @match == null )
+            {
+                this.marker.unlinkEntity();
+                this.marker.freeEntity();
+                @this.marker = null;
                 return false;
+            }
             @ref = match.marker;
             if ( @ref == null )
             {
