@@ -484,12 +484,21 @@ void GT_Shutdown()
 // playing, but nothing has yet started.
 void GT_SpawnGametype()
 {
+    Cvar cm_mapHeader("cm_mapHeader", "", 0);
+
     //G_Print( "numCheckPoints: " + numCheckpoints + "\n" );
 
     //TODO: fix in source, /kill should reset touch timeouts.
     for ( int i = 0; i < numEntities; i++ )
     {
         Entity@ ent = G_GetEntity(i);
+
+        if ( ent.classname == "target_teleporter" ) {
+            if( cm_mapHeader.string != "FBSP" && ( ent.spawnFlags & 1 ) != 0 ) {
+                ent.spawnFlags = ent.spawnFlags & ~1;
+            }
+        }
+
         Vec3 centre = Centre( ent );
         if ( entityFinder.slicks.length() < 1 )
         {
@@ -514,7 +523,7 @@ void GT_SpawnGametype()
         }
         if ( ent.classname == "target_starttimer" )
             entityFinder.addTriggering( "start", ent, false, true, null );
-        if ( ent.classname == "target_stoptimer" )
+        else if ( ent.classname == "target_stoptimer" )
             entityFinder.addTriggering( "finish", ent, false, false, null );
         else if ( ent.classname == "info_player_deathmatch" || ent.classname == "info_player_start" )
         {
