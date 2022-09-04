@@ -806,6 +806,22 @@ class Player
         return this.timeStamp() - this.startTime;
     }
 
+    // Only func_button for now, in case anything breaks
+    void unregisterAsActivator()
+    {
+        Entity@ ent = this.client.getEnt();
+        EntityList@ buttons = entityFinder.buttons;
+        int num = buttons.length();
+
+        for ( int i = 0; i < num; i++ )
+        {
+            Entity@ other = buttons.getEnt( 0 );
+            if ( @other.activator == @ent )
+                @other.activator = G_GetEntity( 0 );
+            @buttons = buttons.drop( 1 );
+        }
+    }
+
     void spawn( int oldTeam, int newTeam )
     {
         this.forceRespawn = 0;
@@ -838,6 +854,7 @@ class Player
             this.client.selectWeapon( -1 ); // auto-select best weapon in the inventory
 
         G_RemoveProjectiles( ent );
+        this.unregisterAsActivator();
         RS_ResetPjState( this.client.playerNum );
 
         this.loadPosition( "", Verbosity_Silent );
