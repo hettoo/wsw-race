@@ -94,7 +94,16 @@ class Run
 
     bool hasCP( int id )
     {
-        return this.cpTimes[id] != 0;
+        if ( this.cpTimes[id] != 0 )
+            return true;
+        for ( uint i = 0; i < this.cpOrder.length; i++ )
+        {
+            if ( this.cpOrder[i] == id )
+                return true;
+            else if ( this.cpOrder[i] == -1 )
+                break;
+        }
+        return false;
     }
 
     uint getCP( int id )
